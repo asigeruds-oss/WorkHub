@@ -103,8 +103,16 @@ export const useTodoStore = defineStore('todo', {
         console.log(`[TodoStore] TodoAPI.addTodo 调用耗时: ${endTime - startTime}ms`)
         console.log('[TodoStore] 添加待办事项返回数据:', data)
         
-        // 不再直接修改本地数据，而是通过fetchTodos刷新
-        // this.todos.push(data)
+        // 更新本地数据以确保UI立即更新
+        if (data) {
+          // 如果是新添加的项目，加入本地数组
+          this.todos.push(data);
+          
+          // 增加总数统计
+          this.pagination.count = (this.pagination.count || 0) + 1;
+          
+          console.log(`[TodoStore] 本地添加待办事项成功，当前有 ${this.todos.length} 个待办事项`);
+        }
         
         return data
       } catch (error) {

@@ -3,24 +3,20 @@
     <v-row>
       <v-col cols="12">
         <div class="d-flex align-center mb-4">
-          <h1 class="text-h4">待办事项</h1>
+          <h1 class="text-h4 font-weight-medium">
+            <v-icon icon="mdi-format-list-checks" class="mr-2" color="primary"></v-icon>
+            待办事项
+          </h1>
           <v-spacer></v-spacer>
           <v-btn
             color="primary"
             @click="openAddDialog"
             prepend-icon="mdi-plus"
             class="mr-2"
+            elevation="2"
+            rounded
           >
             添加新任务
-          </v-btn>
-          <v-btn
-            v-if="isDev"
-            color="info"
-            @click="testApiConnection"
-            prepend-icon="mdi-connection"
-            variant="outlined"
-          >
-            测试API连接
           </v-btn>
         </div>
 
@@ -34,28 +30,28 @@
           {{ todoStore.getError }}
         </v-alert>
         
-        <!-- 开发环境下的调试信息面板 -->
-        <v-card v-if="isDev" class="mb-4 bg-grey-lighten-4">
-          <v-card-title class="text-subtitle-1">
-            <v-icon icon="mdi-bug" class="mr-2"></v-icon>
-            调试信息
-            <v-spacer></v-spacer>
-            <v-btn size="small" variant="text" @click="showDebugPanel = !showDebugPanel">
-              {{ showDebugPanel ? '隐藏' : '显示' }}
+        <!-- 操作通知提示 -->
+        <v-snackbar
+          v-model="snackbar.show"
+          :color="snackbar.color"
+          :timeout="snackbar.timeout"
+        >
+          {{ snackbar.text }}
+          <template v-slot:actions>
+            <v-btn
+              variant="text"
+              @click="snackbar.show = false"
+            >
+              关闭
             </v-btn>
-          </v-card-title>
-          <v-expand-transition>
-            <v-card-text v-if="showDebugPanel" class="text-body-2">
-              <pre class="text-caption">{{ JSON.stringify(todoStore.getAllTodos, null, 2) }}</pre>
-            </v-card-text>
-          </v-expand-transition>
-        </v-card>
+          </template>
+        </v-snackbar>
 
         <!-- 筛选和搜索 -->
-        <v-card class="mb-4">
+        <v-card class="mb-4" elevation="3" rounded="lg">
           <v-card-text>
             <v-row>
-              <v-col cols="12" sm="6" md="3">
+              <v-col cols="12" sm="6" md="4">
                 <v-select
                   v-model="filter"
                   label="状态筛选"
@@ -65,34 +61,25 @@
                   hide-details
                   variant="outlined"
                   density="comfortable"
+                  prepend-inner-icon="mdi-filter-variant"
                   @update:model-value="applyFilters"
+                  class="filter-select"
                 ></v-select>
               </v-col>
-              <v-col cols="12" sm="6" md="3">
-                <v-select
-                  v-model="sortBy"
-                  label="排序方式"
-                  :items="sortOptions"
-                  item-title="text"
-                  item-value="value"
-                  hide-details
-                  variant="outlined"
-                  density="comfortable"
-                  @update:model-value="applyFilters"
-                ></v-select>
-              </v-col>
-              <v-col cols="12" sm="12" md="6">
+              <v-col cols="12" sm="12" md="8">
                 <v-text-field
                   v-model="search"
-                  label="搜索"
+                  label="搜索任务"
                   prepend-icon="mdi-magnify"
                   hide-details
                   variant="outlined"
                   density="comfortable"
                   @keyup.enter="applyFilters"
+                  placeholder="输入关键词搜索..."
+                  class="search-field"
                 >
                   <template v-slot:append>
-                    <v-btn icon="mdi-magnify" variant="text" @click="applyFilters"></v-btn>
+                    <v-btn icon="mdi-magnify" variant="text" color="primary" @click="applyFilters"></v-btn>
                   </template>
                 </v-text-field>
               </v-col>
@@ -113,51 +100,82 @@
 
         <!-- 待办事项列表 -->
         <div v-else>
-          <v-card 
-            v-for="todo in filteredTodos" 
-            :key="todo.id" 
-            class="mb-3"
-            :class="{
-              'completed-todo': todo.status === 'done',
-              'archived-todo': todo.status === 'archived'
-            }"
-          >
-            <v-card-text>
+          <transition-group name="todo-list" tag="div" class="todo-container">
+            <v-card 
+              v-for="todo in filteredTodos" 
+              :key="todo.id" 
+              class="mb-3 todo-card"
+              :class="{
+                'completed-todo': todo.status === 'done',
+                'archived-todo': todo.status === 'archived'
+              }"
+              elevation="2"
+              rounded="lg"
+            >
+              <v-card-text class="pa-4">
               <div class="d-flex align-center">
                 <v-checkbox
                   :model-value="todo.status === 'done'"
                   @change="toggleTodoStatus(todo)"
-                  :disabled="todo.status === 'archived'"
+                  :disabled="todo.status === 'archived' || todo.isUpdating"
                   hide-details
                   density="compact"
-                ></v-checkbox>
-                
-                <div class="ml-2 flex-grow-1">
-                  <div :class="{
+                  :color="getPriorityColor(todo.priority)"
+                >
+                  <template v-slot:loader v-if="todo.isUpdating">
+                    <v-progress-circular indeterminate color="primary" size="16"></v-progress-circular>
+                  </template>
+                </v-checkbox>                <div class="ml-3 flex-grow-1">
+                  <div class="d-flex align-center" :class="{
                     'text-decoration-line-through': todo.status === 'done',
                     'font-weight-medium': todo.status === 'pending',
                     'text-grey': todo.status === 'archived'
                   }">
-                    {{ todo.title }}
+                    <span class="text-subtitle-1">{{ todo.title }}</span>
                     <v-chip
                       v-if="todo.priority"
-                      size="x-small"
+                      size="small"
                       :color="getPriorityColor(todo.priority)"
                       class="ml-2"
+                      variant="outlined"
+                      label
                     >
                       {{ getPriorityLabel(todo.priority) }}
                     </v-chip>
+                    <v-chip
+                      v-if="todo.status === 'done'"
+                      size="small"
+                      color="success"
+                      class="ml-2"
+                      label
+                    >
+                      已完成
+                    </v-chip>
+                    <v-chip
+                      v-if="todo.status === 'archived'"
+                      size="small"
+                      color="grey"
+                      class="ml-2"
+                      label
+                    >
+                      已归档
+                    </v-chip>
                   </div>
-                  <div v-if="todo.description" class="text-body-2 text-grey">
+                  <div v-if="todo.description" class="text-body-2 mt-2 todo-description">
                     {{ todo.description }}
                   </div>
-                  <div class="d-flex align-center text-caption text-grey mt-2">
+                  <!-- 根据设置决定是否显示日期信息 -->
+                  <div v-if="todoSettings.showDateInfo" class="d-flex align-center text-caption text-grey mt-3">
                     <v-icon icon="mdi-calendar" size="small" class="mr-1"></v-icon>
                     <span>创建于: {{ formatDate(todo.created_at) }}</span>
-                    <span v-if="todo.due_date" class="ml-3">
+                    <v-divider vertical class="mx-2"></v-divider>
+                    <span v-if="todo.due_date" class="d-flex align-center">
                       <v-icon icon="mdi-clock-outline" size="small" class="mr-1"></v-icon>
-                      截止日期: {{ formatDate(todo.due_date) }}
+                      <span :class="{'text-error': new Date(todo.due_date) < new Date() && todo.status === 'pending'}">
+                        截止日期: {{ formatDate(todo.due_date) }}
+                      </span>
                     </span>
+                    <span v-else class="text-grey-lighten-1 font-italic">未设置截止日期</span>
                   </div>
                 </div>
                 
@@ -169,33 +187,35 @@
                         variant="text"
                         size="small"
                         v-bind="props"
+                        :disabled="todo.status === 'archived'"
+                        class="menu-button"
                       ></v-btn>
                     </template>
                     <v-list>
-                      <v-list-item @click="openEditDialog(todo)">
+                      <v-list-item @click="openEditDialog(todo)" density="compact">
                         <template v-slot:prepend>
-                          <v-icon icon="mdi-pencil"></v-icon>
+                          <v-icon icon="mdi-pencil" color="primary"></v-icon>
                         </template>
                         <v-list-item-title>编辑</v-list-item-title>
                       </v-list-item>
                       
-                      <v-list-item v-if="todo.status === 'pending'" @click="completeTodo(todo)">
+                      <v-list-item v-if="todo.status === 'pending'" @click="completeTodo(todo)" density="compact">
                         <template v-slot:prepend>
-                          <v-icon icon="mdi-check"></v-icon>
+                          <v-icon icon="mdi-check" color="success"></v-icon>
                         </template>
                         <v-list-item-title>标记为已完成</v-list-item-title>
                       </v-list-item>
                       
-                      <v-list-item v-if="todo.status === 'done'" @click="reopenTodo(todo)">
+                      <v-list-item v-if="todo.status === 'done'" @click="reopenTodo(todo)" density="compact">
                         <template v-slot:prepend>
-                          <v-icon icon="mdi-refresh"></v-icon>
+                          <v-icon icon="mdi-refresh" color="info"></v-icon>
                         </template>
                         <v-list-item-title>重新打开</v-list-item-title>
                       </v-list-item>
                       
-                      <v-list-item v-if="todo.status !== 'archived'" @click="archiveTodo(todo)">
+                      <v-list-item v-if="todo.status !== 'archived'" @click="archiveTodo(todo)" density="compact">
                         <template v-slot:prepend>
-                          <v-icon icon="mdi-archive"></v-icon>
+                          <v-icon icon="mdi-archive" color="grey-darken-1"></v-icon>
                         </template>
                         <v-list-item-title>归档</v-list-item-title>
                       </v-list-item>
@@ -213,14 +233,36 @@
             </v-card-text>
           </v-card>
           
+          </transition-group>
+          
+          <!-- 无数据提示 -->
+          <div v-if="!todoStore.isLoading && todoStore.getAllTodos.length === 0" class="d-flex flex-column align-center my-10">
+            <v-icon icon="mdi-clipboard-text-outline" size="70" color="grey-lighten-2" class="mb-4"></v-icon>
+            <p class="text-h6 text-grey-darken-1">暂无待办事项</p>
+            <p class="text-body-2 text-grey">点击"添加新任务"按钮创建您的第一个待办事项</p>
+            <v-btn
+              color="primary"
+              @click="openAddDialog"
+              prepend-icon="mdi-plus"
+              class="mt-4"
+              variant="outlined"
+              rounded
+            >
+              添加新任务
+            </v-btn>
+          </div>
+          
           <!-- 分页控件 -->
-          <div class="d-flex justify-center mt-4">
+          <div v-if="todoStore.getAllTodos.length > 0" class="d-flex justify-center mt-6">
             <v-pagination
               v-if="todoStore.getPagination.count > 0"
               v-model="currentPage"
               :length="Math.ceil(todoStore.getPagination.count / pageSize)"
               :total-visible="5"
               @update:model-value="handlePageChange"
+              color="primary"
+              rounded="circle"
+              class="pagination"
             ></v-pagination>
           </div>
         </div>
@@ -228,25 +270,35 @@
     </v-row>
 
     <!-- 添加/编辑对话框 -->
-    <v-dialog v-model="dialog" max-width="500">
-      <v-card>
-        <v-card-title>
-          {{ isEditing ? '编辑任务' : '添加新任务' }}
-        </v-card-title>
-        <v-card-text>
+    <v-dialog v-model="dialog" max-width="500" transition="dialog-bottom-transition">
+      <v-card rounded="lg">
+        <v-toolbar :color="isEditing ? 'primary' : 'primary'" density="comfortable" flat>
+          <v-toolbar-title class="text-white">
+            {{ isEditing ? '编辑任务' : '添加新任务' }}
+          </v-toolbar-title>
+        </v-toolbar>
+        
+        <v-card-text class="pt-4">
           <v-form ref="form" @submit.prevent="isEditing ? updateTodo() : addTodo()">
             <v-text-field
               v-model="currentTodo.title"
-              label="标题"
+              label="任务标题"
               :rules="[(v) => !!v && v.trim() !== '' || '标题不能为空']"
               required
+              variant="outlined"
+              prepend-inner-icon="mdi-format-title"
               @input="() => { if(form.value) form.value.resetValidation() }"
+              class="mb-3"
             ></v-text-field>
             
             <v-textarea
               v-model="currentTodo.description"
-              label="描述"
+              label="任务描述"
               rows="3"
+              variant="outlined"
+              prepend-inner-icon="mdi-text-box-outline"
+              class="mb-3"
+              placeholder="输入任务详细描述..."
             ></v-textarea>
             
             <v-select
@@ -255,6 +307,9 @@
               :items="priorityOptions"
               item-title="text"
               item-value="value"
+              variant="outlined"
+              prepend-inner-icon="mdi-flag"
+              class="mb-3"
             ></v-select>
             
             <v-select
@@ -264,6 +319,9 @@
               :items="statusOptions"
               item-title="text"
               item-value="value"
+              variant="outlined"
+              prepend-inner-icon="mdi-check-circle-outline"
+              class="mb-3"
             ></v-select>
             
             <v-text-field
@@ -272,17 +330,24 @@
               type="date"
               hint="选择任务截止日期"
               persistent-hint
+              variant="outlined"
+              prepend-inner-icon="mdi-calendar"
+              class="mb-3"
             ></v-text-field>
           </v-form>
         </v-card-text>
-        <v-card-actions>
+        
+        <v-divider></v-divider>
+        
+        <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="dialog = false">取消</v-btn>
+          <v-btn variant="outlined" @click="dialog = false" class="mr-2">取消</v-btn>
           <v-btn
             color="primary"
             @click="handleFormSubmit"
             :loading="todoStore.isLoading"
             type="submit"
+            variant="elevated"
           >
             {{ isEditing ? '更新' : '添加' }}
           </v-btn>
@@ -291,21 +356,31 @@
     </v-dialog>
 
     <!-- 删除确认对话框 -->
-    <v-dialog v-model="deleteDialog" max-width="400">
-      <v-card>
-        <v-card-title class="text-h6">
-          确认删除
-        </v-card-title>
-        <v-card-text>
-          确定要删除任务"{{ currentTodo.title }}"吗？此操作不可撤销。
+    <v-dialog v-model="deleteDialog" max-width="400" transition="dialog-top-transition">
+      <v-card rounded="lg">
+        <v-toolbar color="error" density="comfortable" flat>
+          <v-toolbar-title class="text-white">
+            确认删除
+          </v-toolbar-title>
+        </v-toolbar>
+        
+        <v-card-text class="pt-4 pb-2 text-center">
+          <v-icon icon="mdi-alert-circle" color="error" size="large" class="mb-3"></v-icon>
+          <p class="text-body-1">确定要删除以下任务吗？</p>
+          <p class="text-subtitle-1 font-weight-medium mt-2">"{{ currentTodo.title }}"</p>
+          <p class="text-caption mt-2 text-grey">此操作不可撤销</p>
         </v-card-text>
-        <v-card-actions>
+        
+        <v-divider></v-divider>
+        
+        <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="deleteDialog = false">取消</v-btn>
+          <v-btn variant="text" @click="deleteDialog = false" class="mr-2">取消</v-btn>
           <v-btn
             color="error"
             @click="deleteTodo()"
             :loading="todoStore.isLoading"
+            variant="elevated"
           >
             删除
           </v-btn>
@@ -316,13 +391,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useTodoStore } from '@/stores/todo'
-import { TodoAPI } from '@/api/todo'
-import axios from 'axios'
+import { useSettingsStore } from '@/stores/settings'
+import { useRouter } from 'vue-router'
 
 // 初始化store
 const todoStore = useTodoStore()
+const settingsStore = useSettingsStore()
+const router = useRouter()
+
+// 获取用户设置
+const todoSettings = settingsStore.getTodoSettings
 
 // 组件状态
 const dialog = ref(false)
@@ -337,14 +417,27 @@ const currentTodo = ref({
 })
 const filter = ref('all')
 const search = ref('')
-const sortBy = ref('-created_at')
 const form = ref(null)
-const showDebugPanel = ref(false)
 const currentPage = ref(1)
-const pageSize = 10
+const pageSize = todoSettings.pageSize // 使用设置中的页面大小
 
-// 是否为开发环境
-const isDev = import.meta.env.MODE === 'development' || import.meta.env.DEV
+// 提示框状态
+const snackbar = ref({
+  show: false,
+  text: '',
+  color: 'info',
+  timeout: 3000
+})
+
+// 显示提示信息
+function showNotification(text, color = 'info', timeout = 3000) {
+  snackbar.value = {
+    show: true,
+    text,
+    color,
+    timeout
+  }
+}
 
 // 筛选选项
 const filterOptions = [
@@ -354,15 +447,7 @@ const filterOptions = [
   { text: '已归档', value: 'archived' }
 ]
 
-// 排序选项
-const sortOptions = [
-  { text: '创建时间 (新→旧)', value: '-created_at' },
-  { text: '创建时间 (旧→新)', value: 'created_at' },
-  { text: '更新时间 (新→旧)', value: '-updated_at' },
-  { text: '截止日期 (近→远)', value: 'due_date' },
-  { text: '优先级 (高→低)', value: '-priority' },
-  { text: '优先级 (低→高)', value: 'priority' },
-]
+
 
 // 优先级选项
 const priorityOptions = [
@@ -408,47 +493,59 @@ function formatDate(dateString) {
 
 // 处理表单提交
 async function handleFormSubmit() {
-  console.log('表单提交按钮被点击')
-  
   // 如果表单引用不存在
   if (!form.value) {
-    console.error('表单实例不存在，无法提交表单')
     return
   }
   
   try {
-    // 手动触发表单验证 - 等待Promise解析
+    // 手动触发表单验证
     const { valid } = await form.value.validate()
-    console.log('表单验证结果:', valid)
     
     if (!valid) {
-      console.error('表单验证未通过，不能提交表单')
       return
     }
     
     // 检查标题是否为空
     if (!currentTodo.value.title || currentTodo.value.title.trim() === '') {
-      console.error('标题为空，不能提交表单')
       return
     }
     
     // 根据编辑状态调用相应函数
     if (isEditing.value) {
-      console.log('提交更新表单')
       await updateTodo()
     } else {
-      console.log('提交新增表单')
       await addTodo()
     }
   } catch (error) {
-    console.error('表单提交过程发生错误:', error)
+    console.error('表单提交失败:', error.message)
   }
 }
 
 // 计算属性：筛选和搜索后的待办事项
 const filteredTodos = computed(() => {
-  // 直接使用API过滤后的结果
-  return todoStore.getAllTodos
+  // 获取API过滤后的结果
+  const todos = [...todoStore.getAllTodos]
+  
+  // 根据设置决定是否对已完成待办进行二次排序
+  // completedTodosPosition: 'bottom' - 已完成的排在下方
+  // completedTodosPosition: 'inline' - 按原有排序规则
+  if (filter.value === 'all' && todoSettings.completedTodosPosition === 'bottom') {
+    return todos.sort((a, b) => {
+      // 已归档的任务总是排在最后
+      if (a.status === 'archived' && b.status !== 'archived') return 1
+      if (a.status !== 'archived' && b.status === 'archived') return -1
+      
+      // 已完成的任务排在未完成的任务后面
+      if (a.status === 'done' && b.status === 'pending') return 1
+      if (a.status === 'pending' && b.status === 'done') return -1
+      
+      // 如果状态相同，按照原有的排序规则
+      return 0
+    })
+  }
+  
+  return todos
 })
 
 // 应用过滤器
@@ -462,7 +559,7 @@ function applyFilters() {
   fetchTodos({
     status,
     search: search.value,
-    ordering: sortBy.value,
+    ordering: settingsStore.getTodoSettings.defaultSortBy, // 使用设置中的排序方式
     page: 1 // 重置为第一页
   })
 }
@@ -475,86 +572,65 @@ function handlePageChange(page) {
 // 封装获取待办事项的函数
 async function fetchTodos(options = {}) {
   try {
-    await todoStore.fetchTodos(options)
+    // 确保始终使用当前的页面大小
+    const fetchOptions = {
+      ...options,
+      pageSize: pageSize
+    }
+    
+    await todoStore.fetchTodos(fetchOptions)
   } catch (error) {
     console.error('加载待办事项失败:', error)
   }
 }
 
-// 测试API连接
-async function testApiConnection() {
-  try {
-    console.log('开始测试API连接 - 确认使用相对路径的代理请求')
-    // 显示一个简单的提示
-    alert('正在测试API连接，请查看控制台日志')
-    
-    // 测试1: 直接使用axios发送请求到代理路径
-    console.log('测试1: 使用全局axios直接发送请求到/api/todos/')
-    try {
-      // 不设置baseURL，使用相对路径
-      const response = await axios.get('/api/todos/')
-      console.log('测试1结果:', response)
-    } catch (error) {
-      console.error('测试1失败:', error.message)
-      console.log('错误详情:', error)
+
+
+// 监听设置变化
+watch(
+  () => settingsStore.getTodoSettings,
+  (newSettings) => {
+    // 如果默认排序方式变化，重新获取数据
+    const previousDefaultSortBy = todoSettings.defaultSortBy
+    if (newSettings.defaultSortBy !== previousDefaultSortBy) {
+      applyFilters()
     }
     
-    // 测试2: 使用http实例发送请求
-    console.log('测试2: 使用TodoAPI直接添加一个待办事项')
-    try {
-      const testData = {
-        title: `测试待办事项 ${new Date().toLocaleTimeString()}`,
-        description: '这是一个使用TodoAPI添加的测试',
-        priority: 3 // 高优先级，使用数字
-      }
+    // 更新每页显示数量
+    if (newSettings.pageSize !== pageSize) {
+      // 保存当前页码
+      const currentItemIndex = (currentPage.value - 1) * pageSize
       
-      const result = await TodoAPI.addTodo(
-        testData.title,
-        testData.description,
-        { priority: testData.priority }
-      )
-      console.log('测试2结果:', result)
-    } catch (error) {
-      console.error('测试2失败:', error)
-    }
-    
-    // 测试3: 尝试直接使用axios添加一个待办事项
-    console.log('测试3: 直接使用axios添加待办事项')
-    try {
-      const testData = {
-        title: `直接axios测试 ${new Date().toLocaleTimeString()}`,
-        description: '这是一个使用axios直接添加的测试',
-        priority: 2, // 中等优先级，使用数字
-        status: 'pending'
-      }
+      // 更新页面大小
+      pageSize = newSettings.pageSize
       
-      // 直接使用axios尝试添加
-      const addResponse = await axios.post('/api/todos/', testData)
-      console.log('测试3结果:', addResponse)
-    } catch (error) {
-      console.error('测试3失败:', error.message)
-      console.log('错误详情:', {
-        config: error.config,
-        response: error.response
-      })
+      // 计算新的页码
+      currentPage.value = Math.floor(currentItemIndex / pageSize) + 1
+      
+      // 重新获取数据
+      applyFilters()
     }
-    
-    alert('API连接测试完成，请查看控制台日志')
-  } catch (error) {
-    console.error('API连接测试失败:', error)
-    alert(`API连接测试失败: ${error.message}`)
-  }
-}
+  },
+  { deep: true }
+)
 
 // 生命周期钩子
 onMounted(async () => {
   try {
+    // 设置加载中状态
+    todoStore.loading = true
+    
+    console.log('初始化加载待办事项')
     await todoStore.fetchTodos({
       page: currentPage.value,
-      pageSize
+      pageSize,
+      ordering: settingsStore.getTodoSettings.defaultSortBy
     })
+    
+    console.log('待办事项加载完成:', todoStore.getAllTodos.length, '个项目')
   } catch (error) {
     console.error('加载待办事项失败:', error)
+    showNotification('加载待办事项失败，请重试', 'error')
   }
 })
 
@@ -583,41 +659,18 @@ function openDeleteDialog(todo) {
 }
 
 async function addTodo() {
-  console.log('添加任务 - 表单引用对象:', form.value)
-  
   // 确保表单实例存在
   if (!form.value) {
-    console.error('表单实例不存在，无法进行验证')
     return
   }
   
   try {
-    // 执行表单验证 - Vuetify 3中validate()返回Promise
+    // 执行表单验证
     const { valid } = await form.value.validate()
-    console.log('表单验证结果:', valid)
     
     if (!valid) {
-      console.log('表单验证失败，不执行添加操作')
       return
     }
-  } catch (error) {
-    console.error('表单验证过程发生错误:', error)
-    return
-  }
-  
-  console.log('开始添加待办事项:', {
-    title: currentTodo.value.title,
-    description: currentTodo.value.description,
-    priority: currentTodo.value.priority,
-    due_date: currentTodo.value.due_date
-  })
-  
-  try {
-    // 使用计时器记录API调用耗时
-    const startTime = performance.now()
-    
-    // 记录执行流程
-    console.log('准备调用todoStore.addTodo方法')
     
     await todoStore.addTodo(
       currentTodo.value.title, 
@@ -628,72 +681,41 @@ async function addTodo() {
       }
     )
     
-    const endTime = performance.now()
-    console.log(`添加待办事项API调用耗时: ${endTime - startTime}ms`)
-    
-    console.log('待办事项添加成功，关闭对话框')
     dialog.value = false
+    showNotification('新任务添加成功', 'success')
     
-    // 刷新列表以获取最新数据
-    console.log('添加成功，刷新任务列表')
-    applyFilters()
+    // 如果之前没有待办事项，不需要刷新，store已经更新
+    if (todoStore.getAllTodos.length <= 1) {
+      console.log('第一个待办事项已添加，无需刷新列表')
+    } else {
+      // 有多个待办事项时刷新列表以确保排序正确
+      applyFilters()
+    }
   } catch (error) {
-    console.error('添加待办事项失败:', error)
-    console.log('错误详情:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      response: error.response ? {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data
-      } : '无响应数据'
-    })
+    console.error('添加待办事项失败:', error.message)
+    showNotification('添加待办事项失败: ' + error.message, 'error')
   }
 }
 
 async function updateTodo() {
-  console.log('表单引用对象:', form.value)
-  
   // 确保表单实例存在
   if (!form.value) {
-    console.error('表单实例不存在，无法进行验证')
     return
   }
   
   try {
-    // 执行表单验证 - Vuetify 3中validate()返回Promise
+    // 执行表单验证
     const { valid } = await form.value.validate()
-    console.log('表单验证结果:', valid)
     
     if (!valid) {
-      console.log('表单验证失败，不执行更新操作')
       return
     }
-  } catch (error) {
-    console.error('表单验证过程发生错误:', error)
-    return
-  }
-  
-  // 检查ID是否存在
-  if (!currentTodo.value.id) {
-    console.error('尝试更新待办事项时ID不存在:', currentTodo.value)
-    return
-  }
-  
-  console.log('开始更新待办事项:', {
-    id: currentTodo.value.id,
-    updates: {
-      title: currentTodo.value.title,
-      description: currentTodo.value.description,
-      status: currentTodo.value.status,
-      priority: currentTodo.value.priority,
-      due_date: currentTodo.value.due_date
+    
+    // 检查ID是否存在
+    if (!currentTodo.value.id) {
+      return
     }
-  })
-  
-  try {
-    // 创建更新对象，记录每一步
+    
     const updates = {
       title: currentTodo.value.title,
       description: currentTodo.value.description,
@@ -702,98 +724,301 @@ async function updateTodo() {
       due_date: currentTodo.value.due_date
     }
     
-    console.log(`准备调用todoStore.updateTodo(${currentTodo.value.id}, ${JSON.stringify(updates)})`)
-    
-    // 使用计时器记录API调用耗时
-    const startTime = performance.now()
-    
-    const updatedTodo = await todoStore.updateTodo(currentTodo.value.id, updates)
-    
-    const endTime = performance.now()
-    console.log(`API调用耗时: ${endTime - startTime}ms`)
-    
-    console.log('待办事项更新成功:', updatedTodo)
+    await todoStore.updateTodo(currentTodo.value.id, updates)
     dialog.value = false
     
     // 刷新列表以获取最新数据
-    console.log('更新成功，刷新任务列表')
     applyFilters()
   } catch (error) {
-    console.error('更新待办事项失败:', error)
-    console.log('错误详情:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      response: error.response ? {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data
-      } : '无响应数据'
-    })
+    console.error('更新待办事项失败:', error.message)
   }
 }
 
 async function deleteTodo() {
   try {
+    // 如果设置为不需要确认，直接删除
+    if (!todoSettings.confirmDelete) {
+      deleteDialog.value = false
+    }
+    
     await todoStore.deleteTodo(currentTodo.value.id)
-    deleteDialog.value = false
+    
+    // 如果设置为需要确认，此时关闭确认对话框
+    if (todoSettings.confirmDelete) {
+      deleteDialog.value = false
+    }
+    
+    showNotification('待办事项已删除', 'success')
   } catch (error) {
     console.error('删除待办事项失败:', error)
+    showNotification('删除失败: ' + error.message, 'error')
   }
 }
 
 async function toggleTodoStatus(todo) {
   try {
-    await todoStore.toggleTodoStatus(todo.id)
-    // 刷新列表以获取最新数据
-    applyFilters()
+    // 如果正在更新，不允许再次点击
+    if (todo.isUpdating) return
+    
+    // 存储原始状态，用于在失败时恢复
+    const originalStatus = todo.status
+    
+    // 计算目标状态
+    const targetStatus = originalStatus === 'done' ? 'pending' : 'done'
+    
+    // 设置加载状态
+    todo.isUpdating = true
+    
+    try {
+      // 先调用API
+      await todoStore.toggleTodoStatus(todo.id)
+      
+      // API调用成功后，更新本地状态
+      todo.status = targetStatus
+      
+      // 稍微延迟刷新列表，让动画效果完成
+      setTimeout(() => {
+        applyFilters()
+      }, 300)
+    } catch (error) {
+      console.error('更新待办事项状态失败:', error)
+      // 显示错误信息给用户，使用snackbar通知
+      if (error.response && error.response.data && error.response.data.message) {
+        showNotification(error.response.data.message, 'warning')
+      } else {
+        showNotification('更新状态失败，请稍后重试', 'error')
+      }
+    } finally {
+      // 无论成功还是失败，都清除加载状态
+      todo.isUpdating = false
+    }
   } catch (error) {
-    console.error('更新待办事项状态失败:', error)
+    console.error('状态切换过程发生错误:', error)
+    // 确保清除加载状态
+    if (todo) todo.isUpdating = false
   }
 }
 
 // 将待办事项标记为已完成
 async function completeTodo(todo) {
   try {
-    await todoStore.completeTodo(todo.id)
-    // 刷新列表以获取最新数据
-    applyFilters()
+    // 如果正在更新，不允许再次点击
+    if (todo.isUpdating) return
+    
+    // 设置加载状态
+    todo.isUpdating = true
+    
+    try {
+      // 先调用API
+      await todoStore.completeTodo(todo.id)
+      
+      // API调用成功后，更新本地状态
+      todo.status = 'done'
+      
+      // 稍微延迟刷新列表，让动画效果完成
+      setTimeout(() => {
+        applyFilters()
+      }, 300)
+    } catch (error) {
+      console.error('标记待办事项为已完成失败:', error)
+      // 显示错误信息给用户，使用snackbar通知
+      if (error.response && error.response.data && error.response.data.message) {
+        showNotification(error.response.data.message, 'warning')
+      } else {
+        showNotification('标记为已完成失败，请稍后重试', 'error')
+      }
+    } finally {
+      // 无论成功还是失败，都清除加载状态
+      todo.isUpdating = false
+    }
   } catch (error) {
     console.error('标记待办事项为已完成失败:', error)
+    // 确保清除加载状态
+    if (todo) todo.isUpdating = false
   }
 }
 
 // 重新打开已完成的待办事项
 async function reopenTodo(todo) {
   try {
-    await todoStore.reopenTodo(todo.id)
-    // 刷新列表以获取最新数据
-    applyFilters()
+    // 如果正在更新，不允许再次点击
+    if (todo.isUpdating) return
+    
+    // 设置加载状态
+    todo.isUpdating = true
+    
+    try {
+      // 先调用API
+      await todoStore.reopenTodo(todo.id)
+      
+      // API调用成功后，更新本地状态
+      todo.status = 'pending'
+      
+      // 稍微延迟刷新列表，让动画效果完成
+      setTimeout(() => {
+        applyFilters()
+      }, 300)
+    } catch (error) {
+      console.error('重新打开待办事项失败:', error)
+      // 显示错误信息给用户，使用snackbar通知
+      if (error.response && error.response.data && error.response.data.message) {
+        showNotification(error.response.data.message, 'warning')
+      } else {
+        showNotification('重新打开任务失败，请稍后重试', 'error')
+      }
+    } finally {
+      // 无论成功还是失败，都清除加载状态
+      todo.isUpdating = false
+    }
   } catch (error) {
     console.error('重新打开待办事项失败:', error)
+    // 确保清除加载状态
+    if (todo) todo.isUpdating = false
   }
 }
 
 // 归档待办事项
 async function archiveTodo(todo) {
   try {
-    await todoStore.archiveTodo(todo.id)
-    // 刷新列表以获取最新数据
-    applyFilters()
+    // 如果正在更新，不允许再次点击
+    if (todo.isUpdating) return
+    
+    // 设置加载状态
+    todo.isUpdating = true
+    
+    try {
+      // 先调用API
+      await todoStore.archiveTodo(todo.id)
+      
+      // API调用成功后，更新本地状态
+      todo.status = 'archived'
+      
+      // 稍微延迟刷新列表，让动画效果完成
+      setTimeout(() => {
+        applyFilters()
+      }, 300)
+    } catch (error) {
+      console.error('归档待办事项失败:', error)
+      // 显示错误信息给用户，使用snackbar通知
+      if (error.response && error.response.data && error.response.data.message) {
+        showNotification(error.response.data.message, 'warning')
+      } else {
+        showNotification('归档任务失败，请稍后重试', 'error')
+      }
+    } finally {
+      // 无论成功还是失败，都清除加载状态
+      todo.isUpdating = false
+    }
   } catch (error) {
     console.error('归档待办事项失败:', error)
+    // 确保清除加载状态
+    if (todo) todo.isUpdating = false
   }
 }
+
+
 </script>
 
 <style scoped>
 .completed-todo {
-  opacity: 0.7;
+  opacity: 0.8;
+  transition: all 0.5s ease;
+  border-left: 4px solid var(--v-success-base, #4caf50);
+  background-color: rgba(76, 175, 80, 0.05);
 }
 
 .archived-todo {
-  opacity: 0.5;
+  opacity: 0.6;
   background-color: #f5f5f5;
+  border-left: 4px solid var(--v-grey-base, #9e9e9e);
+  transition: all 0.5s ease;
+}
+
+.todo-card {
+  transition: all 0.2s ease;
+  border-left: 4px solid var(--v-primary-base, #1976d2);
+}
+
+.todo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 排序动画效果 */
+.todo-container {
+  position: relative;
+  min-height: 50px; /* 确保容器有最小高度 */
+}
+
+.todo-list-move,
+.todo-list-enter-active,
+.todo-list-leave-active {
+  transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); /* 使用更流畅的缓动函数 */
+}
+
+.todo-list-enter-from,
+.todo-list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+/* 确保离开和进入的项目不影响其他项目的布局 */
+.todo-list-leave-active {
+  position: absolute;
+  width: 100%;
+}
+
+/* 任务状态变化时的过渡效果 */
+.todo-card {
+  transition: 
+    all 0.4s ease,
+    opacity 0.3s ease,
+    background-color 0.4s ease, 
+    border-left-color 0.4s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.todo-description {
+  max-height: 80px;
+  overflow-y: auto;
+  color: #616161;
+  padding-left: 4px;
+  border-left: 2px solid #e0e0e0;
+}
+
+.filter-select :deep(.v-field__append-inner) {
+  color: var(--v-primary-base, #1976d2);
+}
+
+.sort-select :deep(.v-field__append-inner) {
+  color: var(--v-primary-base, #1976d2);
+}
+
+.search-field :deep(.v-field__append-inner) {
+  color: var(--v-primary-base, #1976d2);
+}
+
+.pagination {
+  margin-bottom: 24px;
+}
+
+.menu-button {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.todo-card:hover .menu-button {
+  opacity: 1;
+}
+
+/* 添加适配深色模式的样式 */
+:deep(.v-theme--dark) .archived-todo {
+  background-color: rgba(66, 66, 66, 0.8);
+}
+
+:deep(.v-theme--dark) .todo-description {
+  border-left: 2px solid #424242;
 }
 </style>
 

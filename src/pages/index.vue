@@ -3,7 +3,7 @@
     <v-row>
       <v-col cols="12">
         <v-card class="pa-4">
-          <v-card-title class="text-h4 mb-4">欢迎使用内容管理系统</v-card-title>
+          <v-card-title class="text-h4 mb-4">欢迎使用Content-hub</v-card-title>
           <v-card-text>
             <p class="text-body-1">
               这是一个现代化的Vue.js内容管理系统，支持用户认证和待办事项管理功能。

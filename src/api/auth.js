@@ -26,22 +26,26 @@ export const AuthAPI = {
 
   /**
    * 注册新用户
-   * @param {string} username - 用户名
-   * @param {string} email - 电子邮箱
-   * @param {string} password - 密码
+   * @param {Object} userData - 用户数据
+   * @param {string} userData.username - 用户名
+   * @param {string} userData.email - 电子邮箱
+   * @param {string} userData.password - 密码
+   * @param {string} userData.password2 - 确认密码
+   * @param {string} userData.first_name - 姓
+   * @param {string} userData.last_name - 名
+   * @param {string} userData.gender - 性别 (M/F/O)
+   * @param {string} userData.phone - 手机号码
    * @returns {Promise<Object>} - 返回用户信息
    */
-  async register(username, email, password) {
+  async register(userData) {
     try {
-      const response = await http.post('/api/register/', {
-        username,
-        email,
-        password,
-      })
+      console.log('发送注册请求，数据:', userData)
+      const response = await http.post('/api/register/', userData)
       
+      console.log('注册API响应:', response.data)
       return response.data
     } catch (error) {
-      console.error('注册失败:', error)
+      console.error('注册失败:', error.response || error)
       throw error
     }
   },

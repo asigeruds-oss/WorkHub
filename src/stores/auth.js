@@ -18,15 +18,18 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    async register(username, email, password) {
+    async register(userData) {
       this.loading = true
       this.error = null
       
       try {
-        const data = await AuthAPI.register(username, email, password)
+        console.log('Store 处理注册请求:', userData)
+        const data = await AuthAPI.register(userData)
+        console.log('注册成功，返回数据:', data)
         return data
       } catch (error) {
-        this.error = error.response?.data?.message || '注册失败'
+        console.error('注册 Store 错误:', error.response || error)
+        this.error = error.response?.data?.message || error.response?.data?.detail || '注册失败'
         throw error
       } finally {
         this.loading = false
