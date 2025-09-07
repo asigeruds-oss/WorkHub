@@ -192,29 +192,204 @@
                     
                     <v-divider class="my-4" v-if="notificationSettings.enabled"></v-divider>
                     
-                    <v-select
-                      v-if="notificationSettings.enabled"
-                      v-model="notificationSettings.position"
-                      label="通知位置"
-                      :items="notificationPositionOptions"
-                      item-title="text"
-                      item-value="value"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-arrow-decision"
-                      @update:model-value="updateNotificationSettings"
-                      class="mb-4"
-                    ></v-select>
-                    
-                    <v-btn
-                      color="info"
-                      class="mt-4"
-                      prepend-icon="mdi-bell-ring"
-                      @click="testNotification"
-                      :disabled="!notificationSettings.enabled"
-                    >
-                      测试通知
-                    </v-btn>
+                    <div v-if="notificationSettings.enabled">
+                      <v-row>
+                        <v-col cols="12" sm="6">
+                          <v-select
+                            v-model="notificationSettings.push_channel"
+                            label="通知渠道"
+                            :items="pushChannelOptions"
+                            item-title="text"
+                            item-value="value"
+                            variant="outlined"
+                            density="comfortable"
+                            prepend-inner-icon="mdi-message-settings-variant"
+                            @update:model-value="updateNotificationSettings"
+                            class="mb-4"
+                          ></v-select>
+                        </v-col>
+                        
+                        <v-col cols="12" sm="6">
+                          <v-select
+                            v-model="notificationSettings.position"
+                            label="通知位置"
+                            :items="notificationPositionOptions"
+                            item-title="text"
+                            item-value="value"
+                            variant="outlined"
+                            density="comfortable"
+                            prepend-inner-icon="mdi-arrow-decision"
+                            @update:model-value="updateNotificationSettings"
+                            class="mb-4"
+                          ></v-select>
+                        </v-col>
+                      </v-row>
+                      
+                      <v-card class="mb-4 pa-3" variant="outlined">
+                        <v-card-title class="text-subtitle-1">提醒规则</v-card-title>
+                        <v-card-text>
+                          <v-row>
+                            <v-col cols="12">
+                              <v-switch
+                                v-model="notificationSettings.enable_daily_reminder"
+                                label="日常提醒"
+                                color="primary"
+                                hide-details
+                                class="mb-3"
+                                @update:model-value="updateNotificationSettings"
+                              ></v-switch>
+                              
+                              <div v-if="notificationSettings.enable_daily_reminder" class="ml-8 mb-4">
+                                <v-row>
+                                  <v-col cols="12" sm="6">
+                                    <v-slider
+                                      v-model="notificationSettings.daily_reminder_hours"
+                                      :min="1"
+                                      :max="72"
+                                      :step="1"
+                                      label="提前小时数"
+                                      thumb-label="always"
+                                      @update:model-value="updateNotificationSettings"
+                                    >
+                                      <template v-slot:append>
+                                        <v-text-field
+                                          v-model="notificationSettings.daily_reminder_hours"
+                                          type="number"
+                                          style="width: 70px"
+                                          density="compact"
+                                          hide-details
+                                          variant="outlined"
+                                          @update:model-value="updateNotificationSettings"
+                                        ></v-text-field>
+                                      </template>
+                                    </v-slider>
+                                  </v-col>
+                                  <v-col cols="12" sm="6">
+                                    <v-text-field
+                                      v-model="notificationSettings.daily_reminder_time"
+                                      label="每日提醒时间"
+                                      type="time"
+                                      variant="outlined"
+                                      density="compact"
+                                      hint="设置每日固定提醒时间"
+                                      persistent-hint
+                                      @update:model-value="updateNotificationSettings"
+                                    ></v-text-field>
+                                  </v-col>
+                                </v-row>
+                              </div>
+                              
+                              <v-switch
+                                v-model="notificationSettings.enable_soon_reminder"
+                                label="较紧急提醒"
+                                color="warning"
+                                hide-details
+                                class="mb-3"
+                                @update:model-value="updateNotificationSettings"
+                              ></v-switch>
+                              
+                              <div v-if="notificationSettings.enable_soon_reminder" class="ml-8 mb-4">
+                                <v-slider
+                                  v-model="notificationSettings.soon_reminder_hours"
+                                  :min="1"
+                                  :max="24"
+                                  :step="1"
+                                  label="提前小时数"
+                                  thumb-label="always"
+                                  color="warning"
+                                  @update:model-value="updateNotificationSettings"
+                                >
+                                  <template v-slot:append>
+                                    <v-text-field
+                                      v-model="notificationSettings.soon_reminder_hours"
+                                      type="number"
+                                      style="width: 70px"
+                                      density="compact"
+                                      hide-details
+                                      variant="outlined"
+                                      @update:model-value="updateNotificationSettings"
+                                    ></v-text-field>
+                                  </template>
+                                </v-slider>
+                              </div>
+                              
+                              <v-switch
+                                v-model="notificationSettings.enable_urgent_reminder"
+                                label="紧急提醒"
+                                color="error"
+                                hide-details
+                                class="mb-3"
+                                @update:model-value="updateNotificationSettings"
+                              ></v-switch>
+                              
+                              <div v-if="notificationSettings.enable_urgent_reminder" class="ml-8 mb-4">
+                                <v-slider
+                                  v-model="notificationSettings.urgent_reminder_hours"
+                                  :min="1"
+                                  :max="8"
+                                  :step="1"
+                                  label="提前小时数"
+                                  thumb-label="always"
+                                  color="error"
+                                  @update:model-value="updateNotificationSettings"
+                                >
+                                  <template v-slot:append>
+                                    <v-text-field
+                                      v-model="notificationSettings.urgent_reminder_hours"
+                                      type="number"
+                                      style="width: 70px"
+                                      density="compact"
+                                      hide-details
+                                      variant="outlined"
+                                      @update:model-value="updateNotificationSettings"
+                                    ></v-text-field>
+                                  </template>
+                                </v-slider>
+                              </div>
+                              
+                              <v-switch
+                                v-model="notificationSettings.enable_overdue_reminder"
+                                label="过期提醒"
+                                color="grey"
+                                hide-details
+                                class="mb-3"
+                                @update:model-value="updateNotificationSettings"
+                              ></v-switch>
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
+                      
+                      <div class="d-flex align-center mt-4">
+                        <v-btn
+                          color="info"
+                          prepend-icon="mdi-bell-ring"
+                          @click="testNotification"
+                          class="mr-4"
+                        >
+                          测试通知
+                        </v-btn>
+                        
+                        <v-btn
+                          color="warning"
+                          prepend-icon="mdi-refresh"
+                          @click="resetNotificationSettings"
+                          variant="outlined"
+                        >
+                          重置通知设置
+                        </v-btn>
+                        
+                        <v-spacer></v-spacer>
+                        
+                        <v-btn
+                          color="primary"
+                          prepend-icon="mdi-content-save"
+                          @click="syncNotificationSettings"
+                        >
+                          保存到服务器
+                        </v-btn>
+                      </div>
+                    </div>
                   </v-col>
                 </v-row>
               </v-card-text>
@@ -352,6 +527,14 @@ const notificationPositionOptions = [
   { text: '底部中央', value: 'bottom-center' },
 ]
 
+// 通知渠道选项
+const pushChannelOptions = [
+  { text: '微信', value: 'wechat' },
+  { text: '钉钉', value: 'dingtalk' },
+  { text: '全部渠道', value: 'both' },
+  { text: '不使用外部推送', value: 'none' },
+]
+
 // 更新待办事项设置
 function updateTodoSettings() {
   settingsStore.updateTodoSettings({
@@ -376,14 +559,78 @@ function updateThemeSettings() {
   showNotification('主题设置已更新')
 }
 
+// 引入通知API
+import { NotificationAPI } from '@/api/notification'
+
 // 更新通知设置
 function updateNotificationSettings() {
+  // 仅在本地更新，不发送API请求
   settingsStore.updateNotificationSettings({
     enabled: notificationSettings.enabled,
-    position: notificationSettings.position
+    position: notificationSettings.position,
+    push_channel: notificationSettings.push_channel,
+    enable_daily_reminder: notificationSettings.enable_daily_reminder,
+    enable_soon_reminder: notificationSettings.enable_soon_reminder,
+    enable_urgent_reminder: notificationSettings.enable_urgent_reminder,
+    enable_overdue_reminder: notificationSettings.enable_overdue_reminder,
+    daily_reminder_hours: Number(notificationSettings.daily_reminder_hours),
+    soon_reminder_hours: Number(notificationSettings.soon_reminder_hours),
+    urgent_reminder_hours: Number(notificationSettings.urgent_reminder_hours),
+    daily_reminder_time: notificationSettings.daily_reminder_time
   })
   
-  showNotification('通知设置已更新')
+  showNotification('通知设置已本地更新')
+}
+
+// 同步通知设置到服务器
+async function syncNotificationSettings() {
+  try {
+    // 确保数值类型正确
+    const settings = {
+      push_channel: notificationSettings.push_channel,
+      enable_daily_reminder: notificationSettings.enable_daily_reminder,
+      enable_soon_reminder: notificationSettings.enable_soon_reminder,
+      enable_urgent_reminder: notificationSettings.enable_urgent_reminder,
+      enable_overdue_reminder: notificationSettings.enable_overdue_reminder,
+      daily_reminder_hours: Number(notificationSettings.daily_reminder_hours),
+      soon_reminder_hours: Number(notificationSettings.soon_reminder_hours),
+      urgent_reminder_hours: Number(notificationSettings.urgent_reminder_hours),
+      daily_reminder_time: notificationSettings.daily_reminder_time
+    }
+    
+    // 发送更新请求 - 不再使用ID
+    const response = await NotificationAPI.updateSettings(settings)
+    
+    // 更新本地设置
+    Object.assign(notificationSettings, response)
+    
+    // 更新store中的设置
+    settingsStore.updateNotificationSettings(notificationSettings)
+    
+    showNotification('通知设置已保存到服务器', 'success')
+  } catch (error) {
+    console.error('同步通知设置失败', error)
+    showNotification('保存设置到服务器失败: ' + (error.message || '未知错误'), 'error')
+  }
+}
+
+// 重置通知设置
+async function resetNotificationSettings() {
+  try {
+    // 使用更新后的API - 不再使用特定URL而是通过参数指定action
+    const response = await NotificationAPI.resetSettings()
+    
+    // 更新本地设置
+    Object.assign(notificationSettings, response)
+    
+    // 更新store中的设置
+    settingsStore.updateNotificationSettings(notificationSettings)
+    
+    showNotification('通知设置已重置为默认值', 'info')
+  } catch (error) {
+    console.error('重置通知设置失败', error)
+    showNotification('重置通知设置失败: ' + (error.message || '未知错误'), 'error')
+  }
 }
 
 // 确认重置设置
@@ -417,9 +664,29 @@ function showNotification(text, color = 'success', timeout = 3000) {
   snackbar.timeout = timeout
 }
 
+// 从API加载通知设置
+async function loadNotificationSettings() {
+  try {
+    const settings = await NotificationAPI.getSettings()
+    
+    // 更新本地设置
+    Object.assign(notificationSettings, settings)
+    
+    // 更新store中的设置
+    settingsStore.updateNotificationSettings(notificationSettings)
+    
+    return settings
+  } catch (error) {
+    console.error('加载通知设置失败', error)
+    showNotification('加载通知设置失败: ' + (error.message || '未知错误'), 'error')
+    return null
+  }
+}
+
 // 生命周期钩子
-onMounted(() => {
+onMounted(async () => {
   // 页面加载完成
+  await loadNotificationSettings()
 })
 </script>
 

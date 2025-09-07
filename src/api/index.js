@@ -1,5 +1,6 @@
 import { AuthAPI } from './auth'
 import { TodoAPI } from './todo'
+import { NotificationAPI } from './notification'
 import http from './http'
 
 /**
@@ -8,6 +9,7 @@ import http from './http'
 export {
   AuthAPI,
   TodoAPI,
+  NotificationAPI,
   http
 }
 
@@ -17,5 +19,6 @@ export {
 export default {
   auth: AuthAPI,
   todo: TodoAPI,
+  notification: NotificationAPI,
   http
 }

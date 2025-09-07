@@ -171,8 +171,14 @@
                     <v-divider vertical class="mx-2"></v-divider>
                     <span v-if="todo.due_date" class="d-flex align-center">
                       <v-icon icon="mdi-clock-outline" size="small" class="mr-1"></v-icon>
-                      <span :class="{'text-error': new Date(todo.due_date) < new Date() && todo.status === 'pending'}">
-                        截止日期: {{ formatDate(todo.due_date) }}
+                      <span :class="{
+                        'text-error': new Date(todo.due_date) < new Date() && todo.status === 'pending',
+                        'text-warning': isApproachingDeadline(todo.due_date) && todo.status === 'pending'
+                      }">
+                        截止: {{ formatDate(todo.due_date) }}
+                        <v-tooltip activator="parent" location="top">
+                          {{ getTimeRemaining(todo.due_date) }}
+                        </v-tooltip>
                       </span>
                     </span>
                     <span v-else class="text-grey-lighten-1 font-italic">未设置截止日期</span>
@@ -324,16 +330,30 @@
               class="mb-3"
             ></v-select>
             
-            <v-text-field
-              v-model="currentTodo.due_date"
-              label="截止日期"
-              type="date"
-              hint="选择任务截止日期"
-              persistent-hint
-              variant="outlined"
-              prepend-inner-icon="mdi-calendar"
-              class="mb-3"
-            ></v-text-field>
+            <v-row>
+              <v-col cols="12" sm="7">
+                <v-text-field
+                  v-model="currentTodo.due_date"
+                  label="截止日期"
+                  type="date"
+                  hint="选择任务截止日期"
+                  persistent-hint
+                  variant="outlined"
+                  prepend-inner-icon="mdi-calendar"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="5">
+                <v-text-field
+                  v-model="currentTodo.due_time"
+                  label="截止时间"
+                  type="time"
+                  hint="选择截止时间"
+                  persistent-hint
+                  variant="outlined"
+                  prepend-inner-icon="mdi-clock-outline"
+                ></v-text-field>
+              </v-col>
+            </v-row>
           </v-form>
         </v-card-text>
         
@@ -413,7 +433,8 @@ const currentTodo = ref({
   description: '',
   status: 'pending',
   priority: 2, // 中等优先级，使用数字
-  due_date: null
+  due_date: null,
+  due_time: '23:59' // 默认为当天结束时间
 })
 const filter = ref('all')
 const search = ref('')
@@ -488,7 +509,63 @@ function formatDate(dateString) {
   if (!dateString) return '未设置'
   
   const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN')
+  
+  // 格式化为 YYYY年MM月DD日 HH:mm 的格式
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  
+  return `${year}年${month}月${day}日 ${hours}:${minutes}`
+}
+
+// 判断是否接近截止日期（24小时内）
+function isApproachingDeadline(dateString) {
+  if (!dateString) return false
+  
+  const dueDate = new Date(dateString)
+  const now = new Date()
+  const diffMs = dueDate - now
+  const diffHours = diffMs / (1000 * 60 * 60)
+  
+  // 如果截止时间在24小时内但还未过期
+  return diffHours > 0 && diffHours <= 24
+}
+
+// 获取距离截止日期的剩余时间描述
+function getTimeRemaining(dateString) {
+  if (!dateString) return '无截止日期'
+  
+  const dueDate = new Date(dateString)
+  const now = new Date()
+  const diffMs = dueDate - now
+  
+  // 已经过期
+  if (diffMs < 0) {
+    const overdueDays = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60 * 24))
+    const overdueHours = Math.floor(Math.abs(diffMs) % (1000 * 60 * 60 * 24) / (1000 * 60 * 60))
+    
+    if (overdueDays > 0) {
+      return `已逾期 ${overdueDays} 天 ${overdueHours} 小时`
+    } else {
+      const overdueMinutes = Math.floor(Math.abs(diffMs) % (1000 * 60 * 60) / (1000 * 60))
+      return `已逾期 ${overdueHours} 小时 ${overdueMinutes} 分钟`
+    }
+  }
+  
+  // 还未过期
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+  
+  if (days > 0) {
+    return `剩余 ${days} 天 ${hours} 小时`
+  } else if (hours > 0) {
+    return `剩余 ${hours} 小时 ${minutes} 分钟`
+  } else {
+    return `剩余 ${minutes} 分钟`
+  }
 }
 
 // 处理表单提交
@@ -642,14 +719,31 @@ function openAddDialog() {
     description: '',
     status: 'pending',
     priority: 2, // 中等优先级，使用数字
-    due_date: null
+    due_date: null,
+    due_time: '23:59' // 默认设置为当天结束时间
   }
   dialog.value = true
 }
 
 function openEditDialog(todo) {
   isEditing.value = true
+  // 深拷贝待办事项
   currentTodo.value = { ...todo }
+  
+  // 如果有截止日期，拆分为日期和时间
+  if (todo.due_date) {
+    const dueDateTime = new Date(todo.due_date)
+    // 格式化日期部分为YYYY-MM-DD格式（HTML日期输入所需）
+    currentTodo.value.due_date = dueDateTime.toISOString().split('T')[0]
+    
+    // 格式化时间部分为HH:MM格式（HTML时间输入所需）
+    const hours = dueDateTime.getHours().toString().padStart(2, '0')
+    const minutes = dueDateTime.getMinutes().toString().padStart(2, '0')
+    currentTodo.value.due_time = `${hours}:${minutes}`
+  } else {
+    currentTodo.value.due_time = '23:59' // 默认时间
+  }
+  
   dialog.value = true
 }
 
@@ -672,12 +766,24 @@ async function addTodo() {
       return
     }
     
+    // 处理截止日期和时间
+    let dueDateTimeISO = null
+    if (currentTodo.value.due_date) {
+      // 拼接日期和时间
+      const dueDateStr = currentTodo.value.due_date
+      const dueTimeStr = currentTodo.value.due_time || '23:59'
+      
+      // 创建日期对象并转为ISO格式
+      const dueDateTime = new Date(`${dueDateStr}T${dueTimeStr}`)
+      dueDateTimeISO = dueDateTime.toISOString()
+    }
+    
     await todoStore.addTodo(
       currentTodo.value.title, 
       currentTodo.value.description,
       {
         priority: currentTodo.value.priority,
-        due_date: currentTodo.value.due_date
+        due_date: dueDateTimeISO
       }
     )
     
@@ -716,12 +822,24 @@ async function updateTodo() {
       return
     }
     
+    // 处理截止日期和时间
+    let dueDateTimeISO = null
+    if (currentTodo.value.due_date) {
+      // 拼接日期和时间
+      const dueDateStr = currentTodo.value.due_date
+      const dueTimeStr = currentTodo.value.due_time || '23:59'
+      
+      // 创建日期对象并转为ISO格式
+      const dueDateTime = new Date(`${dueDateStr}T${dueTimeStr}`)
+      dueDateTimeISO = dueDateTime.toISOString()
+    }
+    
     const updates = {
       title: currentTodo.value.title,
       description: currentTodo.value.description,
       status: currentTodo.value.status,
       priority: currentTodo.value.priority,
-      due_date: currentTodo.value.due_date
+      due_date: dueDateTimeISO
     }
     
     await todoStore.updateTodo(currentTodo.value.id, updates)
@@ -985,6 +1103,10 @@ async function archiveTodo(todo) {
   color: #616161;
   padding-left: 4px;
   border-left: 2px solid #e0e0e0;
+}
+
+.text-warning {
+  color: #fb8c00 !important;
 }
 
 .filter-select :deep(.v-field__append-inner) {
