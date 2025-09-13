@@ -4,7 +4,7 @@
       <v-col cols="12">
         <div class="d-flex align-center mb-4">
           <h1 class="text-h4 font-weight-medium">
-            <v-icon icon="mdi-format-list-checks" class="mr-2" color="primary"></v-icon>
+                  <v-icon icon="mdi-format-list-checks" class="mr-2" color="primary"></v-icon>
             待办事项
           </h1>
           <v-spacer></v-spacer>
@@ -18,9 +18,7 @@
           >
             添加新任务
           </v-btn>
-        </div>
-
-        <!-- 加载状态 -->
+        </div>        <!-- 加载状态 -->
         <div v-if="todoStore.isLoading" class="d-flex justify-center my-4">
           <v-progress-circular indeterminate color="primary"></v-progress-circular>
         </div>
@@ -160,10 +158,165 @@
                     >
                       已归档
                     </v-chip>
+                    <!-- 子待办数量标记和快捷按钮 -->
+                    <v-chip
+                      v-if="todo.sub_todos && todo.sub_todos.length > 0"
+                      size="small"
+                      color="info"
+                      class="ml-2"
+                      label
+                      :prepend-icon="todo.showSubTodos ? 'mdi-chevron-down' : 'mdi-chevron-right'"
+                      @click="toggleSubTodosVisibility(todo)"
+                      style="cursor: pointer;"
+                    >
+                      {{ todo.sub_todos.length }} 个子任务
+                    </v-chip>
+                    <!-- 添加子任务快捷按钮 -->
+                    <v-btn
+                      v-if="todo.status !== 'archived'"
+                      icon="mdi-playlist-plus"
+                      size="x-small"
+                      color="info"
+                      variant="text"
+                      class="ml-2"
+                      @click="openAddSubTodoDialog(todo)"
+                      title="添加子任务"
+                    ></v-btn>
                   </div>
                   <div v-if="todo.description" class="text-body-2 mt-2 todo-description">
                     {{ todo.description }}
                   </div>
+                  
+                  <!-- 快速添加子任务按钮（在没有子任务时显示） -->
+                  <div v-if="(!todo.sub_todos || todo.sub_todos.length === 0) && todo.status !== 'archived'" class="mt-2">
+                    <v-btn
+                      size="small"
+                      color="info"
+                      variant="text"
+                      prepend-icon="mdi-playlist-plus"
+                      density="comfortable"
+                      @click="openAddSubTodoDialog(todo)"
+                      class="px-2"
+                    >
+                      添加子任务
+                    </v-btn>
+                  </div>
+                  
+                  <!-- 子待办列表 -->
+                  <div v-if="todo.sub_todos && todo.sub_todos.length > 0" class="sub-todos-container mt-3">
+                    <v-expand-transition>
+                      <div v-if="todo.showSubTodos">
+                        <v-card variant="tonal" class="sub-todos-panel pa-2" color="info-lighten-5">
+                          <div class="d-flex align-center justify-space-between mb-2">
+                            <div class="text-subtitle-2 font-weight-medium">
+                              <v-icon icon="mdi-format-list-checks" size="small" class="mr-1"></v-icon>
+                              子任务列表 ({{ todo.sub_todos.length }})
+                            </div>
+                            <v-btn
+                              variant="text"
+                              size="x-small"
+                              icon="mdi-chevron-up"
+                              @click="toggleSubTodosVisibility(todo)"
+                              color="grey"
+                            ></v-btn>
+                          </div>
+                          
+                          <v-list class="sub-todo-list pa-0" density="compact" bg-color="transparent">
+                            <v-list-item
+                              v-for="(subTodo, index) in todo.sub_todos"
+                              :key="subTodo.id"
+                              :class="{
+                                'sub-todo-completed': subTodo.status === 'done',
+                                'sub-todo-archived': subTodo.status === 'archived'
+                              }"
+                            >
+                              <template v-slot:prepend>
+                                <v-checkbox
+                                  :model-value="subTodo.status === 'done'"
+                                  @change="toggleSubTodoStatus(todo.id, subTodo)"
+                                  :disabled="subTodo.status === 'archived' || subTodo.isUpdating"
+                                  hide-details
+                                  density="compact"
+                                  :color="getPriorityColor(subTodo.priority)"
+                                >
+                                  <template v-slot:loader v-if="subTodo.isUpdating">
+                                    <v-progress-circular indeterminate color="primary" size="12"></v-progress-circular>
+                                  </template>
+                                </v-checkbox>
+                              </template>
+                              
+                              <v-list-item-title :class="{
+                                'text-decoration-line-through': subTodo.status === 'done',
+                                'text-grey': subTodo.status === 'archived'
+                              }">
+                                {{ subTodo.title }}
+                              </v-list-item-title>
+                              
+                              <template v-slot:append>
+                                <v-menu>
+                                  <template v-slot:activator="{ props }">
+                                    <v-btn
+                                      icon="mdi-dots-vertical"
+                                      variant="text"
+                                      size="x-small"
+                                      v-bind="props"
+                                      :disabled="subTodo.status === 'archived'"
+                                      class="menu-button"
+                                    ></v-btn>
+                                  </template>
+                                  <v-list>
+                                    <v-list-item @click="openEditSubTodoDialog(todo.id, subTodo)" density="compact">
+                                      <template v-slot:prepend>
+                                        <v-icon icon="mdi-pencil" color="primary" size="small"></v-icon>
+                                      </template>
+                                      <v-list-item-title>编辑</v-list-item-title>
+                                    </v-list-item>
+                                    
+                                    <v-list-item v-if="subTodo.status === 'pending'" @click="completeSubTodo(todo.id, subTodo)" density="compact">
+                                      <template v-slot:prepend>
+                                        <v-icon icon="mdi-check" color="success" size="small"></v-icon>
+                                      </template>
+                                      <v-list-item-title>标记为已完成</v-list-item-title>
+                                    </v-list-item>
+                                    
+                                    <v-list-item v-if="subTodo.status === 'done'" @click="reopenSubTodo(todo.id, subTodo)" density="compact">
+                                      <template v-slot:prepend>
+                                        <v-icon icon="mdi-refresh" color="info" size="small"></v-icon>
+                                      </template>
+                                      <v-list-item-title>重新打开</v-list-item-title>
+                                    </v-list-item>
+                                    
+                                    <v-list-item @click="openDeleteSubTodoDialog(todo.id, subTodo)" class="text-error">
+                                      <template v-slot:prepend>
+                                        <v-icon icon="mdi-delete" color="error" size="small"></v-icon>
+                                      </template>
+                                      <v-list-item-title>删除</v-list-item-title>
+                                    </v-list-item>
+                                  </v-list>
+                                </v-menu>
+                              </template>
+                            </v-list-item>
+                            
+                            <!-- 添加新子待办的输入框 -->
+                            <v-list-item class="add-sub-todo-item">
+                              <v-text-field
+                                v-model="todo.newSubTodoTitle"
+                                placeholder="添加新子任务..."
+                                variant="underlined"
+                                density="compact"
+                                hide-details
+                                @keyup.enter="addSubTodo(todo)"
+                                append-inner-icon="mdi-plus"
+                                @click:append-inner="addSubTodo(todo)"
+                                :loading="todo.isAddingSubTodo"
+                              ></v-text-field>
+                            </v-list-item>
+                          </v-list>
+                        </v-card>
+                      </div>
+                    </v-expand-transition>
+                  </div>
+                  
                   <!-- 根据设置决定是否显示日期信息 -->
                   <div v-if="todoSettings.showDateInfo" class="d-flex align-center text-caption text-grey mt-3">
                     <v-icon icon="mdi-calendar" size="small" class="mr-1"></v-icon>
@@ -218,6 +371,18 @@
                         </template>
                         <v-list-item-title>重新打开</v-list-item-title>
                       </v-list-item>
+                      
+                      <v-divider></v-divider>
+                      
+                      <!-- 子待办相关操作 -->
+                      <v-list-item @click="openAddSubTodoDialog(todo)" density="compact">
+                        <template v-slot:prepend>
+                          <v-icon icon="mdi-playlist-plus" color="primary"></v-icon>
+                        </template>
+                        <v-list-item-title>添加子任务</v-list-item-title>
+                      </v-list-item>
+                      
+                      <v-divider></v-divider>
                       
                       <v-list-item v-if="todo.status !== 'archived'" @click="archiveTodo(todo)" density="compact">
                         <template v-slot:prepend>
@@ -407,6 +572,119 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- 添加/编辑子待办对话框 -->
+    <v-dialog v-model="subTodoDialog" max-width="500" transition="dialog-bottom-transition">
+      <v-card rounded="lg">
+        <v-toolbar :color="isEditingSubTodo ? 'info' : 'info'" density="comfortable" flat>
+          <v-toolbar-title class="text-white">
+            {{ isEditingSubTodo ? '编辑子任务' : '添加子任务' }}
+          </v-toolbar-title>
+          <template v-if="currentParentTodo">
+            <v-toolbar-subtitle class="text-white">
+              父任务: {{ currentParentTodo.title }}
+            </v-toolbar-subtitle>
+          </template>
+        </v-toolbar>
+        
+        <v-card-text class="pt-4">
+          <v-form ref="subTodoForm" @submit.prevent="isEditingSubTodo ? updateSubTodo() : addSubTodoFromDialog()">
+            <v-text-field
+              v-model="currentSubTodo.title"
+              label="子任务标题"
+              :rules="[(v) => !!v && v.trim() !== '' || '标题不能为空']"
+              required
+              variant="outlined"
+              prepend-inner-icon="mdi-format-title"
+              @input="() => { if(subTodoForm.value) subTodoForm.value.resetValidation() }"
+              class="mb-3"
+            ></v-text-field>
+            
+            <v-textarea
+              v-model="currentSubTodo.description"
+              label="子任务描述"
+              rows="2"
+              variant="outlined"
+              prepend-inner-icon="mdi-text-box-outline"
+              class="mb-3"
+              placeholder="输入子任务详细描述..."
+            ></v-textarea>
+            
+            <v-select
+              v-model="currentSubTodo.priority"
+              label="优先级"
+              :items="priorityOptions"
+              item-title="text"
+              item-value="value"
+              variant="outlined"
+              prepend-inner-icon="mdi-flag"
+              class="mb-3"
+            ></v-select>
+            
+            <v-select
+              v-if="isEditingSubTodo"
+              v-model="currentSubTodo.status"
+              label="状态"
+              :items="statusOptions"
+              item-title="text"
+              item-value="value"
+              variant="outlined"
+              prepend-inner-icon="mdi-check-circle-outline"
+              class="mb-3"
+            ></v-select>
+          </v-form>
+        </v-card-text>
+        
+        <v-divider></v-divider>
+        
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn variant="outlined" @click="subTodoDialog = false" class="mr-2">取消</v-btn>
+          <v-btn
+            color="info"
+            @click="handleSubTodoFormSubmit"
+            :loading="todoStore.isLoading"
+            type="submit"
+            variant="elevated"
+          >
+            {{ isEditingSubTodo ? '更新' : '添加' }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 删除子待办确认对话框 -->
+    <v-dialog v-model="deleteSubTodoDialog" max-width="400" transition="dialog-top-transition">
+      <v-card rounded="lg">
+        <v-toolbar color="error" density="comfortable" flat>
+          <v-toolbar-title class="text-white">
+            确认删除子任务
+          </v-toolbar-title>
+        </v-toolbar>
+        
+        <v-card-text class="pt-4 pb-2 text-center">
+          <v-icon icon="mdi-alert-circle" color="error" size="large" class="mb-3"></v-icon>
+          <p class="text-body-1">确定要删除以下子任务吗？</p>
+          <p class="text-subtitle-1 font-weight-medium mt-2">"{{ currentSubTodo.title }}"</p>
+          <p class="text-caption mt-2 text-grey">此操作不可撤销</p>
+        </v-card-text>
+        
+        <v-divider></v-divider>
+        
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="deleteSubTodoDialog = false" class="mr-2">取消</v-btn>
+          <v-btn
+            color="error"
+            @click="deleteSubTodo()"
+            :loading="todoStore.isLoading"
+            variant="elevated"
+          >
+            删除
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -436,6 +714,21 @@ const currentTodo = ref({
   due_date: null,
   due_time: '23:59' // 默认为当天结束时间
 })
+
+// 子待办状态
+const subTodoDialog = ref(false)
+const deleteSubTodoDialog = ref(false)
+const isEditingSubTodo = ref(false)
+const currentParentTodo = ref(null)
+const currentSubTodo = ref({
+  title: '',
+  description: '',
+  status: 'pending',
+  priority: 2,
+  parent_id: null
+})
+const subTodoForm = ref(null)
+
 const filter = ref('all')
 const search = ref('')
 const form = ref(null)
@@ -702,6 +995,23 @@ onMounted(async () => {
       page: currentPage.value,
       pageSize,
       ordering: settingsStore.getTodoSettings.defaultSortBy
+    })
+    
+    // 为所有任务初始化子待办相关的属性
+    todoStore.getAllTodos.forEach(todo => {
+      // 如果todo.sub_todos不存在，初始化为空数组
+      if (!todo.sub_todos) {
+        todo.sub_todos = []
+      }
+      
+      // 为每个待办添加一个控制子待办显示/隐藏的属性
+      todo.showSubTodos = false
+      
+      // 为每个待办添加一个新子待办的标题输入字段
+      todo.newSubTodoTitle = ''
+      
+      // 添加子待办加载状态
+      todo.isAddingSubTodo = false
     })
     
     console.log('待办事项加载完成:', todoStore.getAllTodos.length, '个项目')
@@ -1034,6 +1344,347 @@ async function archiveTodo(todo) {
   }
 }
 
+// 子待办相关方法
+
+// 切换子待办的显示/隐藏状态
+function toggleSubTodosVisibility(todo) {
+  // 切换显示状态
+  todo.showSubTodos = !todo.showSubTodos
+  
+  // 如果是首次显示且没有子待办数据，尝试从服务器获取
+  if (todo.showSubTodos && (!todo.sub_todos || todo.sub_todos.length === 0)) {
+    fetchSubTodos(todo.id)
+  }
+}
+
+// 获取指定待办的子待办列表
+async function fetchSubTodos(parentId) {
+  try {
+    // 找到父待办
+    const parentTodo = todoStore.getAllTodos.find(todo => todo.id === parentId)
+    if (!parentTodo) return
+    
+    // 设置加载状态
+    parentTodo.isLoadingSubTodos = true
+    
+    // 调用API获取子待办
+    const subTodos = await todoStore.fetchSubTodos(parentId)
+    
+    // 更新父待办的子待办列表
+    parentTodo.sub_todos = subTodos || []
+    
+    // 清除加载状态
+    parentTodo.isLoadingSubTodos = false
+  } catch (error) {
+    console.error('获取子待办失败:', error)
+    showNotification('获取子任务失败，请重试', 'error')
+  }
+}
+
+// 打开添加子待办对话框
+function openAddSubTodoDialog(todo) {
+  currentParentTodo.value = todo
+  isEditingSubTodo.value = false
+  currentSubTodo.value = {
+    title: '',
+    description: '',
+    status: 'pending',
+    priority: 2,
+    parent_id: todo.id
+  }
+  subTodoDialog.value = true
+}
+
+// 打开编辑子待办对话框
+function openEditSubTodoDialog(parentId, subTodo) {
+  const parentTodo = todoStore.getAllTodos.find(todo => todo.id === parentId)
+  if (!parentTodo) return
+  
+  currentParentTodo.value = parentTodo
+  isEditingSubTodo.value = true
+  currentSubTodo.value = { ...subTodo, parent_id: parentId }
+  subTodoDialog.value = true
+}
+
+// 打开删除子待办确认对话框
+function openDeleteSubTodoDialog(parentId, subTodo) {
+  const parentTodo = todoStore.getAllTodos.find(todo => todo.id === parentId)
+  if (!parentTodo) return
+  
+  currentParentTodo.value = parentTodo
+  currentSubTodo.value = { ...subTodo, parent_id: parentId }
+  deleteSubTodoDialog.value = true
+}
+
+// 添加子待办（从对话框）
+async function addSubTodoFromDialog() {
+  if (!currentParentTodo.value || !currentSubTodo.value.title) return
+  
+  try {
+    // 设置父待办的子待办加载状态
+    currentParentTodo.value.isAddingSubTodo = true
+    
+    // 调用API添加子待办
+    const newSubTodo = await todoStore.addSubTodo(
+      currentParentTodo.value.id,
+      currentSubTodo.value.title,
+      currentSubTodo.value.description,
+      {
+        priority: currentSubTodo.value.priority
+      }
+    )
+    
+    // 更新父待办的子待办列表
+    if (newSubTodo) {
+      if (!currentParentTodo.value.sub_todos) {
+        currentParentTodo.value.sub_todos = []
+      }
+      currentParentTodo.value.sub_todos.push(newSubTodo)
+      
+      // 确保子待办列表是可见的
+      currentParentTodo.value.showSubTodos = true
+    }
+    
+    // 关闭对话框
+    subTodoDialog.value = false
+    
+    // 显示成功提示
+    showNotification('子任务添加成功', 'success')
+  } catch (error) {
+    console.error('添加子待办失败:', error)
+    showNotification('添加子任务失败，请重试', 'error')
+  } finally {
+    // 清除加载状态
+    if (currentParentTodo.value) {
+      currentParentTodo.value.isAddingSubTodo = false
+    }
+  }
+}
+
+// 从输入框快速添加子待办
+async function addSubTodo(parentTodo) {
+  if (!parentTodo || !parentTodo.newSubTodoTitle || parentTodo.newSubTodoTitle.trim() === '') return
+  
+  try {
+    // 设置加载状态
+    parentTodo.isAddingSubTodo = true
+    
+    // 调用API添加子待办
+    const newSubTodo = await todoStore.addSubTodo(
+      parentTodo.id,
+      parentTodo.newSubTodoTitle,
+      '', // 无描述
+      {
+        priority: 2 // 默认中等优先级
+      }
+    )
+    
+    // 更新父待办的子待办列表
+    if (newSubTodo) {
+      if (!parentTodo.sub_todos) {
+        parentTodo.sub_todos = []
+      }
+      parentTodo.sub_todos.push(newSubTodo)
+    }
+    
+    // 清空输入框
+    parentTodo.newSubTodoTitle = ''
+    
+    // 显示成功提示
+    showNotification('子任务添加成功', 'success')
+  } catch (error) {
+    console.error('添加子待办失败:', error)
+    showNotification('添加子任务失败，请重试', 'error')
+  } finally {
+    // 清除加载状态
+    parentTodo.isAddingSubTodo = false
+  }
+}
+
+// 处理子待办表单提交
+async function handleSubTodoFormSubmit() {
+  if (!subTodoForm.value) return
+  
+  try {
+    // 手动触发表单验证
+    const { valid } = await subTodoForm.value.validate()
+    
+    if (!valid) return
+    
+    // 根据编辑状态调用相应函数
+    if (isEditingSubTodo.value) {
+      await updateSubTodo()
+    } else {
+      await addSubTodoFromDialog()
+    }
+  } catch (error) {
+    console.error('子待办表单提交失败:', error)
+  }
+}
+
+// 更新子待办
+async function updateSubTodo() {
+  if (!currentParentTodo.value || !currentSubTodo.value.id) return
+  
+  try {
+    // 调用API更新子待办
+    const updatedSubTodo = await todoStore.updateSubTodo(
+      currentParentTodo.value.id,
+      currentSubTodo.value.id,
+      {
+        title: currentSubTodo.value.title,
+        description: currentSubTodo.value.description,
+        status: currentSubTodo.value.status,
+        priority: currentSubTodo.value.priority
+      }
+    )
+    
+    // 更新父待办的子待办列表
+    if (updatedSubTodo && currentParentTodo.value.sub_todos) {
+      const index = currentParentTodo.value.sub_todos.findIndex(st => st.id === currentSubTodo.value.id)
+      if (index !== -1) {
+        currentParentTodo.value.sub_todos[index] = updatedSubTodo
+      }
+    }
+    
+    // 关闭对话框
+    subTodoDialog.value = false
+    
+    // 显示成功提示
+    showNotification('子任务更新成功', 'success')
+  } catch (error) {
+    console.error('更新子待办失败:', error)
+    showNotification('更新子任务失败，请重试', 'error')
+  }
+}
+
+// 删除子待办
+async function deleteSubTodo() {
+  if (!currentParentTodo.value || !currentSubTodo.value.id) return
+  
+  try {
+    // 调用API删除子待办
+    await todoStore.deleteSubTodo(currentParentTodo.value.id, currentSubTodo.value.id)
+    
+    // 从父待办的子待办列表中移除
+    if (currentParentTodo.value.sub_todos) {
+      currentParentTodo.value.sub_todos = currentParentTodo.value.sub_todos.filter(
+        st => st.id !== currentSubTodo.value.id
+      )
+    }
+    
+    // 关闭对话框
+    deleteSubTodoDialog.value = false
+    
+    // 显示成功提示
+    showNotification('子任务已删除', 'success')
+  } catch (error) {
+    console.error('删除子待办失败:', error)
+    showNotification('删除子任务失败，请重试', 'error')
+  }
+}
+
+// 切换子待办状态
+async function toggleSubTodoStatus(parentId, subTodo) {
+  const parentTodo = todoStore.getAllTodos.find(todo => todo.id === parentId)
+  if (!parentTodo || !subTodo) return
+  
+  // 如果正在更新，不允许再次点击
+  if (subTodo.isUpdating) return
+  
+  // 设置加载状态
+  subTodo.isUpdating = true
+  
+  try {
+    // 计算目标状态
+    const targetStatus = subTodo.status === 'done' ? 'pending' : 'done'
+    
+    // 调用相应的API
+    let updatedSubTodo
+    if (targetStatus === 'done') {
+      updatedSubTodo = await todoStore.completeSubTodo(parentId, subTodo.id)
+    } else {
+      updatedSubTodo = await todoStore.reopenSubTodo(parentId, subTodo.id)
+    }
+    
+    // 更新本地状态
+    if (updatedSubTodo) {
+      const index = parentTodo.sub_todos.findIndex(st => st.id === subTodo.id)
+      if (index !== -1) {
+        parentTodo.sub_todos[index] = { ...updatedSubTodo, isUpdating: false }
+      }
+    }
+  } catch (error) {
+    console.error('更新子待办状态失败:', error)
+    showNotification('更新子任务状态失败，请重试', 'error')
+  } finally {
+    // 清除加载状态
+    subTodo.isUpdating = false
+  }
+}
+
+// 将子待办标记为已完成
+async function completeSubTodo(parentId, subTodo) {
+  const parentTodo = todoStore.getAllTodos.find(todo => todo.id === parentId)
+  if (!parentTodo || !subTodo) return
+  
+  // 如果正在更新，不允许再次点击
+  if (subTodo.isUpdating) return
+  
+  // 设置加载状态
+  subTodo.isUpdating = true
+  
+  try {
+    // 调用API
+    const updatedSubTodo = await todoStore.completeSubTodo(parentId, subTodo.id)
+    
+    // 更新本地状态
+    if (updatedSubTodo) {
+      const index = parentTodo.sub_todos.findIndex(st => st.id === subTodo.id)
+      if (index !== -1) {
+        parentTodo.sub_todos[index] = { ...updatedSubTodo, isUpdating: false }
+      }
+    }
+  } catch (error) {
+    console.error('标记子待办为已完成失败:', error)
+    showNotification('标记子任务为已完成失败，请重试', 'error')
+  } finally {
+    // 清除加载状态
+    subTodo.isUpdating = false
+  }
+}
+
+// 重新打开子待办
+async function reopenSubTodo(parentId, subTodo) {
+  const parentTodo = todoStore.getAllTodos.find(todo => todo.id === parentId)
+  if (!parentTodo || !subTodo) return
+  
+  // 如果正在更新，不允许再次点击
+  if (subTodo.isUpdating) return
+  
+  // 设置加载状态
+  subTodo.isUpdating = true
+  
+  try {
+    // 调用API
+    const updatedSubTodo = await todoStore.reopenSubTodo(parentId, subTodo.id)
+    
+    // 更新本地状态
+    if (updatedSubTodo) {
+      const index = parentTodo.sub_todos.findIndex(st => st.id === subTodo.id)
+      if (index !== -1) {
+        parentTodo.sub_todos[index] = { ...updatedSubTodo, isUpdating: false }
+      }
+    }
+  } catch (error) {
+    console.error('重新打开子待办失败:', error)
+    showNotification('重新打开子任务失败，请重试', 'error')
+  } finally {
+    // 清除加载状态
+    subTodo.isUpdating = false
+  }
+}
+
 
 </script>
 
@@ -1134,6 +1785,39 @@ async function archiveTodo(todo) {
   opacity: 1;
 }
 
+/* 子待办样式 */
+.sub-todos-container {
+  margin-top: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sub-todos-panel {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.sub-todo-list {
+  background-color: rgba(25, 118, 210, 0.05);
+  border-radius: 8px;
+}
+
+.sub-todo-completed {
+  opacity: 0.7;
+  text-decoration: line-through;
+}
+
+.sub-todo-archived {
+  opacity: 0.5;
+  color: #9e9e9e;
+}
+
+.add-sub-todo-item {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
 /* 添加适配深色模式的样式 */
 :deep(.v-theme--dark) .archived-todo {
   background-color: rgba(66, 66, 66, 0.8);
@@ -1141,6 +1825,14 @@ async function archiveTodo(todo) {
 
 :deep(.v-theme--dark) .todo-description {
   border-left: 2px solid #424242;
+}
+
+:deep(.v-theme--dark) .sub-todo-list {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+:deep(.v-theme--dark) .add-sub-todo-item {
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
 }
 </style>
 

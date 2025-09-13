@@ -269,6 +269,96 @@ export const useTodoStore = defineStore('todo', {
       } finally {
         this.loading = false
       }
+    },
+
+    // 子待办相关方法
+    async fetchSubTodos(parentId) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.getSubTodos(parentId)
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '获取子待办失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async addSubTodo(parentId, title, description = '', additionalData = {}) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.addSubTodo(parentId, title, description, additionalData)
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '添加子待办失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async updateSubTodo(parentId, subTodoId, updates) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.updateSubTodo(parentId, subTodoId, updates)
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '更新子待办失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async deleteSubTodo(parentId, subTodoId) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        await TodoAPI.deleteSubTodo(parentId, subTodoId)
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '删除子待办失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async completeSubTodo(parentId, subTodoId) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.completeSubTodo(parentId, subTodoId)
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '将子待办标记为已完成失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async reopenSubTodo(parentId, subTodoId) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.reopenSubTodo(parentId, subTodoId)
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '重新打开子待办失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
     }
   },
 })

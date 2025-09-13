@@ -327,5 +327,139 @@ export const TodoAPI = {
       console.error('[TodoAPI] 归档待办事项失败:', error)
       throw error
     }
+  },
+
+  /**
+   * 获取子待办事项列表
+   * @param {number} parentId - 父待办事项ID
+   * @returns {Promise<Array>} - 返回子待办事项列表
+   */
+  async getSubTodos(parentId) {
+    try {
+      console.log(`[TodoAPI] 获取待办事项ID:${parentId}的子待办列表`)
+      const response = await axios.get(`/api/todos/${parentId}/subtodos/`)
+      console.log('[TodoAPI] 获取子待办列表响应:', response.status, response.data)
+      
+      // 处理返回数据
+      let subTodos = []
+      if (response.data.results && Array.isArray(response.data.results)) {
+        subTodos = response.data.results
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        subTodos = response.data.data
+      } else if (Array.isArray(response.data)) {
+        subTodos = response.data
+      }
+      
+      return subTodos
+    } catch (error) {
+      console.error('[TodoAPI] 获取子待办事项失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 添加子待办事项
+   * @param {number} parentId - 父待办事项ID
+   * @param {string} title - 子待办标题
+   * @param {string} description - 子待办描述
+   * @param {Object} additionalData - 额外数据
+   * @returns {Promise<Object>} - 返回新建的子待办事项
+   */
+  async addSubTodo(parentId, title, description = '', additionalData = {}) {
+    try {
+      console.log(`[TodoAPI] 添加子待办到待办事项ID:${parentId}，标题:"${title}"`)
+      
+      const subTodoData = {
+        title,
+        description,
+        status: 'pending',
+        ...additionalData
+      }
+      
+      const response = await axios.post(`/api/todos/${parentId}/subtodos/`, subTodoData)
+      console.log('[TodoAPI] 添加子待办响应:', response.status, response.data)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 添加子待办事项失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 更新子待办事项
+   * @param {number} parentId - 父待办事项ID
+   * @param {number} subTodoId - 子待办事项ID
+   * @param {Object} updates - 需要更新的字段
+   * @returns {Promise<Object>} - 返回更新后的子待办事项
+   */
+  async updateSubTodo(parentId, subTodoId, updates) {
+    try {
+      console.log(`[TodoAPI] 更新待办事项ID:${parentId}的子待办ID:${subTodoId}，更新内容:`, updates)
+      const response = await axios.patch(`/api/todos/${parentId}/subtodos/${subTodoId}/`, updates)
+      console.log('[TodoAPI] 更新子待办响应:', response.status, response.data)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 更新子待办事项失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 删除子待办事项
+   * @param {number} parentId - 父待办事项ID
+   * @param {number} subTodoId - 子待办事项ID
+   * @returns {Promise<void>}
+   */
+  async deleteSubTodo(parentId, subTodoId) {
+    try {
+      console.log(`[TodoAPI] 删除待办事项ID:${parentId}的子待办ID:${subTodoId}`)
+      const response = await axios.delete(`/api/todos/${parentId}/subtodos/${subTodoId}/`)
+      console.log('[TodoAPI] 删除子待办响应:', response.status)
+      
+      return response.data
+    } catch (error) {
+      console.error('[TodoAPI] 删除子待办事项失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 将子待办事项标记为已完成
+   * @param {number} parentId - 父待办事项ID
+   * @param {number} subTodoId - 子待办事项ID
+   * @returns {Promise<Object>} - 返回更新后的子待办事项
+   */
+  async completeSubTodo(parentId, subTodoId) {
+    try {
+      console.log(`[TodoAPI] 将待办事项ID:${parentId}的子待办ID:${subTodoId}标记为已完成`)
+      const response = await axios.post(`/api/todos/${parentId}/subtodos/${subTodoId}/complete/`)
+      console.log('[TodoAPI] 完成子待办操作响应:', response.status)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 将子待办事项标记为已完成失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 重新打开已完成的子待办事项
+   * @param {number} parentId - 父待办事项ID
+   * @param {number} subTodoId - 子待办事项ID
+   * @returns {Promise<Object>} - 返回更新后的子待办事项
+   */
+  async reopenSubTodo(parentId, subTodoId) {
+    try {
+      console.log(`[TodoAPI] 重新打开待办事项ID:${parentId}的子待办ID:${subTodoId}`)
+      const response = await axios.post(`/api/todos/${parentId}/subtodos/${subTodoId}/reopen/`)
+      console.log('[TodoAPI] 重新打开子待办操作响应:', response.status)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 重新打开子待办事项失败:', error)
+      throw error
+    }
   }
 }
