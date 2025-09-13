@@ -206,10 +206,10 @@
                   <div v-if="todo.sub_todos && todo.sub_todos.length > 0" class="sub-todos-container mt-3">
                     <v-expand-transition>
                       <div v-if="todo.showSubTodos">
-                        <v-card variant="tonal" class="sub-todos-panel pa-2" color="info-lighten-5">
-                          <div class="d-flex align-center justify-space-between mb-2">
-                            <div class="text-subtitle-2 font-weight-medium">
-                              <v-icon icon="mdi-format-list-checks" size="small" class="mr-1"></v-icon>
+                        <v-card flat class="sub-todos-panel pa-3 rounded-lg" color="transparent" style="border-left: 3px solid var(--v-info-base, #2196F3); background-color: rgba(33, 150, 243, 0.04);">
+                          <div class="d-flex align-center justify-space-between mb-3">
+                            <div class="text-subtitle-2 font-weight-medium text-primary-darken-1">
+                              <v-icon icon="mdi-format-list-checks" size="small" color="info" class="mr-2"></v-icon>
                               子任务列表 ({{ todo.sub_todos.length }})
                             </div>
                             <v-btn
@@ -217,18 +217,21 @@
                               size="x-small"
                               icon="mdi-chevron-up"
                               @click="toggleSubTodosVisibility(todo)"
-                              color="grey"
+                              color="info"
+                              class="elevation-0"
                             ></v-btn>
                           </div>
                           
-                          <v-list class="sub-todo-list pa-0" density="compact" bg-color="transparent">
+                          <v-list class="sub-todo-list pa-0 rounded-lg" density="compact" bg-color="transparent">
                             <v-list-item
                               v-for="(subTodo, index) in todo.sub_todos"
                               :key="subTodo.id"
                               :class="{
                                 'sub-todo-completed': subTodo.status === 'done',
-                                'sub-todo-archived': subTodo.status === 'archived'
+                                'sub-todo-archived': subTodo.status === 'archived',
+                                'rounded-lg mb-1': true
                               }"
+                              rounded="lg"
                             >
                               <template v-slot:prepend>
                                 <v-checkbox
@@ -302,11 +305,15 @@
                               <v-text-field
                                 v-model="todo.newSubTodoTitle"
                                 placeholder="添加新子任务..."
-                                variant="underlined"
+                                variant="outlined"
                                 density="compact"
+                                color="info"
+                                bg-color="white"
                                 hide-details
+                                rounded="lg"
+                                class="sub-todo-input"
                                 @keyup.enter="addSubTodo(todo)"
-                                append-inner-icon="mdi-plus"
+                                append-inner-icon="mdi-plus-circle"
                                 @click:append-inner="addSubTodo(todo)"
                                 :loading="todo.isAddingSubTodo"
                               ></v-text-field>
@@ -1798,24 +1805,50 @@ async function reopenSubTodo(parentId, subTodo) {
 }
 
 .sub-todo-list {
-  background-color: rgba(25, 118, 210, 0.05);
-  border-radius: 8px;
+  border-radius: 12px;
+}
+
+.sub-todo-list .v-list-item {
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.sub-todo-list .v-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  transform: translateX(2px);
 }
 
 .sub-todo-completed {
-  opacity: 0.7;
+  opacity: 0.8;
   text-decoration: line-through;
+  background-color: rgba(76, 175, 80, 0.05) !important;
 }
 
 .sub-todo-archived {
-  opacity: 0.5;
+  opacity: 0.6;
   color: #9e9e9e;
+  background-color: rgba(158, 158, 158, 0.05) !important;
 }
 
 .add-sub-todo-item {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+  padding-top: 12px;
+  padding-bottom: 4px;
+  margin-top: 8px;
+  border-top: 1px dashed rgba(33, 150, 243, 0.2);
+  background-color: transparent !important;
+}
+
+.sub-todo-input :deep(.v-field__field) {
+  border-radius: 8px !important;
+}
+
+.sub-todo-input :deep(.v-field--variant-outlined .v-field__outline) {
+  opacity: 0.5;
+}
+
+.sub-todo-input :deep(.v-field--variant-outlined:hover .v-field__outline) {
+  opacity: 0.8;
 }
 
 /* 添加适配深色模式的样式 */
@@ -1827,12 +1860,33 @@ async function reopenSubTodo(parentId, subTodo) {
   border-left: 2px solid #424242;
 }
 
-:deep(.v-theme--dark) .sub-todo-list {
-  background-color: rgba(255, 255, 255, 0.05);
+:deep(.v-theme--dark) .sub-todos-panel {
+  background-color: rgba(33, 150, 243, 0.05) !important;
+  border-left-color: var(--v-info-lighten-1, #64b5f6) !important;
+}
+
+:deep(.v-theme--dark) .sub-todo-list .v-list-item {
+  background-color: rgba(30, 30, 30, 0.6);
+}
+
+:deep(.v-theme--dark) .sub-todo-list .v-list-item:hover {
+  background-color: rgba(30, 30, 30, 0.9);
+}
+
+:deep(.v-theme--dark) .sub-todo-completed {
+  background-color: rgba(76, 175, 80, 0.1) !important;
+}
+
+:deep(.v-theme--dark) .sub-todo-archived {
+  background-color: rgba(158, 158, 158, 0.1) !important;
 }
 
 :deep(.v-theme--dark) .add-sub-todo-item {
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-top: 1px dashed rgba(33, 150, 243, 0.2);
+}
+
+:deep(.v-theme--dark) .sub-todo-input {
+  background-color: rgba(30, 30, 30, 0.6) !important;
 }
 </style>
 
