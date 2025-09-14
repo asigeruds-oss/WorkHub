@@ -3,7 +3,7 @@ import http from './http'
 
 // 生成请假条
 export const generateAutoPsychReport = (data) => {
-  return http.post('/autops/generate', data, {
+  return http.post('/api/leave-form/generate/', data, {
     responseType: 'blob'
   })
 }

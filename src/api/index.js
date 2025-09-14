@@ -3,6 +3,7 @@ import { TodoAPI } from './todo'
 import { NotificationAPI } from './notification'
 import http from './http'
 import AutoPsAPI from './autops'
+import FeedbackAPI from './feedback'
 
 /**
  * 统一导出所有API服务
@@ -12,6 +13,7 @@ export {
   TodoAPI,
   NotificationAPI,
   AutoPsAPI,
+  FeedbackAPI,
   http
 }
 
@@ -23,5 +25,6 @@ export default {
   todo: TodoAPI,
   notification: NotificationAPI,
   autops: AutoPsAPI,
+  feedback: FeedbackAPI,
   http
 }
