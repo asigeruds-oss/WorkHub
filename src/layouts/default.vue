@@ -103,6 +103,14 @@
           :active="$route.path === '/'"
         ></v-list-item>
         
+        <v-list-item
+          to="/autops"
+          prepend-icon="mdi-file-document-edit"
+          title="zzuli假条生成"
+          rounded="lg"
+          :active="$route.path === '/autops'"
+        ></v-list-item>
+        
         <template v-if="isAuthenticated">
           <v-list-item
             to="/todos"
