@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: always
+    # 可选：如果您的前端需要连接到后端服务
+    # environment:
+    #   - VITE_API_URL=http://your_backend_api_url
