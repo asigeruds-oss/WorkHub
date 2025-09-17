@@ -3,6 +3,7 @@ import { TodoAPI } from '@/api/todo'
 export const useTodoStore = defineStore('todo', {
   state: () => ({
     todos: [],
+    dailyTasks: [], // 添加日常任务数组
     loading: false,
     error: null,
     pagination: {
@@ -15,6 +16,12 @@ export const useTodoStore = defineStore('todo', {
       search: '',
       status: '',
       ordering: '-created_at'
+    },
+    dailyTaskPagination: { // 日常任务的分页信息
+      count: 0,
+      next: null,
+      previous: null,
+      currentPage: 1
     }
   }),
 
@@ -23,9 +30,13 @@ export const useTodoStore = defineStore('todo', {
     getCompletedTodos: (state) => state.todos.filter(todo => todo.status === 'done'),
     getIncompleteTodos: (state) => state.todos.filter(todo => todo.status === 'pending'),
     getArchivedTodos: (state) => state.todos.filter(todo => todo.status === 'archived'),
+    getAllDailyTasks: (state) => state.dailyTasks, // 获取所有日常任务
+    getCompletedDailyTasks: (state) => state.dailyTasks.filter(task => task.is_completed_today), // 今日已完成的日常任务
+    getIncompleteDailyTasks: (state) => state.dailyTasks.filter(task => !task.is_completed_today), // 今日未完成的日常任务
     isLoading: (state) => state.loading,
     getError: (state) => state.error,
     getPagination: (state) => state.pagination,
+    getDailyTaskPagination: (state) => state.dailyTaskPagination, // 日常任务分页
     getFilters: (state) => state.filters,
   },
 
@@ -355,6 +366,156 @@ export const useTodoStore = defineStore('todo', {
         return data
       } catch (error) {
         this.error = error.response?.data?.message || error.response?.data?.detail || '重新打开子待办失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // 日常任务相关方法
+    async fetchDailyTasks(options = {}) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const { page, pageSize, search } = options
+        const queryOptions = {
+          page: page || this.dailyTaskPagination.currentPage,
+          pageSize: pageSize || 10,
+          search: search || ''
+        }
+        
+        const result = await TodoAPI.getDailyTasks(queryOptions)
+        
+        if (Array.isArray(result.items)) {
+          this.dailyTasks = result.items
+          this.dailyTaskPagination = {
+            ...this.dailyTaskPagination,
+            ...result.pagination,
+            currentPage: queryOptions.page
+          }
+        } else {
+          this.error = '日常任务数据格式错误'
+          this.dailyTasks = []
+        }
+        
+        return result.items
+      } catch (error) {
+        console.error('获取日常任务失败:', error)
+        this.error = error.response?.data?.message || error.response?.data?.detail || '获取日常任务失败'
+        this.dailyTasks = []
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async addDailyTask(title, description = '', additionalData = {}) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.addDailyTask(title, description, additionalData)
+        
+        if (data) {
+          this.dailyTasks.push(data)
+          this.dailyTaskPagination.count = (this.dailyTaskPagination.count || 0) + 1
+        }
+        
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '添加日常任务失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async updateDailyTask(id, updates) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.updateDailyTask(id, updates)
+        
+        const index = this.dailyTasks.findIndex(task => task.id === id)
+        if (index !== -1) {
+          this.dailyTasks[index] = { ...this.dailyTasks[index], ...data }
+        }
+        
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '更新日常任务失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async deleteDailyTask(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        await TodoAPI.deleteDailyTask(id)
+        this.dailyTasks = this.dailyTasks.filter(task => task.id !== id)
+        this.dailyTaskPagination.count = Math.max(0, (this.dailyTaskPagination.count || 0) - 1)
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '删除日常任务失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async completeDailyTask(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        console.log(`[TodoStore] 开始调用完成日常任务 API, ID: ${id}`)
+        const data = await TodoAPI.completeDailyTask(id)
+        console.log(`[TodoStore] 完成日常任务 API 调用成功:`, data)
+        
+        const index = this.dailyTasks.findIndex(task => task.id === id)
+        if (index !== -1) {
+          console.log(`[TodoStore] 更新本地日常任务状态, 索引: ${index}`)
+          this.dailyTasks[index] = { ...this.dailyTasks[index], ...data }
+        } else {
+          console.warn(`[TodoStore] 未找到ID为 ${id} 的日常任务，无法更新本地状态`)
+        }
+        
+        return data
+      } catch (error) {
+        console.error(`[TodoStore] 完成日常任务失败:`, error)
+        this.error = error.response?.data?.message || error.response?.data?.detail || '完成日常任务失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async cancelCompleteDailyTask(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        console.log(`[TodoStore] 开始调用取消完成日常任务 API, ID: ${id}`)
+        const data = await TodoAPI.cancelCompleteDailyTask(id)
+        console.log(`[TodoStore] 取消完成日常任务 API 调用成功:`, data)
+        
+        const index = this.dailyTasks.findIndex(task => task.id === id)
+        if (index !== -1) {
+          console.log(`[TodoStore] 更新本地日常任务状态, 索引: ${index}`)
+          this.dailyTasks[index] = { ...this.dailyTasks[index], ...data }
+        } else {
+          console.warn(`[TodoStore] 未找到ID为 ${id} 的日常任务，无法更新本地状态`)
+        }
+        
+        return data
+      } catch (error) {
+        console.error(`[TodoStore] 取消完成日常任务失败:`, error)
+        this.error = error.response?.data?.message || error.response?.data?.detail || '取消完成日常任务失败'
         throw error
       } finally {
         this.loading = false

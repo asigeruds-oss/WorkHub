@@ -370,7 +370,7 @@
     <!-- 用户反馈区域 -->
     <v-card class="mx-auto my-8 pa-4" max-width="900">
       <v-card-title class="d-flex align-center">
-        <div class="text-h6">用户反馈</div>
+        <div class="text-h6">同学请反馈</div>
         <v-spacer></v-spacer>
         <v-btn
           color="primary"

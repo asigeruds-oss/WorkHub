@@ -93,8 +93,6 @@ export const TodoAPI = {
    * @returns {Promise<Object>} - 返回新建的待办事项
    */
   async addTodo(title, description = '', additionalData = {}) {
-    console.log(`[TodoAPI] 开始添加待办事项，标题: "${title}"，描述长度: ${description.length}，附加数据:`, additionalData)
-    
     try {
       const todoData = {
         title,
@@ -103,13 +101,11 @@ export const TodoAPI = {
         ...additionalData
       }
       
-      console.log(`[TodoAPI] 准备发送POST请求到 /api/todos/，数据:`, todoData)
       
       const startTime = performance.now()
       
       // 在请求之前检查当前的token
       const currentToken = localStorage.getItem('accessToken')
-      console.log(`[TodoAPI] 当前token ${currentToken ? '存在' : '不存在'}${currentToken ? '，长度: ' + currentToken.length : ''}`)
       
       // 直接使用axios发送请求，确保代理正常工作
       console.log('[TodoAPI] 使用axios.post直接发送请求，不使用http实例')
@@ -189,7 +185,6 @@ export const TodoAPI = {
       
       // 处理DRF返回的数据格式，数据可能在data字段中
       const result = response.data.data || response.data
-      console.log('[TodoAPI] 处理后返回的数据:', result)
       
       return result
     } catch (error) {
@@ -319,12 +314,9 @@ export const TodoAPI = {
    */
   async archiveTodo(id) {
     try {
-      console.log(`[TodoAPI] 归档待办事项ID:${id}`)
       const response = await axios.post(`/api/todos/${id}/archive/`)
-      console.log('[TodoAPI] 归档操作响应:', response.status)
       return response.data.data || response.data
     } catch (error) {
-      console.error('[TodoAPI] 归档待办事项失败:', error)
       throw error
     }
   },
@@ -459,6 +451,180 @@ export const TodoAPI = {
       return response.data.data || response.data
     } catch (error) {
       console.error('[TodoAPI] 重新打开子待办事项失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 获取所有日常任务
+   * @param {Object} options - 查询选项
+   * @param {number} options.page - 页码
+   * @param {number} options.pageSize - 每页数量
+   * @param {string} options.search - 搜索关键词
+   * @returns {Promise<Object>} - 返回日常任务列表和分页信息
+   */
+  async getDailyTasks(options = {}) {
+    try {
+      const { search, page, pageSize } = options
+      
+      // 构建查询参数
+      const params = {}
+      if (search) params.search = search
+      if (page) params.page = page
+      if (pageSize) params.page_size = pageSize
+      
+      console.log('[TodoAPI] 获取日常任务，查询参数:', params)
+      
+      const response = await axios.get('/api/daily-tasks/', { params })
+      
+      console.log('[TodoAPI] 日常任务API响应:', response)
+      
+      let tasks = [];
+      let pagination = {
+        count: 0,
+        next: null,
+        previous: null
+      };
+      
+      if (response.data) {
+        // 分页响应结构
+        if (response.data.results && Array.isArray(response.data.results)) {
+          tasks = response.data.results;
+          pagination = {
+            count: response.data.count || 0,
+            next: response.data.next,
+            previous: response.data.previous
+          };
+        } 
+        // 数据在data字段中的结构
+        else if (response.data.data && Array.isArray(response.data.data)) {
+          tasks = response.data.data;
+          pagination = {
+            count: response.data.count || tasks.length,
+            next: response.data.next,
+            previous: response.data.previous
+          };
+        }
+        // 直接就是数组的结构
+        else if (Array.isArray(response.data)) {
+          tasks = response.data;
+          pagination = {
+            count: tasks.length,
+            next: null,
+            previous: null
+          };
+        }
+      }
+      
+      return {
+        items: tasks,
+        pagination: pagination
+      }
+    } catch (error) {
+      console.error('获取日常任务失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 添加新的日常任务
+   * @param {string} title - 标题
+   * @param {string} description - 描述
+   * @param {Object} additionalData - 额外数据（优先级等）
+   * @returns {Promise<Object>} - 返回新建的日常任务
+   */
+  async addDailyTask(title, description = '', additionalData = {}) {
+    try {
+      const taskData = {
+        title,
+        description,
+        ...additionalData
+      }
+      
+      console.log(`[TodoAPI] 添加日常任务，数据:`, taskData)
+      
+      const response = await axios.post('/api/daily-tasks/', taskData)
+      
+      console.log('[TodoAPI] 添加日常任务响应:', response)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 添加日常任务失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 更新日常任务
+   * @param {number} id - 日常任务ID
+   * @param {Object} updates - 需要更新的字段
+   * @returns {Promise<Object>} - 返回更新后的日常任务
+   */
+  async updateDailyTask(id, updates) {
+    try {
+      console.log(`[TodoAPI] 更新日常任务ID:${id}，更新内容:`, updates)
+      
+      const response = await axios.patch(`/api/daily-tasks/${id}/`, updates)
+      return response.data.data || response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * 删除日常任务
+   * @param {number} id - 日常任务ID
+   * @returns {Promise<void>}
+   */
+  async deleteDailyTask(id) {
+    try {
+      console.log(`[TodoAPI] 删除日常任务ID:${id}`)
+      
+      const response = await axios.delete(`/api/daily-tasks/${id}/`)
+      
+      
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * 完成今日的日常任务
+   * @param {number} id - 日常任务ID
+   * @returns {Promise<Object>} - 返回更新后的日常任务
+   */
+  async completeDailyTask(id) {
+    try {
+      console.log(`[TodoAPI] 完成今日日常任务ID:${id}`)
+      
+      const response = await axios.post(`/api/daily-tasks/${id}/complete-today/`)
+      
+      console.log('[TodoAPI] 完成今日日常任务响应:', response)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 完成今日日常任务失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 取消完成今日的日常任务
+   * @param {number} id - 日常任务ID
+   * @returns {Promise<Object>} - 返回更新后的日常任务
+   */
+  async cancelCompleteDailyTask(id) {
+    try {
+      console.log(`[TodoAPI] 取消完成今日日常任务ID:${id}`)
+      
+      const response = await axios.post(`/api/daily-tasks/${id}/cancel-complete-today/`)
+      
+      console.log('[TodoAPI] 取消完成今日日常任务响应:', response)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 取消完成今日日常任务失败:', error)
       throw error
     }
   }

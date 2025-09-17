@@ -44,46 +44,9 @@
             </v-btn>
           </template>
         </v-snackbar>
-
-        <!-- 筛选和搜索 -->
-        <v-card class="mb-4" elevation="3" rounded="lg">
-          <v-card-text>
-            <v-row>
-              <v-col cols="12" sm="6" md="4">
-                <v-select
-                  v-model="filter"
-                  label="状态筛选"
-                  :items="filterOptions"
-                  item-title="text"
-                  item-value="value"
-                  hide-details
-                  variant="outlined"
-                  density="comfortable"
-                  prepend-inner-icon="mdi-filter-variant"
-                  @update:model-value="applyFilters"
-                  class="filter-select"
-                ></v-select>
-              </v-col>
-              <v-col cols="12" sm="12" md="8">
-                <v-text-field
-                  v-model="search"
-                  label="搜索任务"
-                  prepend-icon="mdi-magnify"
-                  hide-details
-                  variant="outlined"
-                  density="comfortable"
-                  @keyup.enter="applyFilters"
-                  placeholder="输入关键词搜索..."
-                  class="search-field"
-                >
-                  <template v-slot:append>
-                    <v-btn icon="mdi-magnify" variant="text" color="primary" @click="applyFilters"></v-btn>
-                  </template>
-                </v-text-field>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
+        
+        <!-- 日常任务部分 -->
+        <DailyTaskList :showNotification="showNotification" />
 
         <!-- 没有待办事项 -->
         <v-card v-if="filteredTodos.length === 0 && !todoStore.isLoading" class="pa-4">
@@ -700,6 +663,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useTodoStore } from '@/stores/todo'
 import { useSettingsStore } from '@/stores/settings'
 import { useRouter } from 'vue-router'
+import DailyTaskList from '@/components/DailyTaskList.vue'
 
 // 初始化store
 const todoStore = useTodoStore()
@@ -760,7 +724,7 @@ function showNotification(text, color = 'info', timeout = 3000) {
   }
 }
 
-// 筛选选项
+// 默认筛选状态
 const filterOptions = [
   { text: '全部', value: 'all' },
   { text: '待办', value: 'pending' },
