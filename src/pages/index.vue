@@ -3,10 +3,10 @@
     <v-row>
       <v-col cols="12">
         <v-card class="pa-4">
-          <v-card-title class="text-h4 mb-4">欢迎使用Content-hub</v-card-title>
+          <v-card-title class="text-h4 mb-4">欢迎使用个人待办系统</v-card-title>
           <v-card-text>
             <p class="text-body-1">
-              这是一个现代化的Vue.js内容管理系统，支持用户认证和待办事项管理功能。
+              提效、预计接入WIKI。构造个人知识库。实现AI助理功能。
             </p>
             <p class="text-body-1 mt-4">
               {{ isLoggedIn ? `欢迎回来，${username}！` : '请登录以使用所有功能。' }}
@@ -38,27 +38,27 @@
     <v-row class="mt-6">
       <v-col cols="12" md="4">
         <v-card class="pa-4 h-100">
-          <v-card-title class="text-h6">简单易用</v-card-title>
+          <v-card-title class="text-h6"></v-card-title>
           <v-card-text>
-            直观的用户界面，让您轻松管理内容和待办事项，无需复杂操作。
+            
           </v-card-text>
         </v-card>
       </v-col>
       
       <v-col cols="12" md="4">
         <v-card class="pa-4 h-100">
-          <v-card-title class="text-h6">安全可靠</v-card-title>
+          <v-card-title class="text-h6"></v-card-title>
           <v-card-text>
-            采用JWT令牌认证，确保您的账户和数据安全，自动刷新令牌机制。
+            
           </v-card-text>
         </v-card>
       </v-col>
       
       <v-col cols="12" md="4">
         <v-card class="pa-4 h-100">
-          <v-card-title class="text-h6">现代技术栈</v-card-title>
+          <v-card-title class="text-h6"></v-card-title>
           <v-card-text>
-            基于Vue 3、Pinia状态管理、Vue Router自动路由和Vuetify 3组件库构建。
+            
           </v-card-text>
         </v-card>
       </v-col>

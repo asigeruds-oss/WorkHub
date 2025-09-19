@@ -20,7 +20,7 @@
         </div>
 
         <div class="mt-4 text-caption text-grey">
-          &copy; {{ (new Date()).getFullYear() }} — <strong>内容管理系统</strong>
+          &copy; {{ (new Date()).getFullYear() }} — <strong>个人提效</strong>
         </div>
         
         <div class="mt-2 text-caption text-grey">
@@ -30,7 +30,7 @@
             rel="noopener noreferrer"
             class="text-decoration-none text-grey"
           >
-            鲁IPC备2023039013号-1
+            鲁ICP备2023039013号-1
           </a>
         </div>
       </v-col>

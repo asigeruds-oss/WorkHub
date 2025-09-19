@@ -15,7 +15,7 @@
       
       <v-app-bar-title>
         <router-link to="/" class="text-decoration-none text-white">
-          内容中心
+          个人待办系统
         </router-link>
       </v-app-bar-title>
 
@@ -87,7 +87,7 @@
     >
       <v-list-item
         prepend-icon="mdi-view-dashboard"
-        title="内容中心"
+        title="个人提效中心"
         subtitle="Content Hub"
         class="my-4"
       ></v-list-item>
@@ -103,6 +103,7 @@
           :active="$route.path === '/'"
         ></v-list-item>
         
+        <!-- 暂时隐藏P假条页面
         <v-list-item
           to="/autops"
           prepend-icon="mdi-file-document-edit"
@@ -110,6 +111,7 @@
           rounded="lg"
           :active="$route.path === '/autops'"
         ></v-list-item>
+        -->
         
         <template v-if="isAuthenticated">
           <v-list-item
