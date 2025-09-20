@@ -34,51 +34,8 @@ export const TodoAPI = {
       // 输出原始响应结构，便于调试
       console.log('[TodoAPI] 待办事项API响应:', response)
       
-      // 判断响应结构并正确处理
-      let todos = [];
-      let pagination = {
-        count: 0,
-        next: null,
-        previous: null
-      };
-      
-      if (response.data) {
-        // 分页响应结构
-        if (response.data.results && Array.isArray(response.data.results)) {
-          todos = response.data.results;
-          pagination = {
-            count: response.data.count || 0,
-            next: response.data.next,
-            previous: response.data.previous
-          };
-        } 
-        // 数据在data字段中的结构
-        else if (response.data.data && Array.isArray(response.data.data)) {
-          todos = response.data.data;
-          pagination = {
-            count: response.data.count || todos.length,
-            next: response.data.next,
-            previous: response.data.previous
-          };
-        }
-        // 直接就是数组的结构
-        else if (Array.isArray(response.data)) {
-          todos = response.data;
-          pagination = {
-            count: todos.length,
-            next: null,
-            previous: null
-          };
-        }
-      }
-      
-      console.log('解析后的待办事项数据:', todos);
-      console.log('分页信息:', pagination);
-      
-      return {
-        items: todos,
-        pagination: pagination
-      }
+      // 直接返回后端的标准响应格式，不需要额外处理
+      return response.data
     } catch (error) {
       console.error('获取待办事项失败:', error)
       throw error

@@ -68,7 +68,9 @@
               class="mb-3 todo-card"
               :class="{
                 'completed-todo': todo.status === 'done',
-                'archived-todo': todo.status === 'archived'
+                'archived-todo': todo.status === 'archived',
+                'processing-todo': todo.status === 'processing',
+                'faded-todo': hasProcessingTodo && todo.status !== 'processing'
               }"
               elevation="2"
               rounded="lg"
@@ -120,6 +122,18 @@
                       label
                     >
                       已归档
+                    </v-chip>
+                    <v-chip
+                      v-if="todo.status === 'processing'"
+                      size="small"
+                      color="warning"
+                      class="ml-2 processing-chip"
+                      label
+                      variant="elevated"
+                      elevation="2"
+                    >
+                      <v-icon start size="x-small" class="animate-pulse">mdi-clock-fast</v-icon>
+                      正在处理
                     </v-chip>
                     <!-- 子待办数量标记和快捷按钮 -->
                     <v-chip
@@ -340,6 +354,20 @@
                           <v-icon icon="mdi-refresh" color="info"></v-icon>
                         </template>
                         <v-list-item-title>重新打开</v-list-item-title>
+                      </v-list-item>
+                      
+                      <v-list-item v-if="todo.status !== 'processing' && todo.status !== 'archived'" @click="setProcessingTodo(todo)" density="compact" class="focus-action">
+                        <template v-slot:prepend>
+                          <v-icon icon="mdi-clock-fast" color="warning"></v-icon>
+                        </template>
+                        <v-list-item-title class="font-weight-medium">标记为正在处理</v-list-item-title>
+                      </v-list-item>
+                      
+                      <v-list-item v-if="todo.status === 'processing'" @click="reopenTodo(todo)" density="compact">
+                        <template v-slot:prepend>
+                          <v-icon icon="mdi-progress-close" color="info"></v-icon>
+                        </template>
+                        <v-list-item-title>取消正在处理</v-list-item-title>
                       </v-list-item>
                       
                       <v-divider></v-divider>
@@ -728,6 +756,7 @@ function showNotification(text, color = 'info', timeout = 3000) {
 const filterOptions = [
   { text: '全部', value: 'all' },
   { text: '待办', value: 'pending' },
+  { text: '正在处理', value: 'processing' },
   { text: '已完成', value: 'done' },
   { text: '已归档', value: 'archived' }
 ]
@@ -744,9 +773,15 @@ const priorityOptions = [
 // 状态选项
 const statusOptions = [
   { text: '待办', value: 'pending' },
+  { text: '正在处理', value: 'processing' },
   { text: '已完成', value: 'done' },
   { text: '已归档', value: 'archived' },
 ]
+
+// 计算属性：是否有正在处理的待办
+const hasProcessingTodo = computed(() => {
+  return todoStore.getAllTodos.some(todo => todo.status === 'processing')
+})
 
 // 获取优先级颜色
 function getPriorityColor(priority) {
@@ -1237,6 +1272,54 @@ async function completeTodo(todo) {
   }
 }
 
+// 将待办事项标记为正在处理
+async function setProcessingTodo(todo) {
+  try {
+    // 如果正在更新，不允许再次点击
+    if (todo.isUpdating) return
+    
+    // 设置加载状态
+    todo.isUpdating = true
+    
+    try {
+      // 检查是否已有正在处理的待办
+      const existingProcessingTodo = todoStore.getAllTodos.find(t => t.status === 'processing' && t.id !== todo.id)
+      
+      if (existingProcessingTodo) {
+        // 先将已有的正在处理待办重置为pending状态
+        existingProcessingTodo.isUpdating = true
+        await todoStore.updateTodo(existingProcessingTodo.id, { status: 'pending' })
+        existingProcessingTodo.status = 'pending'
+        existingProcessingTodo.isUpdating = false
+      }
+      
+      // 再将当前待办设置为processing状态
+      await todoStore.updateTodo(todo.id, { status: 'processing' })
+      
+      // API调用成功后，更新本地状态
+      todo.status = 'processing'
+      
+      // 显示通知
+      showNotification('已将任务标记为正在处理', 'warning')
+      
+      // 稍微延迟刷新列表，让动画效果完成
+      setTimeout(() => {
+        applyFilters()
+      }, 300)
+    } catch (error) {
+      console.error('标记待办事项为正在处理失败:', error)
+      showNotification('标记为正在处理失败，请稍后重试', 'error')
+    } finally {
+      // 无论成功还是失败，都清除加载状态
+      todo.isUpdating = false
+    }
+  } catch (error) {
+    console.error('标记待办事项为正在处理失败:', error)
+    // 确保清除加载状态
+    if (todo) todo.isUpdating = false
+  }
+}
+
 // 重新打开已完成的待办事项
 async function reopenTodo(todo) {
   try {
@@ -1247,8 +1330,14 @@ async function reopenTodo(todo) {
     todo.isUpdating = true
     
     try {
-      // 先调用API
-      await todoStore.reopenTodo(todo.id)
+      if (todo.status === 'processing') {
+        // 处理"正在处理"到"待办"的转换
+        await todoStore.updateTodo(todo.id, { status: 'pending' })
+        showNotification('已取消正在处理状态', 'info')
+      } else {
+        // 处理"已完成"到"待办"的转换
+        await todoStore.reopenTodo(todo.id)
+      }
       
       // API调用成功后，更新本地状态
       todo.status = 'pending'
@@ -1813,6 +1902,93 @@ async function reopenSubTodo(parentId, subTodo) {
 
 .sub-todo-input :deep(.v-field--variant-outlined:hover .v-field__outline) {
   opacity: 0.8;
+}
+
+/* 正在处理的待办项样式 */
+.processing-todo {
+  border-left: 6px solid var(--v-warning-base, #FB8C00) !important;
+  box-shadow: 0 6px 16px rgba(251, 140, 0, 0.25) !important;
+  background-color: rgba(251, 140, 0, 0.05) !important;
+  transform: translateY(-3px) !important;
+  position: relative;
+  z-index: 2;
+}
+
+.processing-todo::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid rgba(251, 140, 0, 0.3);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0.7;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 当有正在处理的待办时，其他待办的颜色消退 */
+.faded-todo {
+  opacity: 0.55;
+  filter: grayscale(40%);
+  transition: opacity 0.3s, filter 0.3s;
+  transform: scale(0.98);
+}
+
+.faded-todo:hover {
+  opacity: 0.9;
+  filter: grayscale(0%);
+  transform: scale(1);
+}
+
+/* 添加脉冲动画效果 */
+.animate-pulse {
+  animation: icon-pulse 1.5s infinite;
+}
+
+@keyframes icon-pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 为"正在处理"标签添加特殊样式 */
+.processing-chip {
+  font-weight: bold !important;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(251, 140, 0, 0.5) !important;
+}
+
+/* 突出显示菜单中的重点操作 */
+.focus-action {
+  background-color: rgba(251, 140, 0, 0.08) !important;
+  margin: 4px 0;
+  border-radius: 6px;
+}
+
+.focus-action:hover {
+  background-color: rgba(251, 140, 0, 0.15) !important;
 }
 
 /* 添加适配深色模式的样式 */
