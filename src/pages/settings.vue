@@ -47,14 +47,14 @@
                 <v-row>
                   <v-col cols="12" sm="6">
                     <v-select
-                      v-model="todoSettings.defaultSortBy"
-                      label="默认排序方式"
-                      :items="sortOptions"
+                      v-model="todoSettings.completedTodosPosition"
+                      label="已完成待办显示位置"
+                      :items="completedPositionOptions"
                       item-title="text"
                       item-value="value"
                       variant="outlined"
                       density="comfortable"
-                      prepend-inner-icon="mdi-sort"
+                      prepend-inner-icon="mdi-format-list-checks"
                       @update:model-value="updateTodoSettings"
                       class="mb-4"
                     ></v-select>
@@ -476,17 +476,6 @@ const themeSettings = reactive({ ...settingsStore.getThemeSettings })
 // 通知设置
 const notificationSettings = reactive({ ...settingsStore.getNotificationSettings })
 
-// 待办事项排序选项
-const sortOptions = [
-  { text: '创建时间 (新→旧)', value: '-created_at' },
-  { text: '创建时间 (旧→新)', value: 'created_at' },
-  { text: '更新时间 (新→旧)', value: '-updated_at' },
-  { text: '截止日期 (近→远)', value: 'due_date' },
-  { text: '优先级 (高→低)', value: '-priority' },
-  { text: '优先级 (低→高)', value: 'priority' },
-  { text: '状态 (未完成在前)', value: 'status,-priority' },
-]
-
 // 已完成待办位置选项
 const completedPositionOptions = [
   { text: '在未完成待办下方', value: 'bottom' },
@@ -538,7 +527,6 @@ const pushChannelOptions = [
 // 更新待办事项设置
 function updateTodoSettings() {
   settingsStore.updateTodoSettings({
-    defaultSortBy: todoSettings.defaultSortBy,
     completedTodosPosition: todoSettings.completedTodosPosition,
     showDateInfo: todoSettings.showDateInfo,
     confirmDelete: todoSettings.confirmDelete,
