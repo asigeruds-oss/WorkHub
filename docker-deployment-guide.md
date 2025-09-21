@@ -2,55 +2,7 @@
 
 本指南将帮助您在Ubuntu系统上使用Docker部署Vue前端应用。
 
-## 前提条件
-
-1. 一台运行Ubuntu系统的服务器
-2. 已安装Docker和Docker Compose
-
-如果尚未安装Docker和Docker Compose，请按照以下步骤进行安装：
-
-```bash
-# 更新软件包索引
-sudo apt update
-
-# 安装必要的依赖
-sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
-
-# 添加Docker官方GPG密钥
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
-# 添加Docker仓库
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-
-# 更新软件包索引
-sudo apt update
-
-# 安装Docker
-sudo apt install -y docker-ce docker-ce-cli containerd.io
-
-# 安装Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/download/v2.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
-# 将当前用户添加到docker组，避免每次使用docker命令都需要sudo
-sudo usermod -aG docker $USER
-
-# 应用组更改（重新登录后生效）
-newgrp docker
-```
-
-## 部署步骤
-
-1. 将项目文件传输到Ubuntu服务器
-
-```bash
-# 使用scp命令从本地复制项目到服务器
-# 替换 your_username 和 your_server_ip 为您的服务器信息
-scp -r content_hub_f your_username@your_server_ip:/path/to/destination
-```
-
-或者使用Git克隆：
-
+使用git克隆
 ```bash
 git clone <your-repository-url>
 cd content_hub_f
@@ -100,7 +52,7 @@ docker-compose up -d --build
 ## 注意事项
 
 1. 生产环境部署时，建议配置HTTPS。可以使用Nginx反向代理和Let's Encrypt实现。
-
+·
 2. 如果您的应用需要连接到后端API：
    - 确保在nginx.conf中正确配置了API代理
    - 确保服务器防火墙允许80端口（和443端口，如果使用HTTPS）
