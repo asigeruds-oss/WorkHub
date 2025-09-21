@@ -900,28 +900,8 @@ async function handleFormSubmit() {
 
 // 计算属性：筛选和搜索后的待办事项
 const filteredTodos = computed(() => {
-  // 获取API过滤后的结果
-  const todos = [...todoStore.getAllTodos]
-  
-  // 根据设置决定是否对已完成待办进行二次排序
-  // completedTodosPosition: 'bottom' - 已完成的排在下方
-  // completedTodosPosition: 'inline' - 按原有排序规则
-  if (filter.value === 'all' && todoSettings.completedTodosPosition === 'bottom') {
-    return todos.sort((a, b) => {
-      // 已归档的任务总是排在最后
-      if (a.status === 'archived' && b.status !== 'archived') return 1
-      if (a.status !== 'archived' && b.status === 'archived') return -1
-      
-      // 已完成的任务排在未完成的任务后面
-      if (a.status === 'done' && b.status === 'pending') return 1
-      if (a.status === 'pending' && b.status === 'done') return -1
-      
-      // 如果状态相同，按照原有的排序规则
-      return 0
-    })
-  }
-  
-  return todos
+  // 直接返回API获取的结果，不在前端进行排序
+  return todoStore.getAllTodos
 })
 
 // 应用过滤器
@@ -935,7 +915,6 @@ function applyFilters() {
   fetchTodos({
     status,
     search: search.value,
-    ordering: settingsStore.getTodoSettings.defaultSortBy, // 使用设置中的排序方式
     page: 1 // 重置为第一页
   })
 }
@@ -966,12 +945,6 @@ async function fetchTodos(options = {}) {
 watch(
   () => settingsStore.getTodoSettings,
   (newSettings) => {
-    // 如果默认排序方式变化，重新获取数据
-    const previousDefaultSortBy = todoSettings.defaultSortBy
-    if (newSettings.defaultSortBy !== previousDefaultSortBy) {
-      applyFilters()
-    }
-    
     // 更新每页显示数量
     if (newSettings.pageSize !== pageSize) {
       // 保存当前页码
@@ -999,8 +972,7 @@ onMounted(async () => {
     console.log('初始化加载待办事项')
     await todoStore.fetchTodos({
       page: currentPage.value,
-      pageSize,
-      ordering: settingsStore.getTodoSettings.defaultSortBy
+      pageSize
     })
     
     // 为所有任务初始化子待办相关的属性

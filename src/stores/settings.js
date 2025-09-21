@@ -19,7 +19,6 @@ export const useSettingsStore = defineStore('settings', {
     return {
       // 待办事项设置
       todos: {
-        defaultSortBy: storedSettings?.todos?.defaultSortBy || 'status,-priority', // 默认排序方式
         completedTodosPosition: storedSettings?.todos?.completedTodosPosition || 'bottom', // 已完成待办的位置: 'bottom' 或 'inline'
         showDateInfo: storedSettings?.todos?.showDateInfo !== false, // 是否显示日期信息
         confirmDelete: storedSettings?.todos?.confirmDelete !== false, // 删除前是否确认

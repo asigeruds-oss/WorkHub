@@ -14,8 +14,7 @@ export const useTodoStore = defineStore('todo', {
     },
     filters: {
       search: '',
-      status: '',
-      ordering: '-created_at'
+      status: ''
     },
     dailyTaskPagination: { // 日常任务的分页信息
       count: 0,
@@ -51,7 +50,6 @@ export const useTodoStore = defineStore('todo', {
         // 合并当前过滤器状态与传入的选项
         const queryOptions = {
           search: options.search !== undefined ? options.search : this.filters.search,
-          ordering: options.ordering !== undefined ? options.ordering : this.filters.ordering,
           status: options.status !== undefined ? options.status : this.filters.status,
           page: options.page || this.pagination.currentPage,
           pageSize: options.pageSize || 10
@@ -59,7 +57,6 @@ export const useTodoStore = defineStore('todo', {
         
         // 更新过滤器状态
         if (options.search !== undefined) this.filters.search = options.search
-        if (options.ordering !== undefined) this.filters.ordering = options.ordering
         if (options.status !== undefined) this.filters.status = options.status
         if (options.page) this.pagination.currentPage = options.page
         
@@ -197,7 +194,7 @@ export const useTodoStore = defineStore('todo', {
       const todo = this.todos.find(todo => todo.id === id)
       if (!todo) return
       
-      if (todo.status === 'pending') {
+      if (todo.status === 'pending' || todo.status === 'processing') {
         return this.completeTodo(id)
       } else if (todo.status === 'done') {
         return this.reopenTodo(id)

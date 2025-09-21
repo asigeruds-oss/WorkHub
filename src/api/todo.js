@@ -9,19 +9,18 @@ export const TodoAPI = {
    * 获取所有待办事项
    * @param {Object} options - 查询选项
    * @param {string} options.search - 搜索关键词
-   * @param {string} options.ordering - 排序字段
    * @param {number} options.page - 页码
    * @param {number} options.pageSize - 每页数量
+   * @param {string} options.status - 状态过滤
    * @returns {Promise<Array>} - 返回待办事项列表
    */
   async getTodos(options = {}) {
     try {
-      const { search, ordering, page, pageSize, status } = options
+      const { search, page, pageSize, status } = options
       
       // 构建查询参数
       const params = {}
       if (search) params.search = search
-      if (ordering) params.ordering = ordering
       if (page) params.page = page
       if (pageSize) params.page_size = pageSize
       if (status) params.status = status
