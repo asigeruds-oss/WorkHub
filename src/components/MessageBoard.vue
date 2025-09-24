@@ -19,17 +19,7 @@
           <v-card-text>
             <v-form ref="messageForm" v-model="valid" @submit.prevent="submitMessage">
               <v-row>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="message.nickname"
-                    label="昵称"
-                    outlined
-                    dense
-                    :readonly="loading"
-                    :rules="[rules.required]"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" md="6">
+                <v-col cols="12">
                   <v-select
                     v-model="message.color"
                     :items="colorOptions"
@@ -91,7 +81,6 @@
             top: `${msg.top}%`
           }"
         >
-          <span class="nickname">{{ msg.nickname }}:</span>
           {{ msg.content }}
         </div>
       </transition-group>
@@ -101,6 +90,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { MessageAPI } from '../api'
 
 // 表单状态
 const messageForm = ref(null)
@@ -110,7 +100,6 @@ const showForm = ref(true)
 
 // 留言数据
 const message = reactive({
-  nickname: '',
   content: '',
   color: '#1976D2' // 默认蓝色
 })
@@ -150,16 +139,30 @@ async function submitMessage() {
   loading.value = true
   
   try {
-    // 创建新留言对象
-    const newMessage = {
-      id: generateId(),
-      nickname: message.nickname,
+    // 准备要发送的数据
+    const messageData = {
       content: message.content,
-      color: message.color,
-      timestamp: new Date(),
-      position: Math.floor(Math.random() * 3), // 0, 1, 2 对应不同的轨道
-      duration: 5 + Math.random() * 10, // 5-15秒随机飞过时间
-      top: 10 + Math.floor(Math.random() * 60) // 10%-70%的随机位置
+      color: message.color
+    }
+    
+    // 调用API发送留言
+    // 如果后端API还未实现，则回退到本地处理
+    let newMessage
+    try {
+      const response = await MessageAPI.sendMessage(messageData)
+      newMessage = response.data.data
+    } catch (err) {
+      console.warn('后端API未实现或发生错误，使用本地模拟数据', err)
+      // 创建本地留言对象（模拟后端响应）
+      newMessage = {
+        id: generateId(),
+        content: message.content,
+        color: message.color,
+        timestamp: new Date(),
+        position: Math.floor(Math.random() * 3), // 0, 1, 2 对应不同的轨道
+        duration: 5 + Math.random() * 10, // 5-15秒随机飞过时间
+        top: 10 + Math.floor(Math.random() * 60) // 10%-70%的随机位置
+      }
     }
     
     // 添加到消息列表
@@ -174,10 +177,7 @@ async function submitMessage() {
     // 收起表单
     showForm.value = false
     
-    // 模拟消息发送成功
-    setTimeout(() => {
-      loading.value = false
-    }, 500)
+    loading.value = false
   } catch (error) {
     console.error('发送留言失败:', error)
     loading.value = false
@@ -213,14 +213,14 @@ let messageTimer = null
 
 // 随机添加一些预设留言用于演示
 const demoMessages = [
-  { nickname: '快乐的小鸟', content: '这个工具真的太棒了！谢谢开发者！', color: '#4CAF50' },
-  { nickname: '学习达人', content: '希望能增加更多模板，非常实用', color: '#1976D2' },
-  { nickname: '小明同学', content: '请假条格式很规范，老师一看就通过了', color: '#F44336' },
-  { nickname: '彩虹', content: '网站UI很漂亮，体验很好', color: '#9C27B0' },
-  { nickname: '路人甲', content: '希望能够添加更多院系的信息', color: '#FF9800' },
-  { nickname: '懒懒熊', content: '能不能增加一个历史记录功能？', color: '#795548' },
-  { nickname: '未来星', content: '第一次使用，很方便！', color: '#607D8B' },
-  { nickname: '班长', content: '同学们可以放心使用，格式符合要求', color: '#009688' }
+  { content: '这个工具真的太棒了！谢谢开发者！', color: '#4CAF50' },
+  { content: '希望能增加更多模板，非常实用', color: '#1976D2' },
+  { content: '请假条格式很规范，老师一看就通过了', color: '#F44336' },
+  { content: '网站UI很漂亮，体验很好', color: '#9C27B0' },
+  { content: '希望能够添加更多院系的信息', color: '#FF9800' },
+  { content: '能不能增加一个历史记录功能？', color: '#795548' },
+  { content: '第一次使用，很方便！', color: '#607D8B' },
+  { content: '同学们可以放心使用，格式符合要求', color: '#009688' }
 ]
 
 // 随机生成一条演示留言
@@ -230,7 +230,6 @@ function generateDemoMessage() {
   
   const newMessage = {
     id: generateId(),
-    nickname: demoMsg.nickname,
     content: demoMsg.content,
     color: demoMsg.color,
     timestamp: new Date(),
@@ -243,20 +242,55 @@ function generateDemoMessage() {
   addMessageToDisplay(newMessage)
 }
 
-onMounted(() => {
-  // 初始显示几条随机留言
-  for (let i = 0; i < 3; i++) {
-    setTimeout(() => {
-      generateDemoMessage()
-    }, i * 1500)
-  }
-  
-  // 设置定时器，每隔一段时间随机生成一条留言
-  messageTimer = setInterval(() => {
-    if (Math.random() > 0.3) { // 70%的几率生成一条新留言
-      generateDemoMessage()
+// 从后端获取留言列表
+async function fetchMessages() {
+  try {
+    const response = await MessageAPI.getMessages({
+      page: 1,
+      pageSize: 10,
+      sortBy: 'timestamp',
+      sortOrder: 'desc'
+    })
+    
+    // 处理返回的留言数据
+    const fetchedMessages = response.data.data.messages
+    
+    // 将后端留言添加到本地数据
+    fetchedMessages.forEach(msg => {
+      const newMessage = {
+        id: msg.id,
+        content: msg.content,
+        color: msg.color,
+        timestamp: new Date(msg.timestamp),
+        position: Math.floor(Math.random() * 3),
+        duration: 8 + Math.random() * 7,
+        top: 10 + Math.floor(Math.random() * 60)
+      }
+      
+      messages.value.push(newMessage)
+      addMessageToDisplay(newMessage)
+    })
+  } catch (err) {
+    console.warn('获取留言列表失败，使用本地演示数据', err)
+    // 初始显示几条随机留言
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        generateDemoMessage()
+      }, i * 1500)
     }
-  }, 5000)
+    
+    // 设置定时器，每隔一段时间随机生成一条留言
+    messageTimer = setInterval(() => {
+      if (Math.random() > 0.3) { // 70%的几率生成一条新留言
+        generateDemoMessage()
+      }
+    }, 5000)
+  }
+}
+
+onMounted(() => {
+  // 获取留言数据
+  fetchMessages()
 })
 
 onBeforeUnmount(() => {
@@ -317,11 +351,6 @@ onBeforeUnmount(() => {
 
 .flying-message-2 {
   top: 60%;
-}
-
-.nickname {
-  font-weight: bold;
-  margin-right: 4px;
 }
 
 /* 飞过动画 */

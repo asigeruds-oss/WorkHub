@@ -15,6 +15,7 @@ import { createApp } from 'vue'
 
 // Styles
 import 'unfonts.css'
+import './styles/dark-mode-fixes.css'
 
 const app = createApp(App)
 

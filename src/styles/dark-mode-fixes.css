@@ -1,0 +1,70 @@
+/* 深色模式全局样式修复 */
+
+/* 确保输入框在深色模式下可见 */
+.v-theme--dark .v-field__field {
+  color: #ffffff !important;
+}
+
+.v-theme--dark .v-field__outline {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.v-theme--dark .v-label {
+  color: #e0e0e0 !important;
+}
+
+/* 下拉菜单样式 */
+.v-theme--dark .v-list {
+  background-color: #2d2d2d !important;
+  color: #e0e0e0 !important;
+}
+
+.v-theme--dark .v-list-item {
+  color: #e0e0e0 !important;
+}
+
+/* 对话框和弹出窗口 */
+.v-theme--dark .v-dialog {
+  background-color: #2d2d2d !important;
+  color: #e0e0e0 !important;
+}
+
+.v-theme--dark .v-card {
+  background-color: #2d2d2d !important;
+  color: #e0e0e0 !important;
+}
+
+/* 确保文本区域输入框在深色模式下可见 */
+.v-theme--dark .v-textarea textarea {
+  color: #ffffff !important;
+}
+
+/* 确保按钮文本在深色模式下可见 */
+.v-theme--dark .v-btn {
+  color: inherit;
+}
+
+/* 确保表格在深色模式下可读 */
+.v-theme--dark .v-table {
+  background-color: #2d2d2d !important;
+  color: #e0e0e0 !important;
+}
+
+.v-theme--dark .v-table th {
+  color: #ffffff !important;
+}
+
+/* 确保日期选择器在深色模式下可用 */
+.v-theme--dark .v-date-picker-table {
+  color: #e0e0e0 !important;
+}
+
+/* 修复选择器样式 */
+.v-theme--dark .v-select__selection {
+  color: #ffffff !important;
+}
+
+/* 修复开关组件颜色 */
+.v-theme--dark .v-switch__thumb {
+  color: #ffffff !important;
+}
