@@ -4,6 +4,7 @@ import { NotificationAPI } from './notification'
 import http from './http'
 import AutoPsAPI from './autops'
 import FeedbackAPI from './feedback'
+import MessageAPI from './message'
 
 /**
  * 统一导出所有API服务
@@ -14,6 +15,7 @@ export {
   NotificationAPI,
   AutoPsAPI,
   FeedbackAPI,
+  MessageAPI,
   http
 }
 
@@ -26,5 +28,6 @@ export default {
   notification: NotificationAPI,
   autops: AutoPsAPI,
   feedback: FeedbackAPI,
+  message: MessageAPI,
   http
 }

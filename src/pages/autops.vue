@@ -725,6 +725,41 @@ function resetFeedback() {
   background-color: #f8f9fa;
 }
 
+/* 深色模式下的卡片样式 */
+@media (prefers-color-scheme: dark) {
+  .v-card {
+    background-color: #2d2d2d !important;
+    color: #e0e0e0 !important;
+  }
+  
+  .v-card-title {
+    color: #ffffff !important;
+  }
+  
+  .v-card-subtitle {
+    color: #cccccc !important;
+  }
+  
+  /* 确保输入框在深色模式下可见 */
+  .v-field__field {
+    background-color: rgba(255, 255, 255, 0.09) !important;
+    color: #ffffff !important;
+  }
+  
+  .v-field__outline {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+  
+  .v-label {
+    color: #e0e0e0 !important;
+  }
+  
+  /* 下拉菜单项样式 */
+  .v-list-item {
+    color: #e0e0e0 !important;
+  }
+}
+
 .v-card-title {
   letter-spacing: 0.05em;
   font-weight: 600;
