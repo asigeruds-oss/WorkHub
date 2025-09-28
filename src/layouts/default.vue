@@ -103,6 +103,14 @@
           :active="$route.path === '/'"
         ></v-list-item>
         
+        <v-list-item
+          to="/knowledge"
+          prepend-icon="mdi-book-open-variant"
+          title="知识中心"
+          rounded="lg"
+          :active="$route.path.startsWith('/knowledge')"
+        ></v-list-item>
+        
         <!-- 暂时隐藏P假条页面
         <v-list-item
           to="/autops"

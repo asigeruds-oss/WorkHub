@@ -1,3 +1,4 @@
+import { defineStore } from 'pinia'
 import { AuthAPI } from '@/api/auth'
 import { jwtDecode } from 'jwt-decode'
 

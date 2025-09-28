@@ -369,6 +369,27 @@
 
     <!-- 用户反馈区域 -->
     <v-card class="mx-auto my-8 pa-4" max-width="900">
+      <!-- 反馈回复显示区域 -->
+      <v-slide-y-transition>
+        <v-alert
+          v-if="feedbackReply.show"
+          :class="[
+            'feedback-reply',
+            `feedback-reply--${feedbackReply.position}`,
+            'mb-4'
+          ]"
+          border="start"
+          variant="tonal"
+          color="info"
+          density="compact"
+          closable
+          @click:close="feedbackReply.show = false"
+        >
+          <!-- 使用 white-space: pre-wrap 显示换行 -->
+          <div class="feedback-reply-content">{{ feedbackReply.content }}</div>
+        </v-alert>
+      </v-slide-y-transition>
+      
       <v-card-title class="d-flex align-center">
         <div class="text-h6">同学请反馈</div>
         <v-spacer></v-spacer>
@@ -474,6 +495,9 @@ onMounted(() => {
   const [date, time] = formData.counselorApprovalTime.split(' ')
   counselorDate.value = date
   counselorTime.value = time || '12:00'
+  
+  // 获取反馈回复内容
+  fetchFeedbackReply()
 })
 
 // 表单数据
@@ -503,6 +527,14 @@ const feedback = reactive({
   email: '',
   type: 'suggestion',
   content: ''
+})
+
+// 反馈回复数据
+const feedbackReply = reactive({
+  content: '',
+  position: 'top', // 可能的值: 'top', 'bottom', 'left', 'right'
+  show: false,
+  loading: false
 })
 
 // 反馈类型选项
@@ -712,6 +744,37 @@ function resetFeedback() {
     feedbackForm.value.reset()
   }
 }
+
+// 获取反馈回复内容
+async function fetchFeedbackReply() {
+  try {
+    feedbackReply.loading = true
+    const response = await FeedbackAPI.getFeedbackReply()
+    
+    // 根据后端响应格式调整：response.data.data 是数组
+    if (response.data && response.data.data && response.data.data.length > 0) {
+      // 获取最新的一条回复（数组第一个元素）
+      const latestReply = response.data.data[0]
+      
+      // 确保换行符被正确处理
+      // 如果内容中含有转义的换行符（如 "\\n"），将其转换为实际的换行符
+      let content = latestReply.content
+      if (content) {
+        // 将可能的转义换行符转换为实际换行符
+        content = content.replace(/\\n/g, '\n')
+      }
+      
+      feedbackReply.content = content
+      feedbackReply.position = 'top' // 默认位置，因为后端没有返回位置信息
+      feedbackReply.show = true
+    }
+  } catch (error) {
+    console.error('获取反馈回复失败:', error)
+    feedbackReply.show = false
+  } finally {
+    feedbackReply.loading = false
+  }
+}
 </script>
 
 <style scoped>
@@ -723,6 +786,42 @@ function resetFeedback() {
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   background-color: #f8f9fa;
+}
+
+/* 反馈回复样式 */
+.feedback-reply {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  position: relative;
+}
+
+/* 根据位置调整反馈回复的样式 */
+.feedback-reply--top {
+  margin-bottom: 16px;
+}
+
+.feedback-reply--bottom {
+  margin-top: 16px;
+}
+
+.feedback-reply--left {
+  margin-right: 16px;
+  float: left;
+  max-width: 30%;
+}
+
+.feedback-reply--right {
+  margin-left: 16px;
+  float: right;
+  max-width: 30%;
+}
+
+/* 支持换行显示的内容样式 */
+.feedback-reply-content {
+  white-space: pre-wrap; /* 保留空白符并允许换行 */
+  word-wrap: break-word; /* 允许长词自动换行 */
+  overflow-wrap: break-word; /* 现代浏览器中更好的长词换行支持 */
 }
 
 .v-card-title {
