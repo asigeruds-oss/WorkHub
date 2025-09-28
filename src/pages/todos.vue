@@ -144,7 +144,7 @@
                     :size="20"
                   ></v-icon>
                 </template>                <div class="ml-3 flex-grow-1">
-                  <div class="d-flex align-center" :class="{
+                  <div class="d-flex align-center flex-wrap" :class="{
                     'text-decoration-line-through': todo.status === 'done',
                     'font-weight-medium': todo.status === 'pending',
                     'text-grey': todo.status === 'archived'
@@ -1895,6 +1895,11 @@ async function reopenSubTodo(parentId, subTodo) {
 .todo-card {
   transition: all 0.2s ease;
   border-left: 4px solid var(--v-primary-base, #1976d2);
+  /* 双列布局下的卡片样式 */
+  @media (min-width: 960px) {
+    /* 增加高度利用率，让每张卡片填充可用空间 */
+    height: calc(100% - 12px); /* 减去下边距 */
+  }
 }
 
 .todo-card:hover {
@@ -1906,6 +1911,21 @@ async function reopenSubTodo(parentId, subTodo) {
 .todo-container {
   position: relative;
   min-height: 50px; /* 确保容器有最小高度 */
+  
+  /* 响应式布局 - 根据屏幕尺寸调整列数 */
+  /* 平板设备及以上使用双列 */
+  @media (min-width: 960px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 平均分成两列 */
+    grid-column-gap: 16px; /* 列之间的间隔 */
+    grid-auto-flow: dense; /* 优化布局填充 */
+    align-items: start; /* 确保每个卡片从顶部开始 */
+  }
+  
+  /* 大屏幕设备可以考虑三列 */
+  @media (min-width: 1600px) {
+    grid-template-columns: repeat(3, 1fr); /* 大屏设备使用三列 */
+  }
 }
 
 .todo-list-move,
@@ -1918,6 +1938,15 @@ async function reopenSubTodo(parentId, subTodo) {
 .todo-list-leave-to {
   opacity: 0;
   transform: translateY(30px);
+}
+
+/* 双列布局下的动画调整 */
+@media (min-width: 960px) {
+  .todo-list-leave-active {
+    /* 解决在网格布局中的定位问题 */
+    position: relative;
+    grid-column: span 1;
+  }
 }
 
 /* 确保离开和进入的项目不影响其他项目的布局 */
@@ -1935,14 +1964,40 @@ async function reopenSubTodo(parentId, subTodo) {
     border-left-color 0.4s ease,
     transform 0.3s ease,
     box-shadow 0.3s ease;
+  
+  /* 在双列布局时确保卡片显示一致 */
+  @media (min-width: 960px) {
+    /* 让卡片在每列中保持相同的宽度 */
+    width: 100%;
+    /* 确保内容区域足够显示 */
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .todo-description {
   max-height: 80px;
   overflow-y: auto;
   color: #616161;
-  padding-left: 4px;
-  border-left: 2px solid #e0e0e0;
+}
+
+/* 双列布局下的优化样式 */
+@media (min-width: 960px) {
+  .todo-description {
+    /* 在双列布局中增加描述的最小高度，使卡片更统一 */
+    min-height: 40px;
+  }
+  
+  /* 确保标题在必要时可以折行 */
+  .text-subtitle-1 {
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  
+  /* 确保标签在双列布局中不会导致布局问题 */
+  .v-chip {
+    margin-bottom: 4px;
+  }
 }
 
 .text-warning {
