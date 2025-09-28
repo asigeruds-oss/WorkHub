@@ -16,7 +16,7 @@ export const TodoAPI = {
    */
   async getTodos(options = {}) {
     try {
-      const { search, page, pageSize, status } = options
+      const { search, page, pageSize, status, type } = options
       
       // 构建查询参数
       const params = {}
@@ -24,6 +24,7 @@ export const TodoAPI = {
       if (page) params.page = page
       if (pageSize) params.page_size = pageSize
       if (status) params.status = status
+      if (type) params.type = type  // 添加类型筛选参数
       
       console.log('[TodoAPI] 获取待办事项，查询参数:', params)
       
@@ -581,6 +582,75 @@ export const TodoAPI = {
       return response.data.data || response.data
     } catch (error) {
       console.error('[TodoAPI] 取消完成今日日常任务失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 获取所有备忘录
+   * @param {Object} options - 查询选项
+   * @param {number} options.page - 页码
+   * @param {number} options.pageSize - 每页数量
+   * @returns {Promise<Object>} - 返回备忘录列表
+   */
+  async getMemos(options = {}) {
+    try {
+      const { page, pageSize } = options
+      
+      // 构建查询参数
+      const params = {}
+      if (page) params.page = page
+      if (pageSize) params.page_size = pageSize
+      
+      console.log('[TodoAPI] 获取备忘录，查询参数:', params)
+      
+      const response = await axios.get('/api/todos/memos/', { params })
+      
+      console.log('[TodoAPI] 备忘录API响应:', response)
+      
+      return response.data
+    } catch (error) {
+      console.error('获取备忘录失败:', error)
+      throw error
+    }
+  },
+  
+  /**
+   * 将待办事项转换为备忘录
+   * @param {number} id - 待办事项ID
+   * @returns {Promise<Object>} - 返回更新后的备忘录
+   */
+  async convertToMemo(id) {
+    try {
+      console.log(`[TodoAPI] 将待办事项 ${id} 转换为备忘录`)
+      
+      const response = await axios.post(`/api/todos/${id}/convert_to_memo/`)
+      
+      console.log('[TodoAPI] 转换为备忘录响应:', response)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 转换为备忘录失败:', error)
+      throw error
+    }
+  },
+  
+  /**
+   * 将备忘录转换为普通待办事项
+   * @param {number} id - 备忘录ID
+   * @returns {Promise<Object>} - 返回更新后的待办事项
+   */
+  async convertToTodo(id) {
+    try {
+      console.log(`[TodoAPI] 将备忘录 ${id} 转换为普通待办事项`)
+      
+      const response = await axios.post(`/api/todos/${id}/convert_to_todo/`)
+      
+      console.log('[TodoAPI] 转换为普通待办事项响应:', response)
+      
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('[TodoAPI] 转换为普通待办事项失败:', error)
       throw error
     }
   }

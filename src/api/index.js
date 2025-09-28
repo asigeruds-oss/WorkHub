@@ -5,6 +5,8 @@ import http from './http'
 import AutoPsAPI from './autops'
 import FeedbackAPI from './feedback'
 import MessageAPI from './message'
+import KnowledgeAPI from './knowledge'
+import WikiAPI from './wiki'
 
 /**
  * 统一导出所有API服务
@@ -16,6 +18,8 @@ export {
   AutoPsAPI,
   FeedbackAPI,
   MessageAPI,
+  KnowledgeAPI,
+  WikiAPI,
   http
 }
 
@@ -29,5 +33,7 @@ export default {
   autops: AutoPsAPI,
   feedback: FeedbackAPI,
   message: MessageAPI,
+  knowledge: KnowledgeAPI,
+  wiki: WikiAPI,
   http
 }

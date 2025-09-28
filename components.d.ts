@@ -14,5 +14,6 @@ declare module 'vue' {
     MessageBoard: typeof import('./src/components/MessageBoard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    WikiFolderItem: typeof import('./src/components/WikiFolderItem.vue')['default']
   }
 }

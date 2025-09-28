@@ -8,16 +8,51 @@
             待办事项
           </h1>
           <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            @click="openAddDialog"
-            prepend-icon="mdi-plus"
-            class="mr-2"
-            elevation="2"
-            rounded
-          >
-            添加新任务
-          </v-btn>
+          <div class="d-flex align-center">
+            <!-- 添加类型选择 -->
+            <v-btn-toggle
+              v-model="currentView"
+              mandatory
+              density="comfortable"
+              class="mr-3"
+              color="primary"
+              rounded="lg"
+              @update:modelValue="handleViewChange"
+            >
+              <v-btn value="todos" variant="text">
+                <v-icon start>mdi-checkbox-marked-circle-outline</v-icon>
+                待办事项
+              </v-btn>
+              <v-btn value="memos" variant="text">
+                <v-icon start>mdi-note-text</v-icon>
+                备忘录
+              </v-btn>
+            </v-btn-toggle>
+            
+            <!-- 动态显示添加按钮 -->
+            <v-btn
+              v-if="currentView === 'todos'"
+              color="primary"
+              @click="openAddDialog"
+              prepend-icon="mdi-plus"
+              class="mr-2"
+              elevation="2"
+              rounded
+            >
+              添加新任务
+            </v-btn>
+            <v-btn
+              v-else
+              color="info"
+              @click="openAddMemoDialog"
+              prepend-icon="mdi-plus"
+              class="mr-2"
+              elevation="2"
+              rounded
+            >
+              添加备忘录
+            </v-btn>
+          </div>
         </div>        <!-- 加载状态 -->
         <div v-if="todoStore.isLoading" class="d-flex justify-center my-4">
           <v-progress-circular indeterminate color="primary"></v-progress-circular>
@@ -48,14 +83,23 @@
         <!-- 日常任务部分 -->
         <DailyTaskList :showNotification="showNotification" />
 
-        <!-- 没有待办事项 -->
+        <!-- 没有待办事项或备忘录 -->
         <v-card v-if="filteredTodos.length === 0 && !todoStore.isLoading" class="pa-4">
           <v-card-text class="text-center">
-            <v-icon icon="mdi-checkbox-blank-off-outline" size="large" class="mb-2"></v-icon>
-            <div class="text-body-1">暂无待办事项</div>
-            <v-btn color="primary" class="mt-4" @click="openAddDialog">
-              添加第一个任务
-            </v-btn>
+            <template v-if="currentView === 'todos'">
+              <v-icon icon="mdi-checkbox-blank-off-outline" size="large" class="mb-2"></v-icon>
+              <div class="text-body-1">暂无待办事项</div>
+              <v-btn color="primary" class="mt-4" @click="openAddDialog">
+                添加第一个任务
+              </v-btn>
+            </template>
+            <template v-else>
+              <v-icon icon="mdi-note-text-outline" size="large" class="mb-2"></v-icon>
+              <div class="text-body-1">暂无备忘录</div>
+              <v-btn color="info" class="mt-4" @click="openAddMemoDialog">
+                添加第一个备忘录
+              </v-btn>
+            </template>
           </v-card-text>
         </v-card>
 
@@ -70,6 +114,7 @@
                 'completed-todo': todo.status === 'done',
                 'archived-todo': todo.status === 'archived',
                 'processing-todo': todo.status === 'processing',
+                'memo-card': todo.is_memo,
                 'faded-todo': hasProcessingTodo && todo.status !== 'processing'
               }"
               elevation="2"
@@ -77,18 +122,28 @@
             >
               <v-card-text class="pa-4">
               <div class="d-flex align-center">
-                <v-checkbox
-                  :model-value="todo.status === 'done'"
-                  @change="toggleTodoStatus(todo)"
-                  :disabled="todo.status === 'archived' || todo.isUpdating"
-                  hide-details
-                  density="compact"
-                  :color="getPriorityColor(todo.priority)"
-                >
-                  <template v-slot:loader v-if="todo.isUpdating">
-                    <v-progress-circular indeterminate color="primary" size="16"></v-progress-circular>
-                  </template>
-                </v-checkbox>                <div class="ml-3 flex-grow-1">
+                <template v-if="!todo.is_memo">
+                  <v-checkbox
+                    :model-value="todo.status === 'done'"
+                    @change="toggleTodoStatus(todo)"
+                    :disabled="todo.status === 'archived' || todo.isUpdating"
+                    hide-details
+                    density="compact"
+                    :color="getPriorityColor(todo.priority)"
+                  >
+                    <template v-slot:loader v-if="todo.isUpdating">
+                      <v-progress-circular indeterminate color="primary" size="16"></v-progress-circular>
+                    </template>
+                  </v-checkbox>
+                </template>
+                <template v-else>
+                  <v-icon 
+                    color="info" 
+                    class="mr-2" 
+                    icon="mdi-note-text"
+                    :size="20"
+                  ></v-icon>
+                </template>                <div class="ml-3 flex-grow-1">
                   <div class="d-flex align-center" :class="{
                     'text-decoration-line-through': todo.status === 'done',
                     'font-weight-medium': todo.status === 'pending',
@@ -134,6 +189,15 @@
                     >
                       <v-icon start size="x-small" class="animate-pulse">mdi-clock-fast</v-icon>
                       正在处理
+                    </v-chip>
+                    <v-chip
+                      v-if="todo.is_memo"
+                      size="small"
+                      color="info"
+                      class="ml-2"
+                      label
+                    >
+                      备忘录
                     </v-chip>
                     <!-- 子待办数量标记和快捷按钮 -->
                     <v-chip
@@ -370,6 +434,21 @@
                         <v-list-item-title>取消正在处理</v-list-item-title>
                       </v-list-item>
                       
+                      <!-- 备忘录转换选项 -->
+                      <v-list-item v-if="!todo.is_memo" @click="convertToMemo(todo.id)" density="compact">
+                        <template v-slot:prepend>
+                          <v-icon icon="mdi-note-text" color="info"></v-icon>
+                        </template>
+                        <v-list-item-title>转换为备忘录</v-list-item-title>
+                      </v-list-item>
+                      
+                      <v-list-item v-if="todo.is_memo" @click="convertToTodo(todo.id)" density="compact">
+                        <template v-slot:prepend>
+                          <v-icon icon="mdi-checkbox-marked-circle-outline" color="primary"></v-icon>
+                        </template>
+                        <v-list-item-title>转换为待办事项</v-list-item-title>
+                      </v-list-item>
+                      
                       <v-divider></v-divider>
                       
                       <!-- 子待办相关操作 -->
@@ -441,9 +520,9 @@
     <!-- 添加/编辑对话框 -->
     <v-dialog v-model="dialog" max-width="500" transition="dialog-bottom-transition">
       <v-card rounded="lg">
-        <v-toolbar :color="isEditing ? 'primary' : 'primary'" density="comfortable" flat>
+        <v-toolbar :color="isAddingMemo ? 'info' : 'primary'" density="comfortable" flat>
           <v-toolbar-title class="text-white">
-            {{ isEditing ? '编辑任务' : '添加新任务' }}
+            {{ isEditing ? '编辑' : '添加新' }}{{ isAddingMemo ? '备忘录' : '任务' }}
           </v-toolbar-title>
         </v-toolbar>
         
@@ -482,7 +561,7 @@
             ></v-select>
             
             <v-select
-              v-if="isEditing"
+              v-if="isEditing && !currentTodo.is_memo"
               v-model="currentTodo.status"
               label="状态"
               :items="statusOptions"
@@ -492,6 +571,17 @@
               prepend-inner-icon="mdi-check-circle-outline"
               class="mb-3"
             ></v-select>
+            
+            <!-- 备忘录选项开关 -->
+            <v-switch
+              v-if="!isEditing || currentTodo.is_memo !== undefined"
+              v-model="currentTodo.is_memo"
+              :label="currentTodo.is_memo ? '备忘录' : '待办事项'"
+              :color="currentTodo.is_memo ? 'info' : 'primary'"
+              :hint="currentTodo.is_memo ? '备忘录用于记录想法、笔记等，不会被标记为完成' : '待办事项可以标记为完成、归档等'"
+              persistent-hint
+              class="mb-3 mt-2"
+            ></v-switch>
             
             <v-row>
               <v-col cols="12" sm="7">
@@ -705,9 +795,12 @@ const todoSettings = settingsStore.getTodoSettings
 const dialog = ref(false)
 const deleteDialog = ref(false)
 const isEditing = ref(false)
+const isAddingMemo = ref(false)
+const currentView = ref('todos') // 'todos' 或 'memos'
 const currentTodo = ref({
   title: '',
   description: '',
+  is_memo: false,
   status: 'pending',
   priority: 2, // 中等优先级，使用数字
   due_date: null,
@@ -900,8 +993,14 @@ async function handleFormSubmit() {
 
 // 计算属性：筛选和搜索后的待办事项
 const filteredTodos = computed(() => {
-  // 直接返回API获取的结果，不在前端进行排序
-  return todoStore.getAllTodos
+  // 根据当前视图决定显示待办事项还是备忘录
+  if (currentView.value === 'memos') {
+    // 显示备忘录
+    return todoStore.getAllTodos.filter(todo => todo.is_memo === true);
+  } else {
+    // 显示普通待办事项
+    return todoStore.getAllTodos.filter(todo => !todo.is_memo);
+  }
 })
 
 // 应用过滤器
@@ -931,6 +1030,13 @@ async function fetchTodos(options = {}) {
     const fetchOptions = {
       ...options,
       pageSize: pageSize
+    }
+    
+    // 添加type参数，根据当前视图过滤
+    if (currentView.value === 'memos') {
+      fetchOptions.type = 'memo';
+    } else if (currentView.value === 'todos') {
+      fetchOptions.type = 'todo';
     }
     
     await todoStore.fetchTodos(fetchOptions)
@@ -999,16 +1105,40 @@ onMounted(async () => {
   }
 })
 
+// 处理视图切换
+function handleViewChange() {
+  console.log('切换视图到:', currentView.value);
+  fetchTodos({ page: 1 }); // 切换视图时重新获取第一页数据
+}
+
 // 方法
 function openAddDialog() {
   isEditing.value = false
+  isAddingMemo.value = false
   currentTodo.value = {
     title: '',
     description: '',
     status: 'pending',
     priority: 2, // 中等优先级，使用数字
     due_date: null,
-    due_time: '23:59' // 默认设置为当天结束时间
+    due_time: '23:59', // 默认设置为当天结束时间
+    is_memo: false
+  }
+  dialog.value = true
+}
+
+// 打开添加备忘录对话框
+function openAddMemoDialog() {
+  isEditing.value = false
+  isAddingMemo.value = true
+  currentTodo.value = {
+    title: '',
+    description: '',
+    status: 'memo',
+    priority: 2, // 中等优先级，使用数字
+    due_date: null,
+    due_time: null,
+    is_memo: true
   }
   dialog.value = true
 }
@@ -1071,7 +1201,8 @@ async function addTodo() {
       currentTodo.value.description,
       {
         priority: currentTodo.value.priority,
-        due_date: dueDateTimeISO
+        due_date: dueDateTimeISO,
+        is_memo: currentTodo.value.is_memo
       }
     )
     
@@ -1158,6 +1289,32 @@ async function deleteTodo() {
   } catch (error) {
     console.error('删除待办事项失败:', error)
     showNotification('删除失败: ' + error.message, 'error')
+  }
+}
+
+// 将待办事项转换为备忘录
+async function convertToMemo(todoId) {
+  try {
+    await todoStore.convertToMemo(todoId)
+    showNotification('已成功转换为备忘录', 'success')
+    // 刷新列表以获取最新数据
+    applyFilters()
+  } catch (error) {
+    console.error('转换为备忘录失败:', error)
+    showNotification('转换失败: ' + error.message, 'error')
+  }
+}
+
+// 将备忘录转换为待办事项
+async function convertToTodo(memoId) {
+  try {
+    await todoStore.convertToTodo(memoId)
+    showNotification('已成功转换为待办事项', 'success')
+    // 刷新列表以获取最新数据
+    applyFilters()
+  } catch (error) {
+    console.error('转换为待办事项失败:', error)
+    showNotification('转换失败: ' + error.message, 'error')
   }
 }
 

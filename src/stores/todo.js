@@ -1,3 +1,4 @@
+import { defineStore } from 'pinia'
 import { TodoAPI } from '@/api/todo'
 
 export const useTodoStore = defineStore('todo', {
@@ -29,6 +30,8 @@ export const useTodoStore = defineStore('todo', {
     getCompletedTodos: (state) => state.todos.filter(todo => todo.status === 'done'),
     getIncompleteTodos: (state) => state.todos.filter(todo => todo.status === 'pending'),
     getArchivedTodos: (state) => state.todos.filter(todo => todo.status === 'archived'),
+    getMemos: (state) => state.todos.filter(todo => todo.is_memo === true), // 获取所有备忘录
+    getTodos: (state) => state.todos.filter(todo => todo.is_memo !== true), // 获取所有非备忘录待办事项
     getAllDailyTasks: (state) => state.dailyTasks, // 获取所有日常任务
     getCompletedDailyTasks: (state) => state.dailyTasks.filter(task => task.is_completed_today), // 今日已完成的日常任务
     getIncompleteDailyTasks: (state) => state.dailyTasks.filter(task => !task.is_completed_today), // 今日未完成的日常任务
@@ -52,7 +55,8 @@ export const useTodoStore = defineStore('todo', {
           search: options.search !== undefined ? options.search : this.filters.search,
           status: options.status !== undefined ? options.status : this.filters.status,
           page: options.page || this.pagination.currentPage,
-          pageSize: options.pageSize || 10
+          pageSize: options.pageSize || 10,
+          type: options.type // 新增type参数，用于区分普通待办和备忘录
         }
         
         // 更新过滤器状态
@@ -100,6 +104,12 @@ export const useTodoStore = defineStore('todo', {
           title,
           description,
           ...additionalData
+        }
+        
+        // 如果是备忘录，设置相应属性
+        if (additionalData.is_memo) {
+          todoData.is_memo = true;
+          todoData.status = 'memo'; // 备忘录状态固定为memo
         }
         
         console.log(`[TodoStore] 调用 TodoAPI.addTodo 添加待办事项`, todoData)
@@ -273,6 +283,60 @@ export const useTodoStore = defineStore('todo', {
         this.todos = this.todos.filter(todo => todo.id !== id)
       } catch (error) {
         this.error = error.response?.data?.message || '删除待办事项失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    /**
+     * 将待办事项转换为备忘录
+     * @param {number} id - 待办事项ID
+     * @returns {Promise<Object>} - 返回更新后的待办事项
+     */
+    async convertToMemo(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.convertToMemo(id)
+        
+        // 更新本地数据
+        const index = this.todos.findIndex(todo => todo.id === id)
+        if (index !== -1) {
+          this.todos[index] = { ...this.todos[index], ...data }
+        }
+        
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '转换为备忘录失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    /**
+     * 将备忘录转换为普通待办事项
+     * @param {number} id - 备忘录ID
+     * @returns {Promise<Object>} - 返回更新后的待办事项
+     */
+    async convertToTodo(id) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const data = await TodoAPI.convertToTodo(id)
+        
+        // 更新本地数据
+        const index = this.todos.findIndex(todo => todo.id === id)
+        if (index !== -1) {
+          this.todos[index] = { ...this.todos[index], ...data }
+        }
+        
+        return data
+      } catch (error) {
+        this.error = error.response?.data?.message || error.response?.data?.detail || '转换为普通待办事项失败'
         throw error
       } finally {
         this.loading = false
