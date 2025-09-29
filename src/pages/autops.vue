@@ -2,7 +2,7 @@
   <v-container>
     <v-card class="mx-auto my-8 pa-4" max-width="900">
       <v-card-title class="text-h5 font-weight-bold text-center primary--text">
-        假条自动生成
+        新版假条自动生成
       </v-card-title>
       <v-card-subtitle class="text-center mb-3">
         最好参考i轻工大假条信息格式填写，例如专业需要
@@ -222,30 +222,7 @@
             <v-col cols="12" md="6">
               <v-row>
                 <v-col cols="12" sm="7">
-                  <v-text-field
-                    v-model="counselorDate"
-                    label="辅导员同意日期"
-                    type="date"
-                    hint="选择辅导员同意日期"
-                    persistent-hint
-                    variant="outlined"
-                    prepend-inner-icon="mdi-calendar"
-                    :rules="[rules.required]"
-                    @update:model-value="updateCounselorDateTime"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" sm="5">
-                  <v-text-field
-                    v-model="counselorTime"
-                    label="辅导员同意时间"
-                    type="time"
-                    hint="选择具体时间"
-                    persistent-hint
-                    variant="outlined"
-                    prepend-inner-icon="mdi-clock-outline"
-                    :rules="[rules.required]"
-                    @update:model-value="updateCounselorDateTime"
-                  ></v-text-field>
+                  
                 </v-col>
               </v-row>
             </v-col>
