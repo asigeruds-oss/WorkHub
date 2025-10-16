@@ -8,6 +8,12 @@ export const generateAutoPsychReport = (data) => {
   })
 }
 
+// 获取请假条信息
+export const getLeaveFormInfo = (uuid) => {
+  return http.get(`/api/leave-form-info/${uuid}/`)
+}
+
 export default {
-  generateAutoPsychReport
+  generateAutoPsychReport,
+  getLeaveFormInfo
 }
