@@ -2,13 +2,13 @@
   <v-container>
     <v-card class="mx-auto my-8 pa-4" max-width="900">
       <v-card-title class="text-h5 font-weight-bold text-center primary--text">
-        新版假条自动生成
+        仅用作学习使用
       </v-card-title>
       <v-card-subtitle class="text-center mb-3">
-        最好参考i轻工大假条信息格式填写，例如专业需要
+        绝对不建议真去使用生成的假条
       </v-card-subtitle>
         <v-card-subtitle class="text-center mb-3">
-        填写人工智能22-01而不是人工智能2201
+        仅供学习参考！！！
       </v-card-subtitle>
       <v-card-text>
         <v-form ref="form" v-model="valid" @submit.prevent="generateReport">
@@ -285,6 +285,25 @@
             </v-col>
           </v-row>
         </v-form>
+      </v-card-text>
+    </v-card>
+
+    <!-- 微信群二维码 -->
+    <v-card class="mx-auto my-8 pa-4" max-width="300">
+      <v-card-title class="text-center">
+        假条交流群
+      </v-card-title>
+      <v-card-text class="text-center">
+        <v-img
+          src="https://lyle-mac.oss-cn-hangzhou.aliyuncs.com/blog/1774d050acf2fa9f94a7cf145a3065f9.jpg"
+          alt="假条交流群"
+          max-width="250"
+          class="mx-auto"
+          contain
+        ></v-img>
+        <div class="mt-2 text-caption text--secondary">
+          弄这个在线反馈太费劲了，欢迎无论有没有事的同学都加群交流。
+        </div>
       </v-card-text>
     </v-card>
 
