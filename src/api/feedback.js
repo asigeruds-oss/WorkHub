@@ -23,7 +23,46 @@ export const getFeedbackReply = () => {
   return http.get('/api/feedback/reply')
 }
 
+/**
+ * 获取反馈列表
+ * @param {Object} params - 查询参数
+ * @param {number} params.page - 页码
+ * @param {number} params.pageSize - 每页数量
+ * @param {string} params.source - 反馈来源（可选）
+ * @param {string} params.type - 反馈类型（可选）
+ * @param {string} params.status - 反馈状态（可选）
+ * @returns {Promise} - HTTP响应
+ */
+export const getFeedbackList = (params) => {
+  return http.get('/api/feedback/list', { params })
+}
+
+/**
+ * 获取反馈的回复列表
+ * @param {number} feedbackId - 反馈ID
+ * @returns {Promise} - HTTP响应
+ */
+export const getFeedbackReplies = (feedbackId) => {
+  return http.get(`/api/feedback/${feedbackId}/replies`)
+}
+
+/**
+ * 回复反馈
+ * @param {number} feedbackId - 反馈ID
+ * @param {Object} data - 回复数据
+ * @param {string} data.author - 回复人姓名
+ * @param {string} data.content - 回复内容
+ * @param {boolean} data.is_admin - 是否为管理员回复
+ * @returns {Promise} - HTTP响应
+ */
+export const replyFeedback = (feedbackId, data) => {
+  return http.post(`/api/feedback/${feedbackId}/reply`, data)
+}
+
 export default {
   submitFeedback,
-  getFeedbackReply
+  getFeedbackReply,
+  getFeedbackList,
+  getFeedbackReplies,
+  replyFeedback
 }
