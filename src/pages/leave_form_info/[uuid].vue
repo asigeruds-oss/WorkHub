@@ -206,6 +206,7 @@ function formatDateRange(startDate, endDate) {
 
 // 生命周期
 onMounted(() => {
+  document.title = '学生请假'
   loadLeaveFormInfo()
 })
 </script>

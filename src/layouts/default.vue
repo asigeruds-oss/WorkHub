@@ -104,11 +104,11 @@
         ></v-list-item>
         
         <v-list-item
-          to="/knowledge"
+          to="/wiki"
           prepend-icon="mdi-book-open-variant"
-          title="知识中心"
+          title="Wiki 知识库"
           rounded="lg"
-          :active="$route.path.startsWith('/knowledge')"
+          :active="$route.path.startsWith('/wiki')"
         ></v-list-item>
         
         <!-- 暂时隐藏P假条页面
@@ -128,6 +128,14 @@
             title="待办事项"
             rounded="lg"
             :active="$route.path === '/todos'"
+          ></v-list-item>
+          
+          <v-list-item
+            to="/cultivation"
+            prepend-icon="mdi-arrow-up-bold-circle-outline"
+            title="修仙系统"
+            rounded="lg"
+            :active="$route.path === '/cultivation'"
           ></v-list-item>
           
           <v-list-item
