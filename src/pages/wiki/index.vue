@@ -5,7 +5,7 @@
       v-model="drawer"
       permanent
       :rail="railMode"
-      width="320"
+      width="280"
       class="wiki-sidebar"
       @click="railMode = false"
     >
@@ -45,7 +45,7 @@
       <v-divider />
 
       <!-- 页面树形导航 -->
-      <v-list nav density="compact" class="wiki-nav">
+      <v-list nav density="compact" class="wiki-nav compact-nav">
         <v-list-subheader class="d-flex align-center">
           <span>页面导航</span>
           <v-spacer />
@@ -162,7 +162,7 @@
 
       <!-- 页面内容 -->
       <v-main>
-        <v-container class="wiki-container pa-6">
+        <v-container class="wiki-container pa-6" :class="{ 'content-container': currentPage }">
           <!-- 首页内容 -->
           <div v-if="!currentPage" class="text-center">
             <div class="mb-8">
@@ -529,7 +529,8 @@ onMounted(() => {
 }
 
 .wiki-container {
-  max-width: 1000px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 /* 导航样式 */
@@ -557,6 +558,8 @@ onMounted(() => {
 .markdown-content {
   line-height: 1.7;
   font-size: 16px;
+  max-width: 820px;
+  margin: 0 auto;
 }
 
 .markdown-content :deep(h1) {
@@ -747,6 +750,36 @@ onMounted(() => {
     transparent 100%);
   margin: 2rem 0;
 }
+
+/* 紧凑化Wiki导航 */
+.compact-nav :deep(.v-list-item) {
+  min-height: 36px !important;
+  padding-inline: 8px !important;
+}
+
+.compact-nav :deep(.v-list-group) {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.compact-nav :deep(.v-list-group__items) {
+  padding-left: 12px !important;
+}
+
+.compact-nav :deep(.v-list-item__prepend) {
+  margin-right: 0 !important;
+}
+
+.compact-nav :deep(.v-list-item__content) {
+  padding-left: 0 !important;
+}
+
+.compact-nav :deep(.v-icon) {
+  margin-right: 4px !important;
+}
+
+/* 移除或减少 spacer 元素的宽度 */
+
 </style>
 
 <route>
