@@ -44,6 +44,14 @@ onBeforeUnmount(() => {
 });
 </script>
 
+<route>
+{
+  meta: {
+    requiresAuth: false
+  }
+}
+</route>
+
 <style scoped>
 .loading-container {
   position: fixed;
