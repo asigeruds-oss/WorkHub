@@ -295,7 +295,7 @@
       </v-card-title>
       <v-card-text class="text-center">
         <v-img
-          src="https://lyle-mac.oss-cn-hangzhou.aliyuncs.com/blog/9ea5b5ed22e4131f1f566eb3b95812d6.jpg"
+          src="https://yoloblogger.oss-cn-beijing.aliyuncs.com/blog/202510310932691.jpg"
           alt="假条交流群"
           max-width="250"
           class="mx-auto"
