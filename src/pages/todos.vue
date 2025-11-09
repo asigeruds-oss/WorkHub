@@ -1,59 +1,65 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="12">
-        <div class="d-flex align-center mb-4">
-          <h1 class="text-h4 font-weight-medium">
-                  <v-icon icon="mdi-format-list-checks" class="mr-2" color="primary"></v-icon>
-            待办事项
-          </h1>
-          <v-spacer></v-spacer>
-          <div class="d-flex align-center">
-            <!-- 添加类型选择 -->
+  <div class="todos-page mascot-theme">
+    <v-container>
+      <v-row>
+        <v-col cols="12">
+          <!-- 吉祥物欢迎区域 -->
+          <div class="mascot-welcome-banner mascot-card mb-6 pa-4">
+            <div class="d-flex align-center">
+              <MascotCow size="small" :message="getMascotMessage()" class="mr-4" />
+              <div class="flex-grow-1">
+                <h1 class="mascot-title text-h4 font-weight-bold mb-1">
+                  <v-icon icon="mdi-format-list-checks" class="mr-2"></v-icon>
+                  {{ currentView === 'todos' ? '待办事项' : '备忘录' }}
+                </h1>
+                <p class="text-body-2 mb-0" style="color: var(--mascot-brown);">
+                  {{ currentView === 'todos' ? '和青牛线一起完成今天的任务！' : '记录你的想法和灵感' }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="d-flex align-center mb-4 flex-wrap gap-3">
+            <!-- 视图切换 -->
             <v-btn-toggle
               v-model="currentView"
               mandatory
               density="comfortable"
-              class="mr-3"
-              color="primary"
+              class="mascot-toggle"
               rounded="lg"
               @update:modelValue="handleViewChange"
             >
-              <v-btn value="todos" variant="text">
+              <v-btn value="todos" variant="text" class="px-4">
                 <v-icon start>mdi-checkbox-marked-circle-outline</v-icon>
                 待办事项
               </v-btn>
-              <v-btn value="memos" variant="text">
+              <v-btn value="memos" variant="text" class="px-4">
                 <v-icon start>mdi-note-text</v-icon>
                 备忘录
               </v-btn>
             </v-btn-toggle>
             
+            <v-spacer></v-spacer>
+            
             <!-- 动态显示添加按钮 -->
-            <v-btn
+            <button
               v-if="currentView === 'todos'"
-              color="primary"
               @click="openAddDialog"
-              prepend-icon="mdi-plus"
-              class="mr-2"
-              elevation="2"
-              rounded
+              class="mascot-btn mascot-btn-success"
             >
+              <v-icon start>mdi-plus</v-icon>
               添加新任务
-            </v-btn>
-            <v-btn
+            </button>
+            <button
               v-else
-              color="info"
               @click="openAddMemoDialog"
-              prepend-icon="mdi-plus"
-              class="mr-2"
-              elevation="2"
-              rounded
+              class="mascot-btn mascot-btn-info"
             >
+              <v-icon start>mdi-plus</v-icon>
               添加备忘录
-            </v-btn>
-          </div>
-        </div>        <!-- 加载状态 -->
+            </button>
+          </div>        <!-- 加载状态 -->
         <div v-if="todoStore.isLoading" class="d-flex justify-center my-4">
           <v-progress-circular indeterminate color="primary"></v-progress-circular>
         </div>
@@ -224,8 +230,73 @@
                       title="添加子任务"
                     ></v-btn>
                   </div>
-                  <div v-if="todo.description" class="text-body-2 mt-2 todo-description">
-                    {{ todo.description }}
+                  <!-- 笔记/描述区域 -->
+                  <div class="mt-2">
+                    <div v-if="!todo.editingNote" class="note-display-area">
+                      <div v-if="todo.description" class="text-body-2 todo-description">
+                        <v-icon size="small" color="grey-darken-1" class="mr-1">mdi-note-text-outline</v-icon>
+                        {{ todo.description }}
+                      </div>
+                      <v-btn
+                        v-if="todo.status !== 'archived'"
+                        size="small"
+                        color="grey-darken-1"
+                        variant="text"
+                        :prepend-icon="todo.description ? 'mdi-pencil' : 'mdi-note-plus'"
+                        density="comfortable"
+                        @click="startEditingNote(todo)"
+                        class="px-2 mt-1"
+                      >
+                        {{ todo.description ? '编辑笔记' : '添加笔记' }}
+                      </v-btn>
+                    </div>
+                    <div v-else class="note-edit-area">
+                      <v-textarea
+                        v-model="todo.tempDescription"
+                        variant="outlined"
+                        density="compact"
+                        color="primary"
+                        bg-color="white"
+                        hide-details
+                        rounded="lg"
+                        rows="3"
+                        auto-grow
+                        placeholder="输入笔记内容..."
+                        class="mb-2"
+                        autofocus
+                        @keydown.esc="cancelEditingNote(todo)"
+                        @keydown.ctrl.enter="saveNote(todo)"
+                      >
+                        <template v-slot:prepend-inner>
+                          <v-icon size="small" color="primary">mdi-note-edit</v-icon>
+                        </template>
+                      </v-textarea>
+                      <div class="d-flex gap-2">
+                        <v-btn
+                          size="small"
+                          color="primary"
+                          variant="flat"
+                          prepend-icon="mdi-check"
+                          @click="saveNote(todo)"
+                          :loading="savingNotes.get(todo.id) || false"
+                        >
+                          保存
+                        </v-btn>
+                        <v-btn
+                          size="small"
+                          color="grey"
+                          variant="text"
+                          @click="cancelEditingNote(todo)"
+                        >
+                          取消
+                        </v-btn>
+                        <v-spacer></v-spacer>
+                        <v-chip size="small" variant="text" class="text-caption">
+                          <v-icon size="x-small" class="mr-1">mdi-keyboard</v-icon>
+                          Ctrl+Enter 保存
+                        </v-chip>
+                      </div>
+                    </div>
                   </div>
                   
                   <!-- 快速添加子任务按钮（在没有子任务时显示） -->
@@ -517,271 +588,439 @@
       </v-col>
     </v-row>
 
-    <!-- 添加/编辑对话框 -->
-    <v-dialog v-model="dialog" max-width="500" transition="dialog-bottom-transition">
-      <v-card rounded="lg">
-        <v-toolbar :color="isAddingMemo ? 'info' : 'primary'" density="comfortable" flat>
-          <v-toolbar-title class="text-white">
-            {{ isEditing ? '编辑' : '添加新' }}{{ isAddingMemo ? '备忘录' : '任务' }}
-          </v-toolbar-title>
-        </v-toolbar>
+    <!-- 添加/编辑对话框 - 吉祥物主题 -->
+    <v-dialog v-model="dialog" max-width="550" transition="dialog-bottom-transition" class="mascot-dialog">
+      <v-card rounded="xl" class="mascot-dialog-card">
+        <!-- 吉祥物主题标题栏 -->
+        <div class="mascot-dialog-header">
+          <div class="d-flex align-center justify-space-between pa-4">
+            <div class="d-flex align-center">
+              <div class="mascot-dialog-icon mr-3">
+                {{ isAddingMemo ? '📝' : '✅' }}
+              </div>
+              <div>
+                <h2 class="mascot-dialog-title">
+                  {{ isEditing ? '编辑' : '添加新' }}{{ isAddingMemo ? '备忘录' : '任务' }}
+                </h2>
+                <p class="mascot-dialog-subtitle mb-0">
+                  {{ isAddingMemo ? '记录你的想法和灵感' : '让青牛线帮你完成任务' }}
+                </p>
+              </div>
+            </div>
+            <MascotCow size="small" :animate="false" :show-clock="!isAddingMemo" />
+          </div>
+        </div>
         
-        <v-card-text class="pt-4">
+        <v-card-text class="pt-6 px-6">
           <v-form ref="form" @submit.prevent="isEditing ? updateTodo() : addTodo()">
-            <v-text-field
-              v-model="currentTodo.title"
-              label="任务标题"
-              :rules="[(v) => !!v && v.trim() !== '' || '标题不能为空']"
-              required
-              variant="outlined"
-              prepend-inner-icon="mdi-format-title"
-              @input="() => { if(form.value) form.value.resetValidation() }"
-              class="mb-3"
-            ></v-text-field>
+            <!-- 任务标题 -->
+            <div class="mascot-form-group mb-4">
+              <label class="mascot-form-label">
+                <v-icon size="small" class="mr-1">mdi-format-title</v-icon>
+                任务标题 <span class="text-error">*</span>
+              </label>
+              <v-text-field
+                v-model="currentTodo.title"
+                :rules="[(v) => !!v && v.trim() !== '' || '标题不能为空']"
+                required
+                variant="outlined"
+                placeholder="输入简短的任务名称..."
+                density="comfortable"
+                @input="() => { if(form.value) form.value.resetValidation() }"
+                class="mascot-input-field"
+                hide-details="auto"
+              ></v-text-field>
+            </div>
             
-            <v-textarea
-              v-model="currentTodo.description"
-              label="任务描述"
-              rows="3"
-              variant="outlined"
-              prepend-inner-icon="mdi-text-box-outline"
-              class="mb-3"
-              placeholder="输入任务详细描述..."
-            ></v-textarea>
+            <!-- 任务描述 -->
+            <div class="mascot-form-group mb-4">
+              <label class="mascot-form-label">
+                <v-icon size="small" class="mr-1">mdi-text-box-outline</v-icon>
+                任务描述
+              </label>
+              <v-textarea
+                v-model="currentTodo.description"
+                rows="3"
+                variant="outlined"
+                placeholder="输入任务的详细描述..."
+                density="comfortable"
+                class="mascot-input-field"
+                hide-details
+              ></v-textarea>
+            </div>
             
-            <v-select
-              v-model="currentTodo.priority"
-              label="优先级"
-              :items="priorityOptions"
-              item-title="text"
-              item-value="value"
-              variant="outlined"
-              prepend-inner-icon="mdi-flag"
-              class="mb-3"
-            ></v-select>
+            <!-- 优先级选择 -->
+            <div class="mascot-form-group mb-4">
+              <label class="mascot-form-label">
+                <v-icon size="small" class="mr-1">mdi-flag</v-icon>
+                优先级
+              </label>
+              <v-select
+                v-model="currentTodo.priority"
+                :items="priorityOptions"
+                item-title="text"
+                item-value="value"
+                variant="outlined"
+                density="comfortable"
+                class="mascot-input-field"
+                hide-details
+              >
+                <template v-slot:selection="{ item }">
+                  <span class="d-flex align-center">
+                    <span v-if="item.value === 3" class="mr-2">⚡</span>
+                    <span v-else-if="item.value === 2" class="mr-2">🕐</span>
+                    <span v-else class="mr-2">✅</span>
+                    {{ item.title }}
+                  </span>
+                </template>
+                <template v-slot:item="{ item, props }">
+                  <v-list-item v-bind="props">
+                    <template v-slot:prepend>
+                      <span v-if="item.value === 3">⚡</span>
+                      <span v-else-if="item.value === 2">🕐</span>
+                      <span v-else>✅</span>
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-select>
+            </div>
             
-            <v-select
-              v-if="isEditing && !currentTodo.is_memo"
-              v-model="currentTodo.status"
-              label="状态"
-              :items="statusOptions"
-              item-title="text"
-              item-value="value"
-              variant="outlined"
-              prepend-inner-icon="mdi-check-circle-outline"
-              class="mb-3"
-            ></v-select>
+            <!-- 状态选择（仅编辑时显示） -->
+            <div v-if="isEditing && !currentTodo.is_memo" class="mascot-form-group mb-4">
+              <label class="mascot-form-label">
+                <v-icon size="small" class="mr-1">mdi-check-circle-outline</v-icon>
+                状态
+              </label>
+              <v-select
+                v-model="currentTodo.status"
+                :items="statusOptions"
+                item-title="text"
+                item-value="value"
+                variant="outlined"
+                density="comfortable"
+                class="mascot-input-field"
+                hide-details
+              ></v-select>
+            </div>
             
-            <!-- 备忘录选项开关 -->
-            <v-switch
-              v-if="!isEditing || currentTodo.is_memo !== undefined"
-              v-model="currentTodo.is_memo"
-              :label="currentTodo.is_memo ? '备忘录' : '待办事项'"
-              :color="currentTodo.is_memo ? 'info' : 'primary'"
-              :hint="currentTodo.is_memo ? '备忘录用于记录想法、笔记等，不会被标记为完成' : '待办事项可以标记为完成、归档等'"
-              persistent-hint
-              class="mb-3 mt-2"
-            ></v-switch>
+            <!-- 备忘录/待办切换 -->
+            <div v-if="!isEditing || currentTodo.is_memo !== undefined" class="mascot-form-group mb-4">
+              <div class="mascot-switch-wrapper pa-3">
+                <v-switch
+                  v-model="currentTodo.is_memo"
+                  :color="currentTodo.is_memo ? 'info' : 'success'"
+                  density="comfortable"
+                  hide-details
+                >
+                  <template v-slot:label>
+                    <div class="d-flex align-center">
+                      <span class="mr-2">{{ currentTodo.is_memo ? '📝' : '✅' }}</span>
+                      <div>
+                        <div class="font-weight-bold">{{ currentTodo.is_memo ? '备忘录模式' : '待办事项模式' }}</div>
+                        <div class="text-caption" style="color: #666;">
+                          {{ currentTodo.is_memo ? '记录想法、笔记，不需要完成' : '可标记完成、归档的任务' }}
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </v-switch>
+              </div>
+            </div>
             
-            <v-row>
-              <v-col cols="12" sm="7">
-                <v-text-field
-                  v-model="currentTodo.due_date"
-                  label="截止日期"
-                  type="date"
-                  hint="选择任务截止日期"
-                  persistent-hint
-                  variant="outlined"
-                  prepend-inner-icon="mdi-calendar"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="5">
-                <v-text-field
-                  v-model="currentTodo.due_time"
-                  label="截止时间"
-                  type="time"
-                  hint="选择截止时间"
-                  persistent-hint
-                  variant="outlined"
-                  prepend-inner-icon="mdi-clock-outline"
-                ></v-text-field>
-              </v-col>
-            </v-row>
+            <!-- 截止日期和时间 -->
+            <div class="mascot-form-group">
+              <label class="mascot-form-label mb-2">
+                <v-icon size="small" class="mr-1">mdi-calendar-clock</v-icon>
+                截止时间
+              </label>
+              <v-row>
+                <v-col cols="12" sm="7">
+                  <v-text-field
+                    v-model="currentTodo.due_date"
+                    type="date"
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-calendar"
+                    class="mascot-input-field"
+                    hide-details
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="5">
+                  <v-text-field
+                    v-model="currentTodo.due_time"
+                    type="time"
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-clock-outline"
+                    class="mascot-input-field"
+                    hide-details
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+            </div>
           </v-form>
         </v-card-text>
         
-        <v-divider></v-divider>
+        <!-- 吉祥物主题分隔线 -->
+        <div class="mascot-divider mx-4"></div>
         
-        <v-card-actions class="pa-4">
+        <!-- 操作按钮 -->
+        <v-card-actions class="pa-6">
           <v-spacer></v-spacer>
-          <v-btn variant="outlined" @click="dialog = false" class="mr-2">取消</v-btn>
-          <v-btn
-            color="primary"
+          <button class="mascot-btn-outline mr-3" @click="dialog = false">
+            <v-icon start size="small">mdi-close</v-icon>
+            取消
+          </button>
+          <button
+            class="mascot-btn mascot-btn-success"
             @click="handleFormSubmit"
-            :loading="todoStore.isLoading"
-            type="submit"
-            variant="elevated"
+            :disabled="todoStore.isLoading"
           >
-            {{ isEditing ? '更新' : '添加' }}
-          </v-btn>
+            <v-icon start size="small">{{ isEditing ? 'mdi-check' : 'mdi-plus' }}</v-icon>
+            {{ isEditing ? '更新任务' : '添加任务' }}
+            <div v-if="todoStore.isLoading" class="mascot-loading-mini ml-2"></div>
+          </button>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- 删除确认对话框 -->
-    <v-dialog v-model="deleteDialog" max-width="400" transition="dialog-top-transition">
-      <v-card rounded="lg">
-        <v-toolbar color="error" density="comfortable" flat>
-          <v-toolbar-title class="text-white">
-            确认删除
-          </v-toolbar-title>
-        </v-toolbar>
+    <!-- 删除确认对话框 - 吉祥物主题 -->
+    <v-dialog v-model="deleteDialog" max-width="450" transition="dialog-top-transition">
+      <v-card rounded="xl" class="mascot-dialog-card mascot-dialog-warning">
+        <div class="mascot-dialog-header warning-header">
+          <div class="d-flex align-center justify-center pa-4">
+            <div class="warning-icon-wrapper mr-3">
+              ⚠️
+            </div>
+            <h2 class="mascot-dialog-title">确认删除</h2>
+          </div>
+        </div>
         
-        <v-card-text class="pt-4 pb-2 text-center">
-          <v-icon icon="mdi-alert-circle" color="error" size="large" class="mb-3"></v-icon>
-          <p class="text-body-1">确定要删除以下任务吗？</p>
-          <p class="text-subtitle-1 font-weight-medium mt-2">"{{ currentTodo.title }}"</p>
-          <p class="text-caption mt-2 text-grey">此操作不可撤销</p>
+        <v-card-text class="pt-6 pb-4 text-center">
+          <div class="mb-4">
+            <p class="text-h6 mb-2">真的要删除这个任务吗？</p>
+            <div class="task-preview-box pa-3 my-3">
+              <p class="text-subtitle-1 font-weight-bold mb-0">{{ currentTodo.title }}</p>
+            </div>
+            <p class="text-caption text-error font-weight-medium">
+              <v-icon size="small" class="mr-1">mdi-alert</v-icon>
+              此操作不可撤销，数据将永久删除
+            </p>
+          </div>
         </v-card-text>
         
-        <v-divider></v-divider>
+        <div class="mascot-divider mx-4"></div>
         
-        <v-card-actions class="pa-4">
+        <v-card-actions class="pa-6">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="deleteDialog = false" class="mr-2">取消</v-btn>
-          <v-btn
-            color="error"
+          <button class="mascot-btn-outline mr-3" @click="deleteDialog = false">
+            <v-icon start size="small">mdi-close</v-icon>
+            取消
+          </button>
+          <button
+            class="mascot-btn mascot-btn-danger"
             @click="deleteTodo()"
-            :loading="todoStore.isLoading"
-            variant="elevated"
+            :disabled="todoStore.isLoading"
           >
-            删除
-          </v-btn>
+            <v-icon start size="small">mdi-delete</v-icon>
+            确认删除
+            <div v-if="todoStore.isLoading" class="mascot-loading-mini ml-2"></div>
+          </button>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- 添加/编辑子待办对话框 -->
-    <v-dialog v-model="subTodoDialog" max-width="500" transition="dialog-bottom-transition">
-      <v-card rounded="lg">
-        <v-toolbar :color="isEditingSubTodo ? 'info' : 'info'" density="comfortable" flat>
-          <v-toolbar-title class="text-white">
-            {{ isEditingSubTodo ? '编辑子任务' : '添加子任务' }}
-          </v-toolbar-title>
-          <template v-if="currentParentTodo">
-            <v-toolbar-subtitle class="text-white">
+    <!-- 添加/编辑子任务对话框 - 吉祥物主题 -->
+    <v-dialog v-model="subTodoDialog" max-width="520" transition="dialog-bottom-transition">
+      <v-card rounded="xl" class="mascot-dialog-card">
+        <!-- 子任务对话框标题 -->
+        <div class="mascot-dialog-header subtask-header">
+          <div class="pa-4">
+            <div class="d-flex align-center mb-2">
+              <div class="mascot-dialog-icon mr-3">📋</div>
+              <h2 class="mascot-dialog-title">
+                {{ isEditingSubTodo ? '编辑子任务' : '添加子任务' }}
+              </h2>
+            </div>
+            <div v-if="currentParentTodo" class="parent-task-badge">
+              <v-icon size="small" class="mr-1">mdi-link-variant</v-icon>
               父任务: {{ currentParentTodo.title }}
-            </v-toolbar-subtitle>
-          </template>
-        </v-toolbar>
+            </div>
+          </div>
+        </div>
         
-        <v-card-text class="pt-4">
+        <v-card-text class="pt-6 px-6">
           <v-form ref="subTodoForm" @submit.prevent="isEditingSubTodo ? updateSubTodo() : addSubTodoFromDialog()">
-            <v-text-field
-              v-model="currentSubTodo.title"
-              label="子任务标题"
-              :rules="[(v) => !!v && v.trim() !== '' || '标题不能为空']"
-              required
-              variant="outlined"
-              prepend-inner-icon="mdi-format-title"
-              @input="() => { if(subTodoForm.value) subTodoForm.value.resetValidation() }"
-              class="mb-3"
-            ></v-text-field>
+            <!-- 子任务标题 -->
+            <div class="mascot-form-group mb-4">
+              <label class="mascot-form-label">
+                <v-icon size="small" class="mr-1">mdi-format-title</v-icon>
+                子任务标题 <span class="text-error">*</span>
+              </label>
+              <v-text-field
+                v-model="currentSubTodo.title"
+                :rules="[(v) => !!v && v.trim() !== '' || '标题不能为空']"
+                required
+                variant="outlined"
+                placeholder="输入子任务名称..."
+                density="comfortable"
+                @input="() => { if(subTodoForm.value) subTodoForm.value.resetValidation() }"
+                class="mascot-input-field"
+                hide-details="auto"
+              ></v-text-field>
+            </div>
             
-            <v-textarea
-              v-model="currentSubTodo.description"
-              label="子任务描述"
-              rows="2"
-              variant="outlined"
-              prepend-inner-icon="mdi-text-box-outline"
-              class="mb-3"
-              placeholder="输入子任务详细描述..."
-            ></v-textarea>
+            <!-- 子任务描述 -->
+            <div class="mascot-form-group mb-4">
+              <label class="mascot-form-label">
+                <v-icon size="small" class="mr-1">mdi-text-box-outline</v-icon>
+                子任务描述
+              </label>
+              <v-textarea
+                v-model="currentSubTodo.description"
+                rows="2"
+                variant="outlined"
+                placeholder="输入子任务的详细描述..."
+                density="comfortable"
+                class="mascot-input-field"
+                hide-details
+              ></v-textarea>
+            </div>
             
-            <v-select
-              v-model="currentSubTodo.priority"
-              label="优先级"
-              :items="priorityOptions"
-              item-title="text"
-              item-value="value"
-              variant="outlined"
-              prepend-inner-icon="mdi-flag"
-              class="mb-3"
-            ></v-select>
+            <!-- 优先级 -->
+            <div class="mascot-form-group mb-4">
+              <label class="mascot-form-label">
+                <v-icon size="small" class="mr-1">mdi-flag</v-icon>
+                优先级
+              </label>
+              <v-select
+                v-model="currentSubTodo.priority"
+                :items="priorityOptions"
+                item-title="text"
+                item-value="value"
+                variant="outlined"
+                density="comfortable"
+                class="mascot-input-field"
+                hide-details
+              >
+                <template v-slot:selection="{ item }">
+                  <span class="d-flex align-center">
+                    <span v-if="item.value === 3" class="mr-2">⚡</span>
+                    <span v-else-if="item.value === 2" class="mr-2">🕐</span>
+                    <span v-else class="mr-2">✅</span>
+                    {{ item.title }}
+                  </span>
+                </template>
+              </v-select>
+            </div>
             
-            <v-select
-              v-if="isEditingSubTodo"
-              v-model="currentSubTodo.status"
-              label="状态"
-              :items="statusOptions"
-              item-title="text"
-              item-value="value"
-              variant="outlined"
-              prepend-inner-icon="mdi-check-circle-outline"
-              class="mb-3"
-            ></v-select>
+            <!-- 状态（仅编辑时） -->
+            <div v-if="isEditingSubTodo" class="mascot-form-group">
+              <label class="mascot-form-label">
+                <v-icon size="small" class="mr-1">mdi-check-circle-outline</v-icon>
+                状态
+              </label>
+              <v-select
+                v-model="currentSubTodo.status"
+                :items="statusOptions"
+                item-title="text"
+                item-value="value"
+                variant="outlined"
+                density="comfortable"
+                class="mascot-input-field"
+                hide-details
+              ></v-select>
+            </div>
           </v-form>
         </v-card-text>
         
-        <v-divider></v-divider>
+        <div class="mascot-divider mx-4"></div>
         
-        <v-card-actions class="pa-4">
+        <v-card-actions class="pa-6">
           <v-spacer></v-spacer>
-          <v-btn variant="outlined" @click="subTodoDialog = false" class="mr-2">取消</v-btn>
-          <v-btn
-            color="info"
+          <button class="mascot-btn-outline mr-3" @click="subTodoDialog = false">
+            <v-icon start size="small">mdi-close</v-icon>
+            取消
+          </button>
+          <button
+            class="mascot-btn mascot-btn-info"
             @click="handleSubTodoFormSubmit"
-            :loading="todoStore.isLoading"
-            type="submit"
-            variant="elevated"
+            :disabled="todoStore.isLoading"
           >
+            <v-icon start size="small">{{ isEditingSubTodo ? 'mdi-check' : 'mdi-plus' }}</v-icon>
             {{ isEditingSubTodo ? '更新' : '添加' }}
-          </v-btn>
+            <div v-if="todoStore.isLoading" class="mascot-loading-mini ml-2"></div>
+          </button>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- 删除子待办确认对话框 -->
-    <v-dialog v-model="deleteSubTodoDialog" max-width="400" transition="dialog-top-transition">
-      <v-card rounded="lg">
-        <v-toolbar color="error" density="comfortable" flat>
-          <v-toolbar-title class="text-white">
-            确认删除子任务
-          </v-toolbar-title>
-        </v-toolbar>
+    <!-- 删除子任务确认对话框 - 吉祥物主题 -->
+    <v-dialog v-model="deleteSubTodoDialog" max-width="420" transition="dialog-top-transition">
+      <v-card rounded="xl" class="mascot-dialog-card mascot-dialog-warning">
+        <!-- 警告标题 -->
+        <div class="mascot-dialog-header warning-header">
+          <div class="warning-icon-wrapper">
+            <v-icon color="white" size="x-large">mdi-alert-octagon</v-icon>
+          </div>
+          <h2>确认删除子任务</h2>
+        </div>
         
-        <v-card-text class="pt-4 pb-2 text-center">
-          <v-icon icon="mdi-alert-circle" color="error" size="large" class="mb-3"></v-icon>
-          <p class="text-body-1">确定要删除以下子任务吗？</p>
-          <p class="text-subtitle-1 font-weight-medium mt-2">"{{ currentSubTodo.title }}"</p>
-          <p class="text-caption mt-2 text-grey">此操作不可撤销</p>
+        <v-card-text class="pt-6 pb-4 text-center">
+          <!-- 子任务预览 -->
+          <div class="task-preview-box mb-4">
+            <div class="d-flex align-center mb-2">
+              <v-icon size="small" color="info" class="mr-2">mdi-bookmark-outline</v-icon>
+              <span class="text-caption text-medium-emphasis">要删除的子任务</span>
+            </div>
+            <p class="text-subtitle-1 font-weight-medium text-high-emphasis">
+              "{{ currentSubTodo.title }}"
+            </p>
+            <p v-if="currentSubTodo.description" class="text-caption text-medium-emphasis mt-1">
+              {{ currentSubTodo.description.length > 50 ? currentSubTodo.description.substring(0, 50) + '...' : currentSubTodo.description }}
+            </p>
+          </div>
+          
+          <!-- 警告文本 -->
+          <div class="text-center">
+            <v-icon color="error" size="small" class="mr-1">mdi-alert-circle</v-icon>
+            <span class="text-body-2 text-error font-weight-medium">
+              此操作不可撤销
+            </span>
+          </div>
         </v-card-text>
         
-        <v-divider></v-divider>
+        <div class="mascot-divider mx-4"></div>
         
-        <v-card-actions class="pa-4">
+        <v-card-actions class="pa-6">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="deleteSubTodoDialog = false" class="mr-2">取消</v-btn>
-          <v-btn
-            color="error"
+          <button class="mascot-btn-outline mr-3" @click="deleteSubTodoDialog = false">
+            <v-icon start size="small">mdi-close</v-icon>
+            取消
+          </button>
+          <button
+            class="mascot-btn mascot-btn-danger"
             @click="deleteSubTodo()"
-            :loading="todoStore.isLoading"
-            variant="elevated"
+            :disabled="todoStore.isLoading"
           >
-            删除
-          </v-btn>
+            <v-icon start size="small">mdi-delete-forever</v-icon>
+            确认删除
+            <div v-if="todoStore.isLoading" class="mascot-loading-mini ml-2"></div>
+          </button>
         </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useTodoStore } from '@/stores/todo'
 import { useSettingsStore } from '@/stores/settings'
 import { useRouter } from 'vue-router'
 import DailyTaskList from '@/components/DailyTaskList.vue'
+import MascotCow from '@/components/MascotCow.vue'
 
 // 初始化store
 const todoStore = useTodoStore()
@@ -827,6 +1066,9 @@ const form = ref(null)
 const currentPage = ref(1)
 const pageSize = todoSettings.pageSize // 使用设置中的页面大小
 
+// 笔记保存状态管理 (使用 Map 来跟踪每个 todo 的保存状态)
+const savingNotes = ref(new Map())
+
 // 提示框状态
 const snackbar = ref({
   show: false,
@@ -842,6 +1084,28 @@ function showNotification(text, color = 'info', timeout = 3000) {
     text,
     color,
     timeout
+  }
+}
+
+// 获取吉祥物消息
+function getMascotMessage() {
+  const hour = new Date().getHours()
+  const incompleteTodos = filteredTodos.value.filter(t => t.status !== 'done').length
+  
+  if (currentView.value === 'memos') {
+    return '记录你的想法吧！'
+  }
+  
+  if (incompleteTodos === 0) {
+    return '太棒了！所有任务都完成了！🎉'
+  }
+  
+  if (hour < 12) {
+    return '早安！新的一天，加油！'
+  } else if (hour < 18) {
+    return `还有 ${incompleteTodos} 个任务，继续加油！`
+  } else {
+    return '晚上好！今天辛苦了！'
   }
 }
 
@@ -1315,6 +1579,68 @@ async function convertToTodo(memoId) {
   } catch (error) {
     console.error('转换为待办事项失败:', error)
     showNotification('转换失败: ' + error.message, 'error')
+  }
+}
+
+// ============ 笔记编辑相关方法 ============
+
+// 开始编辑笔记
+function startEditingNote(todo) {
+  // 初始化临时描述字段
+  todo.editingNote = true
+  todo.tempDescription = todo.description || ''
+}
+
+// 取消编辑笔记
+function cancelEditingNote(todo) {
+  todo.editingNote = false
+  todo.tempDescription = ''
+  // 取消时也清除保存状态
+  savingNotes.value.set(todo.id, false)
+}
+
+// 保存笔记
+async function saveNote(todo) {
+  // 防止重复点击
+  if (savingNotes.value.get(todo.id)) {
+    console.log('正在保存中，忽略重复点击')
+    return
+  }
+  
+  console.log('开始保存笔记，todo.id:', todo.id)
+  
+  // 设置保存状态
+  savingNotes.value.set(todo.id, true)
+  
+  try {
+    // 准备更新数据
+    const updates = {
+      description: todo.tempDescription || ''
+    }
+    
+    console.log('调用 API 更新描述:', updates)
+    
+    // 调用 API 更新
+    const updatedTodo = await todoStore.updateTodo(todo.id, updates)
+    
+    console.log('API 更新成功，返回数据:', updatedTodo)
+    
+    // 更新成功后，更新本地数据
+    todo.description = todo.tempDescription
+    todo.editingNote = false
+    
+    // 显示成功提示
+    showNotification('笔记已保存', 'success')
+    
+    console.log('笔记保存完成')
+    
+  } catch (error) {
+    console.error('保存笔记失败:', error)
+    showNotification('保存失败: ' + (error.message || '未知错误'), 'error')
+  } finally {
+    // 重置保存状态
+    savingNotes.value.set(todo.id, false)
+    console.log('isSavingNote 已重置为 false，当前 savingNotes:', savingNotes.value.get(todo.id))
   }
 }
 
@@ -1979,6 +2305,47 @@ async function reopenSubTodo(parentId, subTodo) {
   max-height: 80px;
   overflow-y: auto;
   color: #616161;
+  line-height: 1.6;
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border-left: 3px solid rgba(33, 150, 243, 0.3);
+}
+
+/* 笔记显示和编辑区域样式 */
+.note-display-area {
+  transition: all 0.3s ease;
+}
+
+.note-edit-area {
+  animation: slideDown 0.3s ease-out;
+  padding: 12px;
+  background-color: rgba(33, 150, 243, 0.04);
+  border-radius: 12px;
+  border: 1px dashed rgba(33, 150, 243, 0.3);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.note-edit-area :deep(.v-textarea) {
+  background-color: white;
+}
+
+.note-edit-area :deep(.v-field) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.gap-2 {
+  gap: 8px;
 }
 
 /* 双列布局下的优化样式 */
@@ -2212,6 +2579,277 @@ async function reopenSubTodo(parentId, subTodo) {
 :deep(.v-theme--dark) .sub-todo-input {
   background-color: rgba(30, 30, 30, 0.6) !important;
 }
+
+/* ========== 吉祥物主题样式 ========== */
+
+.todos-page.mascot-theme {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFFAED 0%, #FFE4B5 50%, #F0E68C 100%);
+  padding: 20px 0;
+}
+
+/* 欢迎横幅 */
+.mascot-welcome-banner {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(139, 69, 19, 0.08) 100%);
+  border: 3px solid var(--mascot-brown, #8B4513);
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(139, 69, 19, 0.15);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
+  margin-top: 60px;
+}
+
+.mascot-welcome-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(139, 69, 19, 0.2);
+}
+
+/* 视图切换按钮组 */
+.mascot-toggle {
+  border: 3px solid var(--mascot-brown, #8B4513) !important;
+  background: white !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.mascot-toggle :deep(.v-btn) {
+  font-weight: 600;
+  border: none !important;
+  transition: all 0.3s ease;
+}
+
+.mascot-toggle :deep(.v-btn--active) {
+  background: linear-gradient(135deg, var(--mascot-primary, #8B6914) 0%, var(--mascot-brown, #8B4513) 100%) !important;
+  color: white !important;
+}
+
+/* 工具类 */
+.gap-3 {
+  gap: 12px;
+}
+
+/* 任务卡片使用吉祥物主题 */
+.mascot-theme :deep(.v-card) {
+  border: 3px solid var(--mascot-brown, #8B4513);
+  border-radius: 20px;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8DC 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mascot-theme :deep(.v-card:hover) {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(139, 69, 19, 0.2);
+}
+
+/* 完成的任务 - 绿色主题 */
+.mascot-theme :deep(.todo-completed) {
+  border-left: 6px solid var(--mascot-green, #3CB371) !important;
+  background: linear-gradient(135deg, #F0FFF4 0%, #E6F9EA 100%);
+}
+
+/* 归档的任务 - 灰色主题 */
+.mascot-theme :deep(.todo-archived) {
+  border-left: 6px solid #999 !important;
+  opacity: 0.7;
+}
+
+/* 优先级颜色 - 吉祥物主题 */
+.mascot-theme :deep(.todo-priority-高),
+.mascot-theme :deep(.priority-高) {
+  border-left: 6px solid var(--mascot-warning, #FFA500) !important;
+}
+
+.mascot-theme :deep(.todo-priority-中),
+.mascot-theme :deep(.priority-中) {
+  border-left: 6px solid var(--mascot-cyan, #87CEEB) !important;
+}
+
+.mascot-theme :deep(.todo-priority-低),
+.mascot-theme :deep(.priority-低) {
+  border-left: 6px solid var(--mascot-green, #3CB371) !important;
+}
+
+/* Checkbox 样式 */
+.mascot-theme :deep(.v-checkbox) {
+  color: var(--mascot-primary, #8B6914);
+}
+
+.mascot-theme :deep(.v-checkbox .v-selection-control__input:hover) {
+  color: var(--mascot-brown, #8B4513);
+}
+
+/* 进度条 */
+.mascot-theme :deep(.v-progress-linear) {
+  background: var(--mascot-light-cream, #FFFAED) !important;
+  border: 2px solid var(--mascot-brown, #8B4513);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mascot-theme :deep(.v-progress-linear__determinate) {
+  background: linear-gradient(90deg, var(--mascot-cyan, #87CEEB) 0%, var(--mascot-light-cyan, #B0E0E6) 100%) !important;
+}
+
+/* 笔记区域 */
+.note-display-area {
+  background: rgba(255, 248, 220, 0.3);
+  border: 2px dashed var(--mascot-brown, #8B4513);
+  border-radius: 16px;
+  padding: 12px;
+  min-height: 80px;
+  transition: all 0.3s ease;
+}
+
+.note-display-area:hover {
+  background: rgba(255, 248, 220, 0.5);
+  border-style: solid;
+}
+
+.note-edit-area {
+  background: white;
+  border: 3px solid var(--mascot-primary, #8B6914);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.note-edit-area :deep(.v-textarea) {
+  border-radius: 12px;
+}
+
+/* 按钮组 */
+.note-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* 子任务列表 */
+.mascot-theme :deep(.sub-todo-list) {
+  background: rgba(255, 250, 237, 0.5);
+  border-radius: 16px;
+  padding: 8px;
+}
+
+.mascot-theme :deep(.sub-todo-list .v-list-item) {
+  border-radius: 12px;
+  margin-bottom: 4px;
+  background: white;
+  border: 2px solid rgba(139, 69, 19, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mascot-theme :deep(.sub-todo-list .v-list-item:hover) {
+  border-color: rgba(139, 69, 19, 0.3);
+  transform: translateX(4px);
+}
+
+/* 加载动画 */
+.mascot-theme :deep(.v-progress-circular) {
+  color: var(--mascot-primary, #8B6914) !important;
+}
+
+/* Alert 提示框 */
+.mascot-theme :deep(.v-alert) {
+  border-radius: 16px;
+  border: 3px solid currentColor;
+}
+
+/* Snackbar 通知 */
+.mascot-theme :deep(.v-snackbar__wrapper) {
+  border-radius: 20px;
+  border: 3px solid var(--mascot-brown, #8B4513);
+}
+
+/* Dialog 对话框 */
+.mascot-theme :deep(.v-dialog .v-card) {
+  border-radius: 24px;
+  border: 3px solid var(--mascot-brown, #8B4513);
+}
+
+.mascot-theme :deep(.v-dialog .v-card-title) {
+  background: linear-gradient(135deg, var(--mascot-cream, #FFF8DC) 0%, var(--mascot-light-cream, #FFFAED) 100%);
+  color: var(--mascot-dark-brown, #5D2E0F);
+  font-weight: 700;
+  border-bottom: 3px solid var(--mascot-brown, #8B4513);
+}
+
+/* 输入框 */
+.mascot-theme :deep(.v-text-field),
+.mascot-theme :deep(.v-textarea),
+.mascot-theme :deep(.v-select) {
+  border-radius: 16px;
+}
+
+.mascot-theme :deep(.v-field__outline) {
+  border-width: 2px;
+  border-color: var(--mascot-brown, #8B4513) !important;
+}
+
+.mascot-theme :deep(.v-field--focused .v-field__outline) {
+  border-width: 3px;
+  border-color: var(--mascot-primary, #8B6914) !important;
+}
+
+/* 按钮增强 */
+.mascot-theme :deep(.v-btn:not(.mascot-btn)) {
+  border-radius: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.mascot-theme :deep(.v-btn:not(.mascot-btn):hover) {
+  transform: translateY(-2px);
+}
+
+/* 空状态 */
+.mascot-theme :deep(.v-card .text-center) {
+  color: var(--mascot-brown, #8B4513);
+}
+
+/* 响应式优化 */
+@media (max-width: 600px) {
+  .mascot-welcome-banner {
+    padding: 16px !important;
+  }
+  
+  .mascot-welcome-banner :deep(.MascotCow) {
+    display: none;
+  }
+  
+  .gap-3 {
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .mascot-btn {
+    width: 100%;
+    margin-top: 8px;
+  }
+}
+
+/* 子任务对话框样式 */
+.subtask-header {
+  background: linear-gradient(135deg, #E8F5FF 0%, #B3E0FF 100%) !important;
+  border-bottom: 3px solid var(--mascot-cyan, #87CEEB);
+}
+
+.parent-task-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid var(--mascot-cyan, #87CEEB);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: var(--mascot-cyan-dark, #4A9FCC);
+  font-weight: 600;
+}
+
+.parent-task-badge .v-icon {
+  color: var(--mascot-cyan-dark, #4A9FCC);
+}
+
 </style>
 
 <route>

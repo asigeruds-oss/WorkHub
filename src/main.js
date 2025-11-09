@@ -15,6 +15,7 @@ import { createApp } from 'vue'
 
 // Styles
 import 'unfonts.css'
+import '@/styles/mascot-theme.css' // 引入吉祥物主题
 
 const app = createApp(App)
 

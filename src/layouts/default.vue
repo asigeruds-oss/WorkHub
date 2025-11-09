@@ -1,10 +1,10 @@
 <template>
   <v-app>
-    <!-- 应用栏 -->
+    <!-- 应用栏 - 吉祥物主题 -->
     <v-app-bar
-      :elevation="1"
-      color="primary"
-      class="app-header"
+      :elevation="2"
+      color="mascot-primary"
+      class="app-header mascot-app-bar"
     >
       <template v-slot:prepend>
         <v-app-bar-nav-icon 
@@ -17,8 +17,8 @@
       
       <v-app-bar-title>
         <router-link to="/" class="text-decoration-none text-white logo-container">
-          <v-icon icon="mdi-hexagon-multiple-outline" size="large" class="logo-icon mr-2"></v-icon>
-          <span class="app-title">个人待办系统</span>
+          <MascotCow size="small" :animate="false" :show-clock="true" class="mr-2 header-mascot" />
+          <span class="app-title">青牛线</span>
         </router-link>
       </v-app-bar-title>
 
@@ -26,11 +26,11 @@
       
       <!-- 未登录时显示 -->
       <template v-if="!isAuthenticated">
-        <v-btn variant="text" to="/login" color="white" rounded="pill" class="login-btn">
+        <v-btn variant="text" to="/login" color="white" rounded="xl" class="login-btn mascot-header-btn">
           <v-icon start>mdi-login</v-icon>
           登录
         </v-btn>
-        <v-btn variant="outlined" to="/register" class="ml-2 register-btn" color="white" rounded="pill">
+        <v-btn variant="outlined" to="/register" class="ml-2 register-btn mascot-header-btn" color="white" rounded="xl">
           <v-icon start>mdi-account-plus</v-icon>
           注册
         </v-btn>
@@ -55,15 +55,16 @@
               v-bind="props"
               class="ml-2 user-profile-btn"
               color="white"
+              rounded="xl"
             >
-              <v-avatar size="32" color="primary-lighten-3" class="mr-2 user-avatar" variant="elevated">
-                <v-icon icon="mdi-account"></v-icon>
+              <v-avatar size="32" color="mascot-cream" class="mr-2 user-avatar" variant="elevated">
+                <v-icon icon="mdi-account" color="mascot-brown"></v-icon>
               </v-avatar>
               {{ user?.username || '用户' }}
               <v-icon right class="dropdown-icon">mdi-chevron-down</v-icon>
             </v-btn>
           </template>
-          <v-list width="220" elevation="6" rounded="lg" class="user-dropdown-menu">
+          <v-list width="220" elevation="6" rounded="xl" class="user-dropdown-menu mascot-dropdown">
             <v-list-item to="/settings" prepend-icon="mdi-cog" class="menu-item">
               <v-list-item-title>个人设置</v-list-item-title>
             </v-list-item>
@@ -81,19 +82,19 @@
       <router-view />
     </v-main>
     
-    <!-- 侧边栏导航 -->
+    <!-- 侧边栏导航 - 吉祥物主题 -->
     <v-navigation-drawer
       v-model="drawer"
       temporary
       :width="280"
       elevation="4"
-      class="app-sidebar"
+      class="app-sidebar mascot-sidebar"
     >
       <v-list-item
-        prepend-icon="mdi-hexagon-multiple-outline"
-        title="个人提效中心"
-        subtitle="Content Hub"
-        class="my-4 sidebar-header"
+        prepend-icon="mdi-cow"
+        title="青牛线"
+        subtitle="个人提效中心"
+        class="my-4 sidebar-header mascot-sidebar-header"
       >
         <template v-slot:append>
           <v-btn
@@ -106,14 +107,14 @@
         </template>
       </v-list-item>
 
-      <v-divider></v-divider>
+      <v-divider class="mascot-divider-simple"></v-divider>
 
-      <v-list density="compact" nav class="sidebar-nav">
+      <v-list density="compact" nav class="sidebar-nav mascot-sidebar-nav">
         <v-list-item
           to="/"
           prepend-icon="mdi-home"
           title="首页"
-          rounded="lg"
+          rounded="xl"
           :active="$route.path === '/'"
         ></v-list-item>
         
@@ -121,7 +122,7 @@
           to="/wiki"
           prepend-icon="mdi-book-open-variant"
           title="Wiki 知识库"
-          rounded="lg"
+          rounded="xl"
           :active="$route.path.startsWith('/wiki')"
         ></v-list-item>
         
@@ -130,7 +131,7 @@
           to="/autops"
           prepend-icon="mdi-file-document-edit"
           title="zzuli假条生成"
-          rounded="lg"
+          rounded="xl"
           :active="$route.path === '/autops'"
         ></v-list-item>
         -->
@@ -140,7 +141,7 @@
             to="/todos"
             prepend-icon="mdi-format-list-checks"
             title="待办事项"
-            rounded="lg"
+            rounded="xl"
             :active="$route.path === '/todos'"
           ></v-list-item>
           
@@ -148,7 +149,7 @@
             to="/cultivation"
             prepend-icon="mdi-arrow-up-bold-circle-outline"
             title="修仙系统"
-            rounded="lg"
+            rounded="xl"
             :active="$route.path === '/cultivation'"
           ></v-list-item>
           
@@ -156,14 +157,14 @@
             to="/settings"
             prepend-icon="mdi-cog"
             title="设置"
-            rounded="lg"
+            rounded="xl"
             :active="$route.path === '/settings'"
           ></v-list-item>
         </template>
       </v-list>
       
       <template v-slot:append>
-        <div class="pa-2">
+        <div class="pa-4 mascot-sidebar-footer">
           <v-btn
             v-if="isAuthenticated"
             block
@@ -171,13 +172,13 @@
             variant="outlined"
             prepend-icon="mdi-logout"
             @click="logout"
-            class="mb-2 logout-btn"
-            rounded="lg"
+            class="mb-3 logout-btn mascot-logout-btn"
+            rounded="xl"
           >
             退出登录
           </v-btn>
-          <div class="text-caption text-center text-medium-emphasis mt-2">
-            Content Hub v1.0.0
+          <div class="text-caption text-center text-medium-emphasis">
+            青牛线 v1.0.0
           </div>
         </div>
       </template>
@@ -192,6 +193,7 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import MascotCow from '@/components/MascotCow.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -211,72 +213,102 @@ function logout() {
 </script>
 
 <style scoped>
-/* 应用栏样式 */
-.app-header {
-  background: linear-gradient(135deg, #4A67FF 0%, #3F51B5 100%) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+/* ========== 吉祥物主题样式 ========== */
+
+/* 应用栏样式 - 吉祥物主题 */
+.mascot-app-bar {
+  background: linear-gradient(135deg, #8B6914 0%, #8B4513 100%) !important;
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.25) !important;
+  border-bottom: 3px solid #5D2E0F;
+}
+
+.header-mascot {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .logo-container {
   display: flex;
   align-items: center;
-}
-
-.logo-icon {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
   transition: transform 0.3s ease;
 }
 
-.logo-container:hover .logo-icon {
-  transform: rotate(15deg);
+.logo-container:hover {
+  transform: translateY(-2px);
 }
 
 .app-title {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 1.3rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* 导航图标动画 */
 .nav-icon-animation {
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  border-radius: 12px;
 }
 
 .nav-icon-animation:hover {
-  transform: scale(1.1);
+  transform: scale(1.15) rotate(15deg);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-/* 按钮样式 */
-.login-btn, .register-btn {
-  font-weight: 500;
+/* 按钮样式 - 吉祥物主题 */
+.mascot-header-btn {
+  font-weight: 600;
   letter-spacing: 0.5px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-width: 2px;
+  padding: 8px 20px;
 }
 
-.login-btn:hover, .register-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+.login-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .register-btn {
-  border-width: 2px;
+  border-width: 3px !important;
+  font-weight: 700;
+}
+
+.register-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  color: #8B4513 !important;
 }
 
 .notification-btn {
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  border-radius: 12px;
 }
 
 .notification-btn:hover {
-  transform: rotate(15deg);
+  transform: rotate(15deg) scale(1.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .user-avatar {
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  transition: transform 0.3s ease;
+  border: 3px solid rgba(255, 248, 220, 0.9);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.user-profile-btn {
+  transition: all 0.3s ease;
+  padding: 4px 16px;
+}
+
+.user-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .user-profile-btn:hover .user-avatar {
-  transform: scale(1.1);
+  transform: scale(1.15);
+  border-color: #FFD700;
 }
 
 .dropdown-icon {
@@ -287,66 +319,119 @@ function logout() {
   transform: rotate(180deg);
 }
 
-/* 用户下拉菜单 */
-.user-dropdown-menu {
+/* 用户下拉菜单 - 吉祥物主题 */
+.mascot-dropdown {
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 20px;
+  border: 3px solid #8B4513;
+  background: linear-gradient(135deg, #FFF8DC 0%, #FFFAED 100%);
 }
 
-.menu-item {
-  transition: background-color 0.2s ease;
-  border-radius: 8px;
-  margin: 4px;
-}
-
-/* 侧边栏样式 */
-.app-sidebar {
-  border-radius: 0 12px 12px 0;
-}
-
-.sidebar-header {
-  padding: 16px;
-}
-
-.sidebar-nav :deep(.v-list-item) {
-  margin: 4px 8px;
+.mascot-dropdown .menu-item {
   transition: all 0.2s ease;
-  border-left: 3px solid transparent;
+  border-radius: 12px;
+  margin: 6px;
+  font-weight: 500;
 }
 
-.sidebar-nav :deep(.v-list-item--active) {
-  border-left-color: rgb(var(--v-theme-primary));
+.mascot-dropdown .menu-item:hover {
+  background: rgba(139, 69, 19, 0.1);
+  transform: translateX(4px);
+}
+
+/* 侧边栏样式 - 吉祥物主题 */
+.mascot-sidebar {
+  border-radius: 0 24px 24px 0;
+  border-right: 3px solid #8B4513;
+  background: linear-gradient(180deg, #FFFAED 0%, #FFF8DC 100%);
+}
+
+.mascot-sidebar-header {
+  padding: 20px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 0 0 20px 20px;
+  margin: 0 !important;
+  border-bottom: 3px solid #8B4513;
+}
+
+.mascot-sidebar-header :deep(.v-list-item__prepend) {
+  color: #5D2E0F;
+}
+
+.mascot-sidebar-header :deep(.v-list-item-title) {
+  color: #5D2E0F;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.mascot-sidebar-header :deep(.v-list-item-subtitle) {
+  color: #8B4513;
+  font-weight: 600;
+}
+
+.mascot-divider-simple {
+  display: none;
+}
+
+.mascot-sidebar-nav :deep(.v-list-item) {
+  margin: 6px 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid transparent;
+  font-weight: 500;
+}
+
+.mascot-sidebar-nav :deep(.v-list-item--active) {
+  border-left-color: #8B4513;
   background: linear-gradient(90deg, 
-    rgba(var(--v-theme-primary-rgb), 0.1) 0%, 
-    rgba(var(--v-theme-primary-rgb), 0.05) 70%,
-    rgba(var(--v-theme-primary-rgb), 0) 100%
+    rgba(255, 215, 0, 0.2) 0%, 
+    rgba(255, 215, 0, 0.1) 70%,
+    rgba(255, 215, 0, 0) 100%
   ) !important;
+  color: #5D2E0F;
+  font-weight: 700;
 }
 
-.sidebar-nav :deep(.v-list-item:hover) {
-  background-color: rgba(var(--v-theme-primary-rgb), 0.05);
+.mascot-sidebar-nav :deep(.v-list-item:hover) {
+  background: rgba(139, 69, 19, 0.08);
+  transform: translateX(4px);
+}
+
+.mascot-sidebar-nav :deep(.v-list-item__prepend) {
+  color: #8B4513;
+}
+
+.mascot-sidebar-nav :deep(.v-list-item--active .v-list-item__prepend) {
+  color: #5D2E0F;
 }
 
 .close-btn {
-  opacity: 0.6;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  color: #5D2E0F;
 }
 
 .close-btn:hover {
   opacity: 1;
-  transform: scale(1.1);
+  transform: scale(1.2) rotate(90deg);
+  background: rgba(93, 46, 15, 0.1);
 }
 
-.logout-btn {
-  border-radius: 8px;
-  font-weight: 500;
+.mascot-sidebar-footer {
+  background: linear-gradient(0deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
+  border-top: 2px solid rgba(139, 69, 19, 0.2);
+}
+
+.mascot-logout-btn {
+  border-radius: 16px;
+  font-weight: 600;
   letter-spacing: 0.5px;
-  transition: all 0.2s ease;
-  border-width: 2px;
+  transition: all 0.3s ease;
+  border-width: 3px !important;
 }
 
-.logout-btn:hover {
-  background-color: rgba(var(--v-theme-error-rgb), 0.1);
-  transform: translateY(-1px);
+.mascot-logout-btn:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
 }
 </style>

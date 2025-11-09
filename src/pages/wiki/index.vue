@@ -1,12 +1,12 @@
 <template>
-  <div class="wiki-layout">
-    <!-- 侧边导航 -->
+  <div class="wiki-layout mascot-theme">
+    <!-- 侧边导航 - 吉祥物主题 -->
     <v-navigation-drawer
       v-model="drawer"
       permanent
       :rail="railMode"
       width="280"
-      class="wiki-sidebar"
+      class="wiki-sidebar mascot-wiki-sidebar"
       @click="railMode = false"
     >
       <!-- 侧栏头部 -->
@@ -14,46 +14,50 @@
         <v-list-item
           prepend-icon="mdi-book-open-variant"
           title="Wiki 知识库"
-          subtitle="多级目录管理"
+          subtitle="知识共享平台"
+          class="mascot-sidebar-header"
         >
           <template v-slot:append>
             <v-btn
               variant="text"
-              icon="mdi-chevron-left"
+              :icon="railMode ? 'mdi-chevron-right' : 'mdi-chevron-left'"
               @click.stop="railMode = !railMode"
+              class="toggle-btn"
             />
           </template>
         </v-list-item>
       </v-list>
 
-      <v-divider />
+      <v-divider class="mascot-divider-simple" />
       
       <!-- 搜索框 -->
       <div class="pa-3">
         <v-text-field
           v-model="searchQuery"
-          placeholder="搜索页面..."
+          placeholder="🔍 搜索页面..."
           density="compact"
           variant="outlined"
           prepend-inner-icon="mdi-magnify"
           clearable
           hide-details
           @keyup.enter="performSearch"
+          class="mascot-search-field"
         />
       </div>
       
-      <v-divider />
+      <v-divider class="mascot-divider-simple" />
 
       <!-- 页面树形导航 -->
-      <v-list nav density="compact" class="wiki-nav compact-nav">
-        <v-list-subheader class="d-flex align-center">
-          <span>页面导航</span>
+      <v-list nav density="compact" class="wiki-nav compact-nav mascot-wiki-nav">
+        <v-list-subheader class="d-flex align-center mascot-nav-header">
+          <span>📚 页面导航</span>
           <v-spacer />
           <v-btn
             icon="mdi-plus"
             size="x-small"
             variant="text"
             @click="showCreateDialog = true"
+            class="add-page-btn"
           />
         </v-list-subheader>
         
@@ -79,26 +83,30 @@
 
       <!-- 底部操作 -->
       <template v-slot:append>
-        <v-list density="compact">
+        <v-list density="compact" class="mascot-sidebar-actions">
           <v-list-item
             prepend-icon="mdi-plus"
             title="创建根页面"
             @click="showCreateDialog = true"
+            class="action-item"
+            rounded="xl"
           />
           
           <v-list-item
             prepend-icon="mdi-tag-outline"
             title="标签管理"
             @click="showTagsDialog = true"
+            class="action-item"
+            rounded="xl"
           />
         </v-list>
       </template>
     </v-navigation-drawer>
 
     <!-- 主内容区域 -->
-    <div class="wiki-content">
+    <div class="wiki-content mascot-wiki-content">
       <!-- 顶部工具栏 -->
-      <v-app-bar flat class="wiki-toolbar">
+      <v-app-bar flat class="wiki-toolbar mascot-toolbar">
         <div class="toolbar-content">
           <!-- 面包屑导航 -->
           <v-breadcrumbs
@@ -163,17 +171,17 @@
       <!-- 页面内容 -->
       <v-main>
         <v-container fluid class="wiki-container pa-6">
-          <!-- 首页内容 -->
-          <div v-if="!currentPage" class="text-center welcome-section">
+          <!-- 首页内容 - 吉祥物主题 -->
+          <div v-if="!currentPage" class="text-center welcome-section mascot-welcome">
             <div class="mb-8 hero-welcome">
-              <div class="icon-wrapper mb-4">
-                <v-icon size="100" color="primary">mdi-book-open-variant</v-icon>
+              <div class="mascot-icon-wrapper mb-6">
+                <MascotCow size="large" :message="'开始构建知识库吧！'" />
               </div>
-              <h1 class="text-h3 font-weight-bold mt-4 mb-3 gradient-title">Wiki 知识库</h1>
-              <p class="text-h6 mb-2">
-                构建和管理您的知识体系
+              <h1 class="text-h3 font-weight-bold mt-4 mb-3 mascot-page-title">📚 Wiki 知识库</h1>
+              <p class="text-h6 mb-4 mascot-subtitle">
+                和青牛线一起构建知识体系
               </p>
-              <p class="text-body-1 text-medium-emphasis">
+              <p class="text-body-1 text-medium-emphasis mascot-features">
                 📝 支持 Markdown · 🌳 树形结构 · 🏷️ 标签管理 · 💬 评论互动
               </p>
             </div>
@@ -181,9 +189,9 @@
             <!-- 快速开始 -->
             <v-row class="mb-8 justify-center">
               <v-col cols="12" sm="6" md="4" lg="3">
-                <v-card class="action-card elevation-4" rounded="xl" @click="showCreateDialog = true">
+                <v-card class="action-card mascot-action-card elevation-4" rounded="xl" @click="showCreateDialog = true">
                   <v-card-text class="pa-6 text-center">
-                    <div class="action-icon-wrapper action-icon-primary mb-4">
+                    <div class="action-icon-wrapper mascot-icon-success mb-4">
                       <v-icon size="42" color="white">mdi-file-plus-outline</v-icon>
                     </div>
                     <h3 class="text-h6 font-weight-bold mb-2">创建页面</h3>
@@ -195,9 +203,9 @@
               </v-col>
               
               <v-col cols="12" sm="6" md="4" lg="3">
-                <v-card class="action-card elevation-4" rounded="xl" @click="performSearch">
+                <v-card class="action-card mascot-action-card elevation-4" rounded="xl" @click="performSearch">
                   <v-card-text class="pa-6 text-center">
-                    <div class="action-icon-wrapper action-icon-warning mb-4">
+                    <div class="action-icon-wrapper mascot-icon-warning mb-4">
                       <v-icon size="42" color="white">mdi-magnify</v-icon>
                     </div>
                     <h3 class="text-h6 font-weight-bold mb-2">搜索内容</h3>
@@ -348,6 +356,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { marked } from 'marked'
 import WikiAPI from '@/api/wiki'
+import MascotCow from '@/components/MascotCow.vue'
 import WikiTreeItem from '@/components/wiki/WikiTreeItem.vue'
 import WikiComments from '@/components/wiki/WikiComments.vue'
 import WikiCreateDialog from '@/components/wiki/WikiCreateDialog.vue'
@@ -549,6 +558,303 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ========== 吉祥物主题样式 ========== */
+
+/* Wiki整体布局 */
+.mascot-theme.wiki-layout {
+  background: linear-gradient(180deg, #FFFAED 0%, #FFF8DC 100%);
+}
+
+/* 侧边栏 - 吉祥物主题 */
+.mascot-wiki-sidebar {
+  background: linear-gradient(180deg, #FFF8DC 0%, #FFFAED 100%) !important;
+  border-right: 3px solid #8B4513 !important;
+}
+
+/* Rail 模式（收缩模式）样式修复 */
+.mascot-wiki-sidebar.v-navigation-drawer--rail {
+  width: 72px !important;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-sidebar-header {
+  padding: 12px 8px !important;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .pa-3 {
+  padding: 8px !important;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-search-field {
+  display: none;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-nav-header span {
+  display: none;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-nav-header {
+  justify-content: center;
+  margin: 8px 4px;
+  padding: 8px;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .add-page-btn {
+  margin: 0;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-sidebar-actions {
+  padding: 8px !important;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .action-item {
+  justify-content: center;
+}
+
+.mascot-sidebar-header {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+  border-radius: 0 0 20px 20px;
+  margin: 0 !important;
+  padding: 20px !important;
+  border-bottom: 3px solid #8B4513;
+}
+
+.mascot-sidebar-header :deep(.v-list-item__prepend) {
+  color: #5D2E0F;
+}
+
+.mascot-sidebar-header :deep(.v-list-item-title) {
+  color: #5D2E0F !important;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.mascot-sidebar-header :deep(.v-list-item-subtitle) {
+  color: #8B4513 !important;
+  font-weight: 600;
+}
+
+.toggle-btn {
+  color: #5D2E0F !important;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+  transform: scale(1.2) rotate(15deg);
+  background: rgba(93, 46, 15, 0.1);
+}
+
+.mascot-divider-simple {
+  display: none;
+}
+
+/* 搜索框 */
+.mascot-search-field :deep(.v-field) {
+  border: 2px solid #8B4513;
+  border-radius: 16px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.mascot-search-field :deep(.v-field:hover) {
+  border-color: #FFD700;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+.mascot-search-field :deep(.v-field--focused) {
+  border-color: #FFA500 !important;
+  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+}
+
+/* 导航列表 */
+.mascot-nav-header {
+  font-weight: 700;
+  color: #5D2E0F;
+  padding: 12px 16px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 12px;
+  margin: 8px 12px;
+}
+
+.add-page-btn {
+  color: #8B4513 !important;
+  transition: all 0.3s ease;
+}
+
+.add-page-btn:hover {
+  transform: scale(1.2) rotate(90deg);
+  background: rgba(139, 69, 19, 0.1);
+}
+
+.mascot-wiki-nav :deep(.v-list-item) {
+  margin: 4px 12px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.mascot-wiki-nav :deep(.v-list-item:hover) {
+  background: rgba(139, 69, 19, 0.08);
+  border-left-color: #8B4513;
+  transform: translateX(4px);
+}
+
+.mascot-wiki-nav :deep(.v-list-item--active) {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, transparent 100%);
+  border-left-color: #8B4513;
+  font-weight: 700;
+  color: #5D2E0F;
+}
+
+/* Rail 模式下的导航项 */
+.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-wiki-nav :deep(.v-list-item) {
+  margin: 4px;
+  justify-content: center;
+}
+
+.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-wiki-nav :deep(.v-list-item:hover) {
+  transform: translateX(0) scale(1.1);
+}
+
+/* 侧边栏底部操作 */
+.mascot-sidebar-actions {
+  background: linear-gradient(0deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
+  border-top: 2px solid rgba(139, 69, 19, 0.2);
+  padding: 12px !important;
+}
+
+.mascot-sidebar-actions .action-item {
+  margin: 4px 0;
+  font-weight: 600;
+  color: #5D2E0F;
+  transition: all 0.3s ease;
+}
+
+.mascot-sidebar-actions .action-item:hover {
+  background: rgba(139, 69, 19, 0.1);
+  transform: translateX(4px);
+}
+
+/* 主内容区域 */
+.mascot-wiki-content {
+  background: linear-gradient(180deg, #FFFAED 0%, #FFF8DC 100%);
+}
+
+/* 工具栏 */
+.mascot-toolbar {
+  background: linear-gradient(135deg, #8B6914 0%, #8B4513 100%) !important;
+  border-bottom: 3px solid #5D2E0F;
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.25) !important;
+}
+
+.mascot-toolbar :deep(.v-breadcrumbs-item) {
+  color: white !important;
+  font-weight: 600;
+}
+
+.mascot-toolbar :deep(.v-breadcrumbs-divider) {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.mascot-toolbar :deep(.v-btn) {
+  color: white !important;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.mascot-toolbar :deep(.v-btn:hover) {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+}
+
+/* 欢迎页面 */
+.mascot-welcome {
+  padding: 80px 20px;
+  background: radial-gradient(circle at top, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+}
+
+.mascot-icon-wrapper {
+  animation: floatAnimation 3s ease-in-out infinite;
+}
+
+@keyframes floatAnimation {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.mascot-page-title {
+  color: #5D2E0F;
+  text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.1);
+  animation: titlePulse 2s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.mascot-subtitle {
+  color: #8B4513;
+  font-weight: 600;
+}
+
+.mascot-features {
+  background: rgba(255, 215, 0, 0.1);
+  padding: 12px 24px;
+  border-radius: 20px;
+  border: 2px solid #FFD700;
+  display: inline-block;
+}
+
+/* 操作卡片 */
+.mascot-action-card {
+  border: 3px solid #8B4513;
+  background: linear-gradient(135deg, #FFFAED 0%, white 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.mascot-action-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 12px 32px rgba(139, 69, 19, 0.25) !important;
+  border-color: #FFD700;
+}
+
+.mascot-icon-success {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #3CB371 0%, #2E8B57 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 4px 16px rgba(60, 179, 113, 0.3);
+  transition: all 0.3s ease;
+}
+
+.mascot-action-card:hover .mascot-icon-success {
+  transform: rotate(360deg) scale(1.1);
+}
+
+.mascot-icon-warning {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 4px 16px rgba(255, 165, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.mascot-action-card:hover .mascot-icon-warning {
+  transform: rotate(-360deg) scale(1.1);
+}
+
+/* ========== 原有布局样式 ========== */
+
 /* 布局样式 */
 .wiki-layout {
   display: flex;

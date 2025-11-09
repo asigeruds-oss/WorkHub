@@ -1,43 +1,50 @@
 <template>
-  <div class="home-container">
+  <div class="home-container mascot-theme">
     <!-- 装饰性背景 -->
     <div class="bg-decoration">
       <div class="circle circle-1"></div>
       <div class="circle circle-2"></div>
       <div class="circle circle-3"></div>
+      <!-- 吉祥物装饰元素 -->
+      <div class="mascot-decoration mascot-clock">🕐</div>
+      <div class="mascot-decoration mascot-star">⭐</div>
+      <div class="mascot-decoration mascot-lightning">⚡</div>
+      <div class="mascot-decoration mascot-check">✅</div>
     </div>
 
     <!-- 顶部欢迎区域 -->
     <v-container class="hero-section py-12">
       <v-row align="center" justify="center">
         <v-col cols="12" md="10" lg="8" class="text-center">
-          <div class="avatar-wrapper mb-6">
-            <v-avatar size="140" class="elevation-8 avatar-main">
-              <v-img src="https://lyle-mac.oss-cn-hangzhou.aliyuncs.com/blog/20250921121120.png" alt="个人头像"></v-img>
-            </v-avatar>
-            <div class="avatar-ring"></div>
+          <!-- 吉祥物头像 -->
+          <div class="mascot-hero mb-6">
+            <div class="mascot-avatar-large mascot-float">
+              <MascotCow size="large" />
+            </div>
+            <div class="mascot-subtitle"></div>
           </div>
-          <h1 class="text-h3 font-weight-bold gradient-text mb-4 title-animate">个人内容中心</h1>
+          <h1 class="mascot-title text-h3 font-weight-bold mb-4 title-animate">
+            Ox Line 
+          </h1>
           <p class="text-h6 mb-8 subtitle-text">
-            <span class="feature-tag">📚 知识管理</span>
+            <span class="mascot-tag feature-tag">📚 知识管理</span>
             <span class="separator">·</span>
-            <span class="feature-tag">✅ 任务追踪</span>
+            <span class="mascot-tag feature-tag">✅ 任务追踪</span>
             <span class="separator">·</span>
-            <span class="feature-tag">🌱 个人成长</span>
+            <span class="mascot-tag feature-tag">🌱 个人成长</span>
             <span class="separator">·</span>
-            <span class="feature-tag">💬 想法记录</span>
+            <span class="mascot-tag feature-tag">💬 想法记录</span>
           </p>
           <v-btn
             v-if="!isLoggedIn"
-            color="primary"
             size="x-large"
             rounded="pill"
             to="/login"
             elevation="8"
-            class="cta-button px-10 py-3"
+            class="mascot-btn mascot-btn-primary px-10 py-3"
           >
             <v-icon start size="24">mdi-rocket-launch</v-icon>
-            立即开始探索
+            和青牛线一起开始
             <v-icon end size="24">mdi-arrow-right</v-icon>
           </v-btn>
         </v-col>
@@ -1031,6 +1038,200 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
+
+/* ========== 吉祥物主题样式 ========== */
+
+/* 吉祥物装饰元素 */
+.mascot-decoration {
+  position: fixed;
+  font-size: 3rem;
+  opacity: 0.15;
+  animation: mascot-float-gentle 4s ease-in-out infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.mascot-cow {
+  top: 15%;
+  left: 5%;
+  animation-delay: 0s;
+}
+
+.mascot-clock {
+  top: 25%;
+  right: 8%;
+  animation-delay: 0.5s;
+}
+
+.mascot-star {
+  top: 60%;
+  left: 10%;
+  animation-delay: 1s;
+}
+
+.mascot-lightning {
+  top: 70%;
+  right: 15%;
+  animation-delay: 1.5s;
+}
+
+.mascot-check {
+  top: 40%;
+  right: 5%;
+  animation-delay: 2s;
+}
+
+@keyframes mascot-float-gentle {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(10px, -10px) rotate(5deg); }
+  50% { transform: translate(0, -20px) rotate(0deg); }
+  75% { transform: translate(-10px, -10px) rotate(-5deg); }
+}
+
+/* 大号吉祥物头像 */
+.mascot-hero {
+  position: relative;
+  display: inline-block;
+}
+
+.mascot-avatar-large {
+  font-size: 120px;
+  display: inline-block;
+  filter: drop-shadow(0 10px 30px rgba(139, 69, 19, 0.3));
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mascot-avatar-large:hover {
+  transform: scale(1.1) rotate(5deg);
+  filter: drop-shadow(0 15px 40px rgba(139, 69, 19, 0.4));
+}
+
+.mascot-subtitle {
+  margin-top: 10px;
+  color: var(--mascot-dark-brown, #5D2E0F);
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* 吉祥物主题的主要按钮 */
+.mascot-btn-primary {
+  background: linear-gradient(135deg, #8B6914 0%, #8B4513 100%) !important;
+  color: white !important;
+  border: 3px solid #5D2E0F !important;
+  box-shadow: 0 8px 24px rgba(139, 69, 19, 0.35) !important;
+  transition: all 0.3s ease !important;
+  font-size: 1.1rem !important;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mascot-btn-primary:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(139, 69, 19, 0.5) !important;
+}
+
+/* 重写主容器背景 */
+.mascot-theme.home-container {
+  background: linear-gradient(180deg, #FFFAED 0%, #FFE4B5 50%, #F0E68C 100%);
+}
+
+/* 吉祥物主题的装饰圈圈 */
+.mascot-theme .circle-1 {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  opacity: 0.08;
+}
+
+.mascot-theme .circle-2 {
+  background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
+  opacity: 0.08;
+}
+
+.mascot-theme .circle-3 {
+  background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
+  opacity: 0.08;
+}
+
+/* 吉祥物主题的统计卡片 */
+.mascot-theme .stat-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8DC 100%);
+  border: 3px solid #8B4513;
+  border-radius: 24px;
+}
+
+.mascot-theme .stat-card-primary {
+  border-left: 6px solid #8B6914;
+}
+
+.mascot-theme .stat-card-success {
+  border-left: 6px solid #3CB371;
+}
+
+.mascot-theme .stat-card-warning {
+  border-left: 6px solid #FFA500;
+}
+
+.mascot-theme .stat-card-info {
+  border-left: 6px solid #87CEEB;
+}
+
+/* 吉祥物主题的功能卡片 */
+.mascot-theme .feature-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8DC 100%);
+  border: 3px solid #8B4513;
+  border-radius: 24px;
+}
+
+.mascot-theme .feature-card:hover {
+  border-color: #8B6914;
+  box-shadow: 0 20px 60px rgba(139, 69, 19, 0.25) !important;
+}
+
+/* 吉祥物主题的欢迎横幅 */
+.mascot-theme .welcome-banner {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(139, 69, 19, 0.1) 100%);
+  border: 2px solid rgba(139, 69, 19, 0.2);
+  border-radius: 24px;
+}
+
+/* 添加可爱的牛斑点效果到卡片 */
+.mascot-theme .feature-card::after,
+.mascot-theme .stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(139, 69, 19, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* CTA卡片吉祥物主题 */
+.mascot-theme .cta-card {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(139, 69, 19, 0.08) 100%);
+  border: 3px solid rgba(139, 105, 20, 0.3);
+  border-radius: 32px;
+}
+
+/* 吉祥物主题的标签 */
+.mascot-theme .feature-tag {
+  background: rgba(139, 105, 20, 0.12);
+  border: 2px solid rgba(139, 69, 19, 0.2);
+  border-radius: 16px;
+  padding: 6px 14px;
+  font-weight: 600;
+}
+
+.mascot-theme .feature-tag:hover {
+  background: rgba(139, 105, 20, 0.2);
+  border-color: rgba(139, 69, 19, 0.4);
+  transform: translateY(-3px) scale(1.05);
+}
+
 </style>
 
 <route>
