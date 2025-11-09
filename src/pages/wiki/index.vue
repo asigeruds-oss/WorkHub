@@ -747,7 +747,7 @@ onMounted(() => {
 }
 
 .mascot-toolbar :deep(.v-breadcrumbs-item) {
-  color: white !important;
+  color: rgb(0, 0, 0) !important;
   font-weight: 600;
 }
 
@@ -756,7 +756,7 @@ onMounted(() => {
 }
 
 .mascot-toolbar :deep(.v-btn) {
-  color: white !important;
+  color: rgb(161, 41, 41) !important;
   border-radius: 12px;
   transition: all 0.3s ease;
 }
@@ -864,7 +864,7 @@ onMounted(() => {
 
 .wiki-sidebar {
   border-right: 1px solid rgba(0, 0, 0, 0.08);
-  background: white !important;
+  background: #fff7de !important;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -878,7 +878,7 @@ onMounted(() => {
 
 .wiki-toolbar {
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  background: white !important;
+  background: #fff9e9 !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
