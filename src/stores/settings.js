@@ -17,53 +17,25 @@ export const useSettingsStore = defineStore('settings', {
     const storedSettings = getStoredSettings()
     
     return {
-      // 待办事项设置
-      todos: {
-        completedTodosPosition: storedSettings?.todos?.completedTodosPosition || 'bottom', // 已完成待办的位置: 'bottom' 或 'inline'
-        showDateInfo: storedSettings?.todos?.showDateInfo !== false, // 是否显示日期信息
-        confirmDelete: storedSettings?.todos?.confirmDelete !== false, // 删除前是否确认
-        pageSize: storedSettings?.todos?.pageSize || 10, // 每页显示数量
-      },
-      // 主题设置
-      theme: {
-        mode: storedSettings?.theme?.mode || 'system', // 'light', 'dark', 'system'
-        primaryColor: storedSettings?.theme?.primaryColor || 'blue', // 主题色
-      },
       // 通知设置
       notifications: {
-        enabled: storedSettings?.notifications?.enabled !== false, // 是否启用通知
-        position: storedSettings?.notifications?.position || 'bottom-right', // 通知位置
-        // 根据API文档添加的新设置项
-        push_channel: storedSettings?.notifications?.push_channel || 'dingtalk', // 通知渠道: 'wechat', 'dingtalk', 'both', 'none'
-        enable_daily_reminder: storedSettings?.notifications?.enable_daily_reminder !== false, // 启用日常提醒
-        enable_soon_reminder: storedSettings?.notifications?.enable_soon_reminder !== false, // 启用较紧急提醒
-        enable_urgent_reminder: storedSettings?.notifications?.enable_urgent_reminder !== false, // 启用紧急提醒
-        enable_overdue_reminder: storedSettings?.notifications?.enable_overdue_reminder !== false, // 启用过期提醒
-        daily_reminder_hours: storedSettings?.notifications?.daily_reminder_hours || 24, // 日常提醒提前小时数
-        soon_reminder_hours: storedSettings?.notifications?.soon_reminder_hours || 4, // 较紧急提醒提前小时数
-        urgent_reminder_hours: storedSettings?.notifications?.urgent_reminder_hours || 2, // 紧急提醒提前小时数
-        daily_reminder_time: storedSettings?.notifications?.daily_reminder_time || '09:00' // 日常提醒时间
+        enabled: storedSettings?.notifications?.enabled !== false,
+        push_channel: storedSettings?.notifications?.push_channel || 'dingtalk',
+        enable_daily_reminder: storedSettings?.notifications?.enable_daily_reminder !== false,
+        enable_soon_reminder: storedSettings?.notifications?.enable_soon_reminder !== false,
+        enable_urgent_reminder: storedSettings?.notifications?.enable_urgent_reminder !== false,
+        enable_overdue_reminder: storedSettings?.notifications?.enable_overdue_reminder !== false,
+        daily_reminder_hours: storedSettings?.notifications?.daily_reminder_hours || 24,
+        soon_reminder_hours: storedSettings?.notifications?.soon_reminder_hours || 4,
+        urgent_reminder_hours: storedSettings?.notifications?.urgent_reminder_hours || 2,
+        daily_reminder_time: storedSettings?.notifications?.daily_reminder_time || '09:00'
       }
     }
   },
   getters: {
-    getTodoSettings: (state) => state.todos,
-    getThemeSettings: (state) => state.theme,
     getNotificationSettings: (state) => state.notifications,
   },
   actions: {
-    // 更新待办事项设置
-    updateTodoSettings(settings) {
-      this.todos = { ...this.todos, ...settings }
-      this.saveSettings()
-    },
-    
-    // 更新主题设置
-    updateThemeSettings(settings) {
-      this.theme = { ...this.theme, ...settings }
-      this.saveSettings()
-    },
-    
     // 更新通知设置
     updateNotificationSettings(settings) {
       this.notifications = { ...this.notifications, ...settings }
@@ -73,8 +45,6 @@ export const useSettingsStore = defineStore('settings', {
     // 保存设置到 localStorage
     saveSettings() {
       const settings = {
-        todos: this.todos,
-        theme: this.theme,
         notifications: this.notifications
       }
       
@@ -92,3 +62,4 @@ export const useSettingsStore = defineStore('settings', {
     }
   }
 })
+

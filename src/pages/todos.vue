@@ -5,6 +5,9 @@
         <!-- 左侧栏：日常任务 -->
         <v-col cols="12" md="3">
           <DailyTaskList :showNotification="showNotification" />
+
+          <!-- 待办事项统计 -->
+          <TodoStatistics :statistics="statistics" />
         </v-col>
 
         <!-- 右侧栏：待办事项列表 -->
@@ -32,6 +35,42 @@
                 备忘
               </v-btn>
             </v-btn-toggle>
+
+            <!-- 状态筛选下拉菜单 -->
+            <v-menu location="bottom start">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="text"
+                  size="small"
+                  class="ml-2 text-grey-darken-1"
+                  prepend-icon="mdi-filter-variant"
+                >
+                  {{ getFilterLabel(filter) }}
+                  <v-icon end size="small">mdi-chevron-down</v-icon>
+                </v-btn>
+              </template>
+              <v-list density="compact" nav class="py-0">
+                <v-list-item
+                  v-for="option in filterOptions"
+                  :key="option.value"
+                  :value="option.value"
+                  @click="setFilter(option.value)"
+                  :active="filter === option.value"
+                  color="primary"
+                  min-height="36"
+                >
+                  <template v-slot:prepend>
+                    <v-icon
+                      :icon="getFilterIcon(option.value)"
+                      size="small"
+                      class="mr-2"
+                    ></v-icon>
+                  </template>
+                  <v-list-item-title>{{ option.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
 
             <v-spacer></v-spacer>
 
@@ -107,7 +146,10 @@
           </v-alert>
 
           <!-- 加载状态 -->
-          <div v-if="todoStore.isLoading" class="d-flex justify-center my-4">
+          <div
+            v-if="todoStore.isLoading && !loadingMore"
+            class="d-flex justify-center my-4"
+          >
             <v-progress-circular
               indeterminate
               color="primary"
@@ -164,6 +206,7 @@
                   'completed-todo': todo.status === 'done',
                   'archived-todo': todo.status === 'archived',
                   'processing-todo': todo.status === 'processing',
+                  'suspended-todo': todo.status === 'suspended',
                   'memo-card': todo.is_memo,
                   'faded-todo':
                     hasProcessingTodo && todo.status !== 'processing',
@@ -238,6 +281,28 @@
                             @click.stop
                           >
                             处理中
+                          </v-chip>
+
+                          <v-chip
+                            v-if="todo.status === 'suspended'"
+                            size="x-small"
+                            color="grey"
+                            variant="tonal"
+                            class="font-weight-bold"
+                            @click.stop
+                          >
+                            已挂起
+                          </v-chip>
+
+                          <v-chip
+                            v-if="todo.workload"
+                            size="x-small"
+                            color="blue-grey"
+                            variant="tonal"
+                            prepend-icon="mdi-clock-outline"
+                            @click.stop
+                          >
+                            {{ todo.workload }}h
                           </v-chip>
 
                           <v-chip
@@ -416,7 +481,7 @@
 
                       <!-- Date Info -->
                       <div
-                        v-if="todoSettings.showDateInfo && todo.due_date"
+                        v-if="todo.due_date"
                         class="text-caption text-grey mt-1 d-flex align-center"
                       >
                         <v-icon
@@ -516,10 +581,84 @@
 
                             <v-divider class="my-1"></v-divider>
 
+                            <!-- 转换功能 -->
+                            <v-list-item
+                              v-if="!todo.is_memo"
+                              @click="convertToMemo(todo.id)"
+                              value="convert-memo"
+                            >
+                              <template v-slot:prepend>
+                                <v-icon
+                                  icon="mdi-note-text"
+                                  color="info"
+                                  size="small"
+                                  class="mr-2"
+                                ></v-icon>
+                              </template>
+                              <v-list-item-title>转为备忘录</v-list-item-title>
+                            </v-list-item>
+
+                            <v-list-item
+                              v-if="todo.is_memo"
+                              @click="convertToTodo(todo.id)"
+                              value="convert-todo"
+                            >
+                              <template v-slot:prepend>
+                                <v-icon
+                                  icon="mdi-checkbox-marked-circle"
+                                  color="info"
+                                  size="small"
+                                  class="mr-2"
+                                ></v-icon>
+                              </template>
+                              <v-list-item-title
+                                >转为待办事项</v-list-item-title
+                              >
+                            </v-list-item>
+
+                            <v-divider class="my-1"></v-divider>
+
+                            <v-list-item
+                              v-if="
+                                todo.status !== 'suspended' &&
+                                todo.status !== 'done' &&
+                                todo.status !== 'archived'
+                              "
+                              @click="suspendTodo(todo)"
+                              value="suspend"
+                            >
+                              <template v-slot:prepend>
+                                <v-icon
+                                  icon="mdi-pause"
+                                  color="grey"
+                                  size="small"
+                                  class="mr-2"
+                                ></v-icon>
+                              </template>
+                              <v-list-item-title>挂起任务</v-list-item-title>
+                            </v-list-item>
+
+                            <v-list-item
+                              v-if="todo.status === 'suspended'"
+                              @click="unsuspendTodo(todo)"
+                              value="unsuspend"
+                            >
+                              <template v-slot:prepend>
+                                <v-icon
+                                  icon="mdi-play-circle-outline"
+                                  color="success"
+                                  size="small"
+                                  class="mr-2"
+                                ></v-icon>
+                              </template>
+                              <v-list-item-title>恢复任务</v-list-item-title>
+                            </v-list-item>
+
                             <v-list-item
                               v-if="
                                 todo.status !== 'processing' &&
-                                todo.status !== 'archived'
+                                todo.status !== 'archived' &&
+                                todo.status !== 'suspended'
                               "
                               @click="setProcessingTodo(todo)"
                               value="process"
@@ -611,179 +750,41 @@
               </v-btn>
             </div>
 
-            <!-- 分页控件 -->
+            <!-- 加载更多提示 -->
             <div
-              v-if="todoStore.getAllTodos.length > 0"
+              v-if="hasMore && (!todoStore.isLoading || loadingMore)"
               class="d-flex justify-center mt-6"
             >
-              <v-pagination
-                v-if="todoStore.getPagination.count > 0"
-                v-model="currentPage"
-                :length="Math.ceil(todoStore.getPagination.count / pageSize)"
-                :total-visible="5"
-                @update:model-value="handlePageChange"
+              <v-btn
+                @click="loadMore"
                 color="primary"
-                rounded="circle"
-                class="pagination"
-              ></v-pagination>
+                variant="outlined"
+                :loading="loadingMore"
+              >
+                加载更多
+              </v-btn>
+            </div>
+
+            <!-- 已加载全部提示 -->
+            <div
+              v-if="!hasMore && todoStore.getAllTodos.length > 0"
+              class="text-center text-grey mt-6"
+            >
+              已加载全部内容
             </div>
           </div>
         </v-col>
       </v-row>
 
       <!-- 添加/编辑对话框 -->
-      <v-dialog v-model="dialog" max-width="500">
-        <v-card>
-          <v-card-title class="text-h6 py-3">
-            {{ isEditing ? "编辑" : "添加"
-            }}{{ isAddingMemo ? "备忘录" : "任务" }}
-          </v-card-title>
-
-          <v-card-text class="pt-4 px-4">
-            <v-form
-              ref="form"
-              @submit.prevent="isEditing ? updateTodo() : addTodo()"
-            >
-              <!-- 任务标题 -->
-              <div class="mb-3">
-                <v-text-field
-                  v-model="currentTodo.title"
-                  :rules="[(v) => (!!v && v.trim() !== '') || '标题不能为空']"
-                  required
-                  label="任务标题"
-                  variant="outlined"
-                  density="compact"
-                  @input="
-                    () => {
-                      if (form.value) form.value.resetValidation();
-                    }
-                  "
-                  hide-details="auto"
-                ></v-text-field>
-              </div>
-
-              <!-- 任务描述 -->
-              <div class="mb-3">
-                <v-textarea
-                  v-model="currentTodo.description"
-                  label="任务描述"
-                  rows="2"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                ></v-textarea>
-              </div>
-
-              <!-- 优先级选择 -->
-              <div class="mb-3">
-                <v-select
-                  v-model="currentTodo.priority"
-                  :items="priorityOptions"
-                  item-title="text"
-                  item-value="value"
-                  label="优先级"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                >
-                  <template v-slot:selection="{ item }">
-                    <span class="d-flex align-center">
-                      <span v-if="item.value === 3" class="mr-2">⚡</span>
-                      <span v-else-if="item.value === 2" class="mr-2">🕐</span>
-                      <span v-else class="mr-2">✅</span>
-                      {{ item.title }}
-                    </span>
-                  </template>
-                  <template v-slot:item="{ item, props }">
-                    <v-list-item v-bind="props">
-                      <template v-slot:prepend>
-                        <span v-if="item.value === 3">⚡</span>
-                        <span v-else-if="item.value === 2">🕐</span>
-                        <span v-else>✅</span>
-                      </template>
-                    </v-list-item>
-                  </template>
-                </v-select>
-              </div>
-
-              <!-- 状态选择（仅编辑时显示） -->
-              <div v-if="isEditing && !currentTodo.is_memo" class="mb-3">
-                <v-select
-                  v-model="currentTodo.status"
-                  :items="statusOptions"
-                  item-title="text"
-                  item-value="value"
-                  label="状态"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                ></v-select>
-              </div>
-
-              <!-- 备忘录/待办切换 -->
-              <div
-                v-if="!isEditing || currentTodo.is_memo !== undefined"
-                class="mb-3"
-              >
-                <div
-                  class="pa-2 rounded"
-                  style="background-color: rgba(0, 0, 0, 0.03)"
-                >
-                  <v-switch
-                    v-model="currentTodo.is_memo"
-                    :label="currentTodo.is_memo ? '备忘录模式' : '待办事项模式'"
-                    :color="currentTodo.is_memo ? 'info' : 'success'"
-                    density="compact"
-                    hide-details
-                  ></v-switch>
-                </div>
-              </div>
-
-              <!-- 截止日期和时间 -->
-              <div>
-                <v-row dense>
-                  <v-col cols="12" sm="7">
-                    <v-text-field
-                      v-model="currentTodo.due_date"
-                      type="date"
-                      label="截止日期"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="5">
-                    <v-text-field
-                      v-model="currentTodo.due_time"
-                      type="time"
-                      label="时间"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </div>
-            </v-form>
-          </v-card-text>
-
-          <v-card-actions class="pa-3">
-            <v-spacer></v-spacer>
-            <v-btn variant="text" @click="dialog = false" size="small">
-              取消
-            </v-btn>
-            <v-btn
-              color="primary"
-              variant="flat"
-              @click="handleFormSubmit"
-              :loading="todoStore.isLoading"
-              size="small"
-            >
-              {{ isEditing ? "更新" : "添加" }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <TodoDialog
+        v-model="dialog"
+        :todo="currentTodo"
+        :is-editing="isEditing"
+        :is-adding-memo="isAddingMemo"
+        :loading="todoStore.isLoading"
+        @submit="handleDialogSubmit"
+      />
 
       <!-- 删除确认对话框 -->
       <v-dialog v-model="deleteDialog" max-width="400">
@@ -892,7 +893,36 @@
                   variant="outlined"
                   density="compact"
                   hide-details
-                ></v-select>
+                >
+                  <template v-slot:selection="{ item }">
+                    <v-chip
+                      size="x-small"
+                      :color="getStatusColor(item.value)"
+                      label
+                      class="mr-2"
+                      variant="tonal"
+                    >
+                      <v-icon
+                        start
+                        size="x-small"
+                        :icon="getStatusIcon(item.value)"
+                      ></v-icon>
+                      {{ item.title }}
+                    </v-chip>
+                  </template>
+                  <template v-slot:item="{ item, props }">
+                    <v-list-item v-bind="props" density="compact">
+                      <template v-slot:prepend>
+                        <v-icon
+                          :color="getStatusColor(item.value)"
+                          :icon="getStatusIcon(item.value)"
+                          size="small"
+                          class="mr-2"
+                        ></v-icon>
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-select>
               </div>
             </v-form>
           </v-card-text>
@@ -959,14 +989,21 @@ import { useTodoStore } from "@/stores/todo";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter } from "vue-router";
 import DailyTaskList from "@/components/DailyTaskList.vue";
+import TodoStatistics from "@/components/todos/TodoStatistics.vue";
+import TodoDialog from "@/components/todos/TodoDialog.vue";
+import {
+  priorityOptions,
+  statusOptions,
+  getPriorityColor,
+  getPriorityLabel,
+  getStatusColor,
+  getStatusIcon,
+} from "@/utils/todoUtils";
 
 // 初始化store
 const todoStore = useTodoStore();
 const settingsStore = useSettingsStore();
 const router = useRouter();
-
-// 获取用户设置
-const todoSettings = settingsStore.getTodoSettings;
 
 // 组件状态
 const dialog = ref(false);
@@ -979,9 +1016,10 @@ const currentTodo = ref({
   description: "",
   is_memo: false,
   status: "pending",
-  priority: 2, // 中等优先级，使用数字
+  priority: 3, // 中等优先级，使用数字
   due_date: null,
   due_time: "23:59", // 默认为当天结束时间
+  workload: null, // 预计工作量（小时）
 });
 
 // 快速添加状态
@@ -997,16 +1035,19 @@ const currentSubTodo = ref({
   title: "",
   description: "",
   status: "pending",
-  priority: 2,
+  priority: 3,
   parent_id: null,
 });
 const subTodoForm = ref(null);
 
 const filter = ref("all");
 const search = ref("");
-const form = ref(null);
+
+// 滚动加载相关
+const loadingMore = ref(false);
+const hasMore = ref(true);
 const currentPage = ref(1);
-const pageSize = ref(todoSettings.pageSize || 20); // 使用设置中的页面大小
+const pageSize = 20; // 固定每次加载20条
 
 // 笔记保存状态管理 (使用 Map 来跟踪每个 todo 的保存状态)
 const savingNotes = ref(new Map());
@@ -1058,21 +1099,7 @@ const filterOptions = [
   { text: "全部", value: "all" },
   { text: "待办", value: "pending" },
   { text: "正在处理", value: "processing" },
-  { text: "已完成", value: "done" },
-  { text: "已归档", value: "archived" },
-];
-
-// 优先级选项
-const priorityOptions = [
-  { text: "高", value: 3 },
-  { text: "中", value: 2 },
-  { text: "低", value: 1 },
-];
-
-// 状态选项
-const statusOptions = [
-  { text: "待办", value: "pending" },
-  { text: "正在处理", value: "processing" },
+  { text: "已挂起", value: "suspended" },
   { text: "已完成", value: "done" },
   { text: "已归档", value: "archived" },
 ];
@@ -1081,34 +1108,6 @@ const statusOptions = [
 const hasProcessingTodo = computed(() => {
   return todoStore.getAllTodos.some((todo) => todo.status === "processing");
 });
-
-// 获取优先级颜色
-function getPriorityColor(priority) {
-  switch (Number(priority)) {
-    case 3:
-      return "error";
-    case 2:
-      return "warning";
-    case 1:
-      return "success";
-    default:
-      return "grey";
-  }
-}
-
-// 获取优先级标签
-function getPriorityLabel(priority) {
-  switch (Number(priority)) {
-    case 3:
-      return "高";
-    case 2:
-      return "中";
-    case 1:
-      return "低";
-    default:
-      return "未设置";
-  }
-}
 
 // 格式化日期
 function formatDate(dateString) {
@@ -1246,37 +1245,85 @@ const filteredTodos = computed(() => {
   }
 });
 
+// 统计数据
+const statistics = computed(() => todoStore.getStatistics);
+
 // 应用过滤器
 function applyFilters() {
   // 转换filter.value为API需要的status参数
   let status = "";
   if (
     filter.value === "pending" ||
+    filter.value === "processing" ||
     filter.value === "done" ||
-    filter.value === "archived"
+    filter.value === "archived" ||
+    filter.value === "suspended"
   ) {
     status = filter.value;
   }
 
+  currentPage.value = 1;
+  hasMore.value = true;
   fetchTodos({
     status,
     search: search.value,
-    page: 1, // 重置为第一页
+    page: 1,
+    reset: true, // 标记为重置加载
   });
 }
 
-// 处理分页变化
-function handlePageChange(page) {
-  fetchTodos({ page });
+function setFilter(value) {
+  filter.value = value;
+  applyFilters();
+}
+
+function getFilterLabel(value) {
+  const option = filterOptions.find((opt) => opt.value === value);
+  return option ? option.text : "筛选";
+}
+
+function getFilterIcon(value) {
+  switch (value) {
+    case "all":
+      return "mdi-view-list";
+    case "pending":
+      return "mdi-checkbox-blank-circle-outline";
+    case "processing":
+      return "mdi-progress-clock";
+    case "suspended":
+      return "mdi-pause-circle-outline";
+    case "done":
+      return "mdi-check-circle-outline";
+    case "archived":
+      return "mdi-archive-outline";
+    default:
+      return "mdi-filter";
+  }
+}
+
+// 加载更多
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value) return;
+
+  loadingMore.value = true;
+  currentPage.value++;
+
+  try {
+    await fetchTodos({
+      page: currentPage.value,
+      append: true, // 标记为追加模式
+    });
+  } finally {
+    loadingMore.value = false;
+  }
 }
 
 // 封装获取待办事项的函数
 async function fetchTodos(options = {}) {
   try {
-    // 确保始终使用当前的页面大小
     const fetchOptions = {
       ...options,
-      pageSize: pageSize.value,
+      pageSize: pageSize,
     };
 
     // 添加type参数，根据当前视图过滤
@@ -1286,33 +1333,21 @@ async function fetchTodos(options = {}) {
       fetchOptions.type = "todo";
     }
 
-    await todoStore.fetchTodos(fetchOptions);
+    const result = await todoStore.fetchTodos(fetchOptions);
+
+    // 更新hasMore状态
+    const loadedCount = options.append
+      ? todoStore.getAllTodos.length
+      : result.length;
+    hasMore.value = todoStore.getPagination.next !== null;
+
+    return result;
   } catch (error) {
     console.error("加载待办事项失败:", error);
   }
 }
 
-// 监听设置变化
-watch(
-  () => settingsStore.getTodoSettings,
-  (newSettings) => {
-    // 更新每页显示数量
-    if (newSettings.pageSize !== pageSize.value) {
-      // 保存当前页码
-      const currentItemIndex = (currentPage.value - 1) * pageSize.value;
-
-      // 更新页面大小
-      pageSize.value = newSettings.pageSize;
-
-      // 计算新的页码
-      currentPage.value = Math.floor(currentItemIndex / pageSize.value) + 1;
-
-      // 重新获取数据
-      applyFilters();
-    }
-  },
-  { deep: true }
-);
+// 不再需要监听设置变化
 
 // 生命周期钩子
 onMounted(async () => {
@@ -1321,10 +1356,14 @@ onMounted(async () => {
     todoStore.loading = true;
 
     console.log("初始化加载待办事项");
-    await todoStore.fetchTodos({
-      page: currentPage.value,
-      pageSize: pageSize.value,
-    });
+    // 并行加载待办事项和统计数据
+    await Promise.all([
+      fetchTodos({
+        page: 1,
+        reset: true,
+      }),
+      todoStore.fetchStatistics(),
+    ]);
 
     // 为所有任务初始化子待办相关的属性
     todoStore.getAllTodos.forEach((todo) => {
@@ -1472,121 +1511,65 @@ function openDeleteDialog(todo) {
   deleteDialog.value = true;
 }
 
-async function addTodo() {
-  // 确保表单实例存在
-  if (!form.value) {
-    return;
-  }
-
+async function handleDialogSubmit(todoData) {
   try {
-    // 执行表单验证
-    const { valid } = await form.value.validate();
-
-    if (!valid) {
-      return;
-    }
-
     // 处理截止日期和时间
     let dueDateTimeISO = null;
-    if (currentTodo.value.due_date) {
+    if (todoData.due_date) {
       // 拼接日期和时间
-      const dueDateStr = currentTodo.value.due_date;
-      const dueTimeStr = currentTodo.value.due_time || "23:59";
+      const dueDateStr = todoData.due_date;
+      const dueTimeStr = todoData.due_time || "23:59";
 
       // 创建日期对象并转为ISO格式
       const dueDateTime = new Date(`${dueDateStr}T${dueTimeStr}`);
       dueDateTimeISO = dueDateTime.toISOString();
     }
 
-    await todoStore.addTodo(
-      currentTodo.value.title,
-      currentTodo.value.description,
-      {
-        priority: currentTodo.value.priority,
-        due_date: dueDateTimeISO,
-        is_memo: currentTodo.value.is_memo,
+    if (isEditing.value) {
+      // 检查ID是否存在
+      if (!todoData.id) {
+        return;
       }
-    );
+
+      const updates = {
+        title: todoData.title,
+        description: todoData.description,
+        status: todoData.status,
+        priority: todoData.priority,
+        due_date: dueDateTimeISO,
+        workload: todoData.workload || null,
+      };
+
+      await todoStore.updateTodo(todoData.id, updates);
+      showNotification("任务更新成功", "success");
+    } else {
+      await todoStore.addTodo(todoData.title, todoData.description, {
+        priority: todoData.priority,
+        due_date: dueDateTimeISO,
+        is_memo: todoData.is_memo,
+        workload: todoData.workload || null,
+      });
+      showNotification("新任务添加成功", "success");
+    }
 
     dialog.value = false;
-    showNotification("新任务添加成功", "success");
 
-    // 如果之前没有待办事项，不需要刷新，store已经更新
-    if (todoStore.getAllTodos.length <= 1) {
+    // 刷新列表
+    if (!isEditing.value && todoStore.getAllTodos.length <= 1) {
       console.log("第一个待办事项已添加，无需刷新列表");
     } else {
-      // 有多个待办事项时刷新列表以确保排序正确
       applyFilters();
     }
   } catch (error) {
-    console.error("添加待办事项失败:", error.message);
-    showNotification("添加待办事项失败: " + error.message, "error");
-  }
-}
-
-async function updateTodo() {
-  // 确保表单实例存在
-  if (!form.value) {
-    return;
-  }
-
-  try {
-    // 执行表单验证
-    const { valid } = await form.value.validate();
-
-    if (!valid) {
-      return;
-    }
-
-    // 检查ID是否存在
-    if (!currentTodo.value.id) {
-      return;
-    }
-
-    // 处理截止日期和时间
-    let dueDateTimeISO = null;
-    if (currentTodo.value.due_date) {
-      // 拼接日期和时间
-      const dueDateStr = currentTodo.value.due_date;
-      const dueTimeStr = currentTodo.value.due_time || "23:59";
-
-      // 创建日期对象并转为ISO格式
-      const dueDateTime = new Date(`${dueDateStr}T${dueTimeStr}`);
-      dueDateTimeISO = dueDateTime.toISOString();
-    }
-
-    const updates = {
-      title: currentTodo.value.title,
-      description: currentTodo.value.description,
-      status: currentTodo.value.status,
-      priority: currentTodo.value.priority,
-      due_date: dueDateTimeISO,
-    };
-
-    await todoStore.updateTodo(currentTodo.value.id, updates);
-    dialog.value = false;
-
-    // 刷新列表以获取最新数据
-    applyFilters();
-  } catch (error) {
-    console.error("更新待办事项失败:", error.message);
+    console.error("操作失败:", error.message);
+    showNotification("操作失败: " + error.message, "error");
   }
 }
 
 async function deleteTodo() {
   try {
-    // 如果设置为不需要确认，直接删除
-    if (!todoSettings.confirmDelete) {
-      deleteDialog.value = false;
-    }
-
     await todoStore.deleteTodo(currentTodo.value.id);
-
-    // 如果设置为需要确认，此时关闭确认对话框
-    if (todoSettings.confirmDelete) {
-      deleteDialog.value = false;
-    }
-
+    deleteDialog.value = false;
     showNotification("待办事项已删除", "success");
   } catch (error) {
     console.error("删除待办事项失败:", error);
@@ -1872,6 +1855,56 @@ async function reopenTodo(todo) {
   } catch (error) {
     console.error("重新打开待办事项失败:", error);
     // 确保清除加载状态
+    if (todo) todo.isUpdating = false;
+  }
+}
+
+// 挂起待办事项
+async function suspendTodo(todo) {
+  try {
+    if (todo.isUpdating) return;
+    todo.isUpdating = true;
+
+    try {
+      await todoStore.updateTodo(todo.id, { status: "suspended" });
+      todo.status = "suspended";
+      showNotification("任务已挂起", "info");
+      setTimeout(() => {
+        applyFilters();
+      }, 300);
+    } catch (error) {
+      console.error("挂起待办事项失败:", error);
+      showNotification("挂起任务失败，请稍后重试", "error");
+    } finally {
+      todo.isUpdating = false;
+    }
+  } catch (error) {
+    console.error("挂起待办事项失败:", error);
+    if (todo) todo.isUpdating = false;
+  }
+}
+
+// 恢复挂起的待办事项
+async function unsuspendTodo(todo) {
+  try {
+    if (todo.isUpdating) return;
+    todo.isUpdating = true;
+
+    try {
+      await todoStore.updateTodo(todo.id, { status: "pending" });
+      todo.status = "pending";
+      showNotification("任务已恢复", "success");
+      setTimeout(() => {
+        applyFilters();
+      }, 300);
+    } catch (error) {
+      console.error("恢复待办事项失败:", error);
+      showNotification("恢复任务失败，请稍后重试", "error");
+    } finally {
+      todo.isUpdating = false;
+    }
+  } catch (error) {
+    console.error("恢复待办事项失败:", error);
     if (todo) todo.isUpdating = false;
   }
 }
@@ -2318,16 +2351,24 @@ async function reopenSubTodo(parentId, subTodo) {
   transition: background-color 0.2s ease;
 }
 
-.todo-card.priority-high::before {
-  background-color: #ff5252;
+.todo-card.priority-5::before {
+  background-color: #ff5252; /* Error/Critical */
 }
 
-.todo-card.priority-medium::before {
-  background-color: #fb8c00;
+.todo-card.priority-4::before {
+  background-color: #ff5722; /* Deep Orange/High */
 }
 
-.todo-card.priority-low::before {
-  background-color: #4caf50;
+.todo-card.priority-3::before {
+  background-color: #fb8c00; /* Warning/Medium */
+}
+
+.todo-card.priority-2::before {
+  background-color: #4caf50; /* Success/Low */
+}
+
+.todo-card.priority-1::before {
+  background-color: #2196f3; /* Info/Minimal */
 }
 
 .todo-card.status-processing::before {
@@ -2336,6 +2377,19 @@ async function reopenSubTodo(parentId, subTodo) {
 
 .todo-card.status-done::before {
   background-color: #bdbdbd;
+}
+
+.todo-card.status-suspended::before {
+  background-color: #9e9e9e;
+  border-right: 1px dashed #e0e0e0;
+}
+
+/* Dialog Styles */
+.title-input :deep(.v-field__input) {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  padding-left: 0;
+  letter-spacing: -0.01em;
 }
 
 /* Status Styles */
@@ -2352,6 +2406,12 @@ async function reopenSubTodo(parentId, subTodo) {
 
 .processing-todo {
   background-color: #f0f7ff;
+}
+
+.suspended-todo {
+  opacity: 0.8;
+  background-color: #fff8e1; /* Amber lighten-5 */
+  border-style: dashed !important;
 }
 
 .archived-todo {

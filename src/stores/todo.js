@@ -22,13 +22,16 @@ export const useTodoStore = defineStore('todo', {
       next: null,
       previous: null,
       currentPage: 1
-    }
+    },
+    statistics: null // 待办事项统计数据
   }),
 
   getters: {
     getAllTodos: (state) => state.todos,
+    getStatistics: (state) => state.statistics,
     getCompletedTodos: (state) => state.todos.filter(todo => todo.status === 'done'),
     getIncompleteTodos: (state) => state.todos.filter(todo => todo.status === 'pending'),
+    getSuspendedTodos: (state) => state.todos.filter(todo => todo.status === 'suspended'),
     getArchivedTodos: (state) => state.todos.filter(todo => todo.status === 'archived'),
     getMemos: (state) => state.todos.filter(todo => todo.is_memo === true), // 获取所有备忘录
     getTodos: (state) => state.todos.filter(todo => todo.is_memo !== true), // 获取所有非备忘录待办事项
@@ -55,7 +58,7 @@ export const useTodoStore = defineStore('todo', {
           search: options.search !== undefined ? options.search : this.filters.search,
           status: options.status !== undefined ? options.status : this.filters.status,
           page: options.page || this.pagination.currentPage,
-          pageSize: options.pageSize || 10,
+          pageSize: options.pageSize || 20,
           type: options.type // 新增type参数，用于区分普通待办和备忘录
         }
         
@@ -69,7 +72,15 @@ export const useTodoStore = defineStore('todo', {
         // 检查数据是否有效
         if (Array.isArray(result.items)) {
           console.log(`成功获取到${result.items.length}个待办事项`)
-          this.todos = result.items
+          
+          // 如果是追加模式，将新数据追加到现有数据后面
+          if (options.append && !options.reset) {
+            this.todos = [...this.todos, ...result.items]
+          } else {
+            // 否则替换现有数据
+            this.todos = result.items
+          }
+          
           this.pagination = {
             ...this.pagination,
             ...result.pagination,
@@ -78,17 +89,31 @@ export const useTodoStore = defineStore('todo', {
         } else {
           console.error('待办事项数据无效:', result)
           this.error = '待办事项数据格式错误'
-          this.todos = []
+          if (!options.append) {
+            this.todos = []
+          }
         }
         
         return result.items
       } catch (error) {
         console.error('获取待办事项失败:', error)
         this.error = error.response?.data?.message || error.response?.data?.detail || '获取待办事项失败'
-        this.todos = []
+        if (!options.append) {
+          this.todos = []
+        }
         throw error
       } finally {
         this.loading = false
+      }
+    },
+
+    async fetchStatistics() {
+      try {
+        const stats = await TodoAPI.getStatistics()
+        this.statistics = stats
+        return stats
+      } catch (error) {
+        console.error('获取统计数据失败:', error)
       }
     },
 
@@ -181,6 +206,9 @@ export const useTodoStore = defineStore('todo', {
           console.warn(`[TodoStore] 在本地数据中未找到ID为${id}的待办事项`)
         }
         
+        // 更新统计数据
+        this.fetchStatistics()
+        
         return data
       } catch (error) {
         console.error('[TodoStore] 更新待办事项失败:', {
@@ -223,6 +251,9 @@ export const useTodoStore = defineStore('todo', {
           this.todos[index] = { ...this.todos[index], ...data }
         }
         
+        // 更新统计数据
+        this.fetchStatistics()
+        
         return data
       } catch (error) {
         this.error = error.response?.data?.message || error.response?.data?.detail || '将待办事项标记为已完成失败'
@@ -243,6 +274,9 @@ export const useTodoStore = defineStore('todo', {
         if (index !== -1) {
           this.todos[index] = { ...this.todos[index], ...data }
         }
+        
+        // 更新统计数据
+        this.fetchStatistics()
         
         return data
       } catch (error) {
@@ -265,6 +299,9 @@ export const useTodoStore = defineStore('todo', {
           this.todos[index] = { ...this.todos[index], ...data }
         }
         
+        // 更新统计数据
+        this.fetchStatistics()
+        
         return data
       } catch (error) {
         this.error = error.response?.data?.message || error.response?.data?.detail || '归档待办事项失败'
@@ -281,6 +318,9 @@ export const useTodoStore = defineStore('todo', {
       try {
         await TodoAPI.deleteTodo(id)
         this.todos = this.todos.filter(todo => todo.id !== id)
+        
+        // 更新统计数据
+        this.fetchStatistics()
       } catch (error) {
         this.error = error.response?.data?.message || '删除待办事项失败'
         throw error
@@ -306,6 +346,9 @@ export const useTodoStore = defineStore('todo', {
         if (index !== -1) {
           this.todos[index] = { ...this.todos[index], ...data }
         }
+        
+        // 更新统计数据
+        this.fetchStatistics()
         
         return data
       } catch (error) {
@@ -333,6 +376,9 @@ export const useTodoStore = defineStore('todo', {
         if (index !== -1) {
           this.todos[index] = { ...this.todos[index], ...data }
         }
+        
+        // 更新统计数据
+        this.fetchStatistics()
         
         return data
       } catch (error) {

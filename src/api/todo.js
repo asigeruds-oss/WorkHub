@@ -43,6 +43,20 @@ export const TodoAPI = {
   },
 
   /**
+   * 获取待办事项统计数据
+   * @returns {Promise<Object>} - 返回统计数据
+   */
+  async getStatistics() {
+    try {
+      const response = await axios.get('/api/todos/statistics/')
+      return response.data
+    } catch (error) {
+      console.error('获取待办统计失败:', error)
+      throw error
+    }
+  },
+
+  /**
    * 添加新的待办事项
    * @param {string} title - 标题
    * @param {string} description - 描述
