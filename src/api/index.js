@@ -6,7 +6,6 @@ import AutoPsAPI from './autops'
 import FeedbackAPI from './feedback'
 import MessageAPI from './message'
 import WikiAPI from './wiki'
-import CultivationAPI from './cultivation'
 
 /**
  * 统一导出所有API服务
@@ -19,7 +18,6 @@ export {
   FeedbackAPI,
   MessageAPI,
   WikiAPI,
-  CultivationAPI,
   http
 }
 
@@ -34,6 +32,5 @@ export default {
   feedback: FeedbackAPI,
   message: MessageAPI,
   wiki: WikiAPI,
-  cultivation: CultivationAPI,
   http
 }

@@ -7,38 +7,63 @@
       class="app-header mascot-app-bar"
     >
       <template v-slot:prepend>
-        <v-app-bar-nav-icon 
+        <v-app-bar-nav-icon
           variant="text"
-          @click.stop="drawer = !drawer" 
+          @click.stop="drawer = !drawer"
           color="white"
           class="nav-icon-animation"
         ></v-app-bar-nav-icon>
       </template>
-      
+
       <v-app-bar-title>
-        <router-link to="/" class="text-decoration-none text-white logo-container">
-          <MascotCow size="small" :animate="false" :show-clock="true" class="mr-2 header-mascot" />
+        <router-link
+          to="/"
+          class="text-decoration-none text-white logo-container"
+        >
+          <MascotCow
+            size="small"
+            :animate="false"
+            :show-clock="true"
+            class="mr-2 header-mascot"
+          />
           <span class="app-title">青牛线</span>
         </router-link>
       </v-app-bar-title>
 
       <v-spacer></v-spacer>
-      
+
       <!-- 未登录时显示 -->
       <template v-if="!isAuthenticated">
-        <v-btn variant="text" to="/login" color="white" rounded="xl" class="login-btn mascot-header-btn">
+        <v-btn
+          variant="text"
+          to="/login"
+          color="white"
+          rounded="xl"
+          class="login-btn mascot-header-btn"
+        >
           <v-icon start>mdi-login</v-icon>
           登录
         </v-btn>
-        <v-btn variant="outlined" to="/register" class="ml-2 register-btn mascot-header-btn" color="white" rounded="xl">
+        <v-btn
+          variant="outlined"
+          to="/register"
+          class="ml-2 register-btn mascot-header-btn"
+          color="white"
+          rounded="xl"
+        >
           <v-icon start>mdi-account-plus</v-icon>
           注册
         </v-btn>
       </template>
-      
+
       <!-- 已登录时显示 -->
       <template v-else>
-        <v-btn icon="mdi-bell" variant="text" color="white" class="mr-2 notification-btn">
+        <v-btn
+          icon="mdi-bell"
+          variant="text"
+          color="white"
+          class="mr-2 notification-btn"
+        >
           <v-badge
             color="error"
             :content="0"
@@ -47,7 +72,7 @@
             dot
           ></v-badge>
         </v-btn>
-        
+
         <v-menu location="bottom">
           <template v-slot:activator="{ props }">
             <v-btn
@@ -57,19 +82,37 @@
               color="white"
               rounded="xl"
             >
-              <v-avatar size="32" color="mascot-cream" class="mr-2 user-avatar" variant="elevated">
+              <v-avatar
+                size="32"
+                color="mascot-cream"
+                class="mr-2 user-avatar"
+                variant="elevated"
+              >
                 <v-icon icon="mdi-account" color="mascot-brown"></v-icon>
               </v-avatar>
-              {{ user?.username || '用户' }}
+              {{ user?.username || "用户" }}
               <v-icon right class="dropdown-icon">mdi-chevron-down</v-icon>
             </v-btn>
           </template>
-          <v-list width="220" elevation="6" rounded="xl" class="user-dropdown-menu mascot-dropdown">
-            <v-list-item to="/settings" prepend-icon="mdi-cog" class="menu-item">
+          <v-list
+            width="220"
+            elevation="6"
+            rounded="xl"
+            class="user-dropdown-menu mascot-dropdown"
+          >
+            <v-list-item
+              to="/settings"
+              prepend-icon="mdi-cog"
+              class="menu-item"
+            >
               <v-list-item-title>个人设置</v-list-item-title>
             </v-list-item>
             <v-divider></v-divider>
-            <v-list-item @click="logout" prepend-icon="mdi-logout" class="menu-item">
+            <v-list-item
+              @click="logout"
+              prepend-icon="mdi-logout"
+              class="menu-item"
+            >
               <v-list-item-title class="text-error">退出登录</v-list-item-title>
             </v-list-item>
           </v-list>
@@ -81,7 +124,7 @@
     <v-main>
       <router-view />
     </v-main>
-    
+
     <!-- 侧边栏导航 - 吉祥物主题 -->
     <v-navigation-drawer
       v-model="drawer"
@@ -117,7 +160,7 @@
           rounded="xl"
           :active="$route.path === '/'"
         ></v-list-item>
-        
+
         <v-list-item
           to="/wiki"
           prepend-icon="mdi-book-open-variant"
@@ -125,7 +168,7 @@
           rounded="xl"
           :active="$route.path.startsWith('/wiki')"
         ></v-list-item>
-        
+
         <!-- 暂时隐藏P假条页面
         <v-list-item
           to="/autops"
@@ -135,7 +178,7 @@
           :active="$route.path === '/autops'"
         ></v-list-item>
         -->
-        
+
         <template v-if="isAuthenticated">
           <v-list-item
             to="/todos"
@@ -144,15 +187,7 @@
             rounded="xl"
             :active="$route.path === '/todos'"
           ></v-list-item>
-          
-          <v-list-item
-            to="/cultivation"
-            prepend-icon="mdi-arrow-up-bold-circle-outline"
-            title="修仙系统"
-            rounded="xl"
-            :active="$route.path === '/cultivation'"
-          ></v-list-item>
-          
+
           <v-list-item
             to="/settings"
             prepend-icon="mdi-cog"
@@ -162,7 +197,7 @@
           ></v-list-item>
         </template>
       </v-list>
-      
+
       <template v-slot:append>
         <div class="pa-4 mascot-sidebar-footer">
           <v-btn
@@ -190,25 +225,25 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import MascotCow from '@/components/MascotCow.vue'
+import { ref, computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import MascotCow from "@/components/MascotCow.vue";
 
-const authStore = useAuthStore()
-const router = useRouter()
-const $route = useRoute()
-const drawer = ref(false)
+const authStore = useAuthStore();
+const router = useRouter();
+const $route = useRoute();
+const drawer = ref(false);
 
 // 计算属性
-const isAuthenticated = computed(() => authStore.isAuthenticated)
-const user = computed(() => authStore.getUser)
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+const user = computed(() => authStore.getUser);
 
 // 方法
 function logout() {
-  authStore.logout()
-  drawer.value = false
-  router.push('/login')
+  authStore.logout();
+  drawer.value = false;
+  router.push("/login");
 }
 </script>
 
@@ -217,9 +252,9 @@ function logout() {
 
 /* 应用栏样式 - 吉祥物主题 */
 .mascot-app-bar {
-  background: linear-gradient(135deg, #8B6914 0%, #8B4513 100%) !important;
+  background: linear-gradient(135deg, #8b6914 0%, #8b4513 100%) !important;
   box-shadow: 0 4px 12px rgba(139, 69, 19, 0.25) !important;
-  border-bottom: 3px solid #5D2E0F;
+  border-bottom: 3px solid #5d2e0f;
 }
 
 .header-mascot {
@@ -278,7 +313,7 @@ function logout() {
   transform: translateY(-3px) scale(1.05);
   box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.95);
-  color: #8B4513 !important;
+  color: #8b4513 !important;
 }
 
 .notification-btn {
@@ -308,7 +343,7 @@ function logout() {
 
 .user-profile-btn:hover .user-avatar {
   transform: scale(1.15);
-  border-color: #FFD700;
+  border-color: #ffd700;
 }
 
 .dropdown-icon {
@@ -323,8 +358,8 @@ function logout() {
 .mascot-dropdown {
   overflow: hidden;
   border-radius: 20px;
-  border: 3px solid #8B4513;
-  background: linear-gradient(135deg, #FFF8DC 0%, #FFFAED 100%);
+  border: 3px solid #8b4513;
+  background: linear-gradient(135deg, #fff8dc 0%, #fffaed 100%);
 }
 
 .mascot-dropdown .menu-item {
@@ -342,30 +377,30 @@ function logout() {
 /* 侧边栏样式 - 吉祥物主题 */
 .mascot-sidebar {
   border-radius: 0 24px 24px 0;
-  border-right: 3px solid #8B4513;
-  background: linear-gradient(180deg, #FFFAED 0%, #FFF8DC 100%);
+  border-right: 3px solid #8b4513;
+  background: linear-gradient(180deg, #fffaed 0%, #fff8dc 100%);
 }
 
 .mascot-sidebar-header {
   padding: 20px;
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
   border-radius: 0 0 20px 20px;
   margin: 0 !important;
-  border-bottom: 3px solid #8B4513;
+  border-bottom: 3px solid #8b4513;
 }
 
 .mascot-sidebar-header :deep(.v-list-item__prepend) {
-  color: #5D2E0F;
+  color: #5d2e0f;
 }
 
 .mascot-sidebar-header :deep(.v-list-item-title) {
-  color: #5D2E0F;
+  color: #5d2e0f;
   font-weight: 700;
   font-size: 1.1rem;
 }
 
 .mascot-sidebar-header :deep(.v-list-item-subtitle) {
-  color: #8B4513;
+  color: #8b4513;
   font-weight: 600;
 }
 
@@ -381,13 +416,14 @@ function logout() {
 }
 
 .mascot-sidebar-nav :deep(.v-list-item--active) {
-  border-left-color: #8B4513;
-  background: linear-gradient(90deg, 
-    rgba(255, 215, 0, 0.2) 0%, 
+  border-left-color: #8b4513;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 215, 0, 0.2) 0%,
     rgba(255, 215, 0, 0.1) 70%,
     rgba(255, 215, 0, 0) 100%
   ) !important;
-  color: #5D2E0F;
+  color: #5d2e0f;
   font-weight: 700;
 }
 
@@ -397,17 +433,17 @@ function logout() {
 }
 
 .mascot-sidebar-nav :deep(.v-list-item__prepend) {
-  color: #8B4513;
+  color: #8b4513;
 }
 
 .mascot-sidebar-nav :deep(.v-list-item--active .v-list-item__prepend) {
-  color: #5D2E0F;
+  color: #5d2e0f;
 }
 
 .close-btn {
   opacity: 0.7;
   transition: all 0.3s ease;
-  color: #5D2E0F;
+  color: #5d2e0f;
 }
 
 .close-btn:hover {
@@ -417,7 +453,11 @@ function logout() {
 }
 
 .mascot-sidebar-footer {
-  background: linear-gradient(0deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
+  background: linear-gradient(
+    0deg,
+    rgba(255, 215, 0, 0.1) 0%,
+    transparent 100%
+  );
   border-top: 2px solid rgba(139, 69, 19, 0.2);
 }
 
