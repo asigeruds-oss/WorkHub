@@ -1,18 +1,7 @@
 <template>
-  <v-footer class="mascot-footer">
+  <v-footer class="bg-grey-lighten-4">
     <v-row justify="center" no-gutters>
       <v-col class="text-center py-6" cols="12">
-        <!-- 装饰性分割线 -->
-        <div class="footer-decoration mb-4">
-          <div class="decoration-line"></div>
-          <div class="decoration-icons">
-            <span class="decoration-icon">⭐</span>
-            <span class="decoration-icon">⚡</span>
-            <span class="decoration-icon">✅</span>
-          </div>
-          <div class="decoration-line"></div>
-        </div>
-
         <!-- 快捷链接 -->
         <div class="footer-links mb-4">
           <v-btn
@@ -22,8 +11,7 @@
             :href="item.href"
             target="_blank"
             rel="noopener noreferrer"
-            class="mx-2 mascot-footer-btn"
-            rounded="xl"
+            class="mx-2"
           >
             <v-icon :icon="item.icon" class="mr-1"></v-icon>
             {{ item.title }}
@@ -32,16 +20,17 @@
 
         <!-- 版权信息 -->
         <div class="footer-copyright">
-          <div class="text-body-2 font-weight-bold mb-2" style="color: #5D2E0F;">
-            © {{ (new Date()).getFullYear() }} <strong>青牛线</strong> — 让效率更高
+          <div class="text-body-2 font-weight-bold mb-2 text-medium-emphasis">
+            © {{ new Date().getFullYear() }} <strong>青牛线</strong> —
+            让效率更高
           </div>
-          
-          <div class="text-caption" style="color: #8B4513;">
-            <a 
-              href="https://beian.miit.gov.cn/" 
-              target="_blank" 
+
+          <div class="text-caption text-medium-emphasis">
+            <a
+              href="https://beian.miit.gov.cn/"
+              target="_blank"
               rel="noopener noreferrer"
-              class="text-decoration-none icp-link"
+              class="text-decoration-none text-medium-emphasis"
             >
               鲁ICP备2023039013号-1
             </a>
@@ -60,18 +49,18 @@
 </template>
 
 <script setup>
-  const items = [
-    {
-      title: '主页',
-      icon: 'mdi-home',
-      href: '/',
-    },
-    {
-      title: '待办事项',
-      icon: 'mdi-checkbox-marked-outline',
-      href: '/todos',
-    }
-  ]
+const items = [
+  {
+    title: "主页",
+    icon: "mdi-home",
+    href: "/",
+  },
+  {
+    title: "待办事项",
+    icon: "mdi-checkbox-marked-outline",
+    href: "/todos",
+  },
+];
 </script>
 
 <style scoped lang="sass">
@@ -108,18 +97,18 @@
 .decoration-icons
   display: flex
   gap: 12px
-  
+
 .decoration-icon
   font-size: 1.2rem
   animation: floatIcon 2s ease-in-out infinite
   display: inline-block
-  
+
   &:nth-child(1)
     animation-delay: 0s
-    
+
   &:nth-child(2)
     animation-delay: 0.3s
-    
+
   &:nth-child(3)
     animation-delay: 0.6s
 
@@ -141,17 +130,17 @@
   font-weight: 600
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
   border: 2px solid transparent
-  
+
   &:hover
     background: rgba(139, 69, 19, 0.1) !important
     border-color: #8B4513
     transform: translateY(-2px)
     color: #8B4513 !important
-    
+
   :deep(.v-icon)
     color: #8B4513
     transition: transform 0.3s ease
-    
+
   &:hover :deep(.v-icon)
     transform: scale(1.2) rotate(10deg)
 
@@ -166,7 +155,7 @@
   padding: 4px 8px
   border-radius: 8px
   display: inline-block
-  
+
   &:hover
     color: #5D2E0F !important
     background: rgba(139, 69, 19, 0.1)
@@ -177,7 +166,7 @@
   display: flex
   justify-content: center
   gap: 8px
-  
+
 .pattern-dot
   width: 8px
   height: 8px
@@ -185,13 +174,13 @@
   border-radius: 50%
   opacity: 0.3
   animation: pulseDot 2s ease-in-out infinite
-  
+
   &:nth-child(1)
     animation-delay: 0s
-    
+
   &:nth-child(2)
     animation-delay: 0.4s
-    
+
   &:nth-child(3)
     animation-delay: 0.8s
 
@@ -207,14 +196,14 @@
 @media (max-width: 600px)
   .footer-decoration
     gap: 10px
-    
+
   .decoration-line
     max-width: 80px
-    
+
   .footer-links
     flex-direction: column
     align-items: center
-    
+
   .mascot-footer-btn
     width: 200px
 </style>

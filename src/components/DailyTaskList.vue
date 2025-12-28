@@ -310,7 +310,7 @@ const todoStore = useTodoStore();
 
 // 本地数据状态
 const dailyTasks = computed(() => todoStore.getAllDailyTasks);
-const loading = computed(() => todoStore.isLoading);
+const loading = computed(() => todoStore.isDailyTasksLoading);
 
 // 统计数据
 const totalTasks = computed(() => dailyTasks.value.length);

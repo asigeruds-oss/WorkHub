@@ -16,7 +16,7 @@ export const TodoAPI = {
    */
   async getTodos(options = {}) {
     try {
-      const { search, page, pageSize, status, type } = options
+      const { search, page, pageSize, status, type, project } = options
       
       // 构建查询参数
       const params = {}
@@ -25,6 +25,7 @@ export const TodoAPI = {
       if (pageSize) params.page_size = pageSize
       if (status) params.status = status
       if (type) params.type = type  // 添加类型筛选参数
+      if (project) params.project = project // 添加项目筛选参数
       
       console.log('[TodoAPI] 获取待办事项，查询参数:', params)
       

@@ -197,7 +197,12 @@
 
           <!-- 待办事项列表 -->
           <div v-else>
-            <transition-group name="todo-list" tag="div" class="todo-container">
+            <transition-group
+              name="todo-list"
+              tag="div"
+              class="todo-container"
+              :class="{ 'memo-grid': currentView === 'memos' }"
+            >
               <v-card
                 v-for="todo in filteredTodos"
                 :key="todo.id"
@@ -207,7 +212,7 @@
                   'archived-todo': todo.status === 'archived',
                   'processing-todo': todo.status === 'processing',
                   'suspended-todo': todo.status === 'suspended',
-                  'memo-card': todo.is_memo,
+                  'memo-card': todo.type === 'memo',
                   'faded-todo':
                     hasProcessingTodo && todo.status !== 'processing',
                   [`priority-${todo.priority}`]: true,
@@ -221,7 +226,7 @@
                   <div class="d-flex align-start">
                     <!-- Checkbox / Icon -->
                     <div class="mr-3 mt-1">
-                      <template v-if="!todo.is_memo">
+                      <template v-if="todo.type === 'todo'">
                         <v-checkbox
                           :model-value="todo.status === 'done'"
                           @change="toggleTodoStatus(todo)"
@@ -260,14 +265,13 @@
                         </span>
 
                         <!-- Chips -->
-                        <div class="d-flex align-center gap-1">
+                        <div class="d-flex align-center gap-1" @click.stop>
                           <v-chip
                             v-if="todo.priority && todo.priority !== 'low'"
                             size="x-small"
                             :color="getPriorityColor(todo.priority)"
                             variant="tonal"
                             class="font-weight-bold"
-                            @click.stop
                           >
                             {{ getPriorityLabel(todo.priority) }}
                           </v-chip>
@@ -278,7 +282,6 @@
                             color="warning"
                             variant="tonal"
                             class="font-weight-bold"
-                            @click.stop
                           >
                             处理中
                           </v-chip>
@@ -289,7 +292,6 @@
                             color="grey"
                             variant="tonal"
                             class="font-weight-bold"
-                            @click.stop
                           >
                             已挂起
                           </v-chip>
@@ -300,9 +302,22 @@
                             color="blue-grey"
                             variant="tonal"
                             prepend-icon="mdi-clock-outline"
-                            @click.stop
                           >
                             {{ todo.workload }}h
+                          </v-chip>
+
+                          <v-chip
+                            v-if="todo.project && getProjectById(todo.project)"
+                            size="x-small"
+                            :color="
+                              getProjectById(todo.project).color || 'primary'
+                            "
+                            variant="tonal"
+                            prepend-icon="mdi-folder-outline"
+                            @click="goToProject(todo.project)"
+                            class="cursor-pointer"
+                          >
+                            {{ getProjectById(todo.project).name }}
                           </v-chip>
 
                           <v-chip
@@ -310,7 +325,7 @@
                             size="x-small"
                             variant="tonal"
                             color="grey-darken-1"
-                            @click.stop="toggleSubTodosVisibility(todo)"
+                            @click="toggleSubTodosVisibility(todo)"
                             class="cursor-pointer"
                           >
                             <v-icon start size="x-small">{{
@@ -334,7 +349,6 @@
                         <div
                           v-if="!todo.editingNote"
                           class="todo-description"
-                          @click.stop="openEditNote(todo)"
                           style="cursor: pointer"
                         >
                           {{ todo.description }}
@@ -505,17 +519,19 @@
                     </div>
 
                     <!-- Actions (Right Side) -->
-                    <div class="d-flex flex-column align-end ml-2">
+                    <div class="d-flex flex-column align-end ml-2" @click.stop>
                       <div class="d-flex align-center">
                         <!-- 快速添加子任务按钮 -->
                         <v-btn
-                          v-if="!todo.is_memo && todo.status !== 'archived'"
+                          v-if="
+                            todo.type === 'todo' && todo.status !== 'archived'
+                          "
                           icon="mdi-format-list-checks"
                           variant="text"
                           size="small"
                           color="grey-darken-1"
                           class="mr-1"
-                          @click.stop="openAddSubTodoDialog(todo)"
+                          @click="openAddSubTodoDialog(todo)"
                           title="添加子任务"
                         ></v-btn>
 
@@ -527,7 +543,6 @@
                               size="small"
                               color="grey-darken-1"
                               v-bind="props"
-                              @click.stop
                             ></v-btn>
                           </template>
                           <v-list
@@ -583,7 +598,7 @@
 
                             <!-- 转换功能 -->
                             <v-list-item
-                              v-if="!todo.is_memo"
+                              v-if="todo.type === 'todo'"
                               @click="convertToMemo(todo.id)"
                               value="convert-memo"
                             >
@@ -599,7 +614,7 @@
                             </v-list-item>
 
                             <v-list-item
-                              v-if="todo.is_memo"
+                              v-if="todo.type === 'memo'"
                               @click="convertToTodo(todo.id)"
                               value="convert-todo"
                             >
@@ -986,6 +1001,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useTodoStore } from "@/stores/todo";
+import { useProjectStore } from "@/stores/project";
 import { useSettingsStore } from "@/stores/settings";
 import { useRouter } from "vue-router";
 import DailyTaskList from "@/components/DailyTaskList.vue";
@@ -1002,6 +1018,7 @@ import {
 
 // 初始化store
 const todoStore = useTodoStore();
+const projectStore = useProjectStore();
 const settingsStore = useSettingsStore();
 const router = useRouter();
 
@@ -1014,7 +1031,7 @@ const currentView = ref("todos"); // 'todos' 或 'memos'
 const currentTodo = ref({
   title: "",
   description: "",
-  is_memo: false,
+  type: "todo",
   status: "pending",
   priority: 3, // 中等优先级，使用数字
   due_date: null,
@@ -1238,15 +1255,24 @@ const filteredTodos = computed(() => {
   // 根据当前视图决定显示待办事项还是备忘录
   if (currentView.value === "memos") {
     // 显示备忘录
-    return todoStore.getAllTodos.filter((todo) => todo.is_memo === true);
+    return todoStore.getAllTodos.filter((todo) => todo.type === "memo");
   } else {
     // 显示普通待办事项
-    return todoStore.getAllTodos.filter((todo) => !todo.is_memo);
+    return todoStore.getAllTodos.filter((todo) => todo.type === "todo");
   }
 });
 
 // 统计数据
 const statistics = computed(() => todoStore.getStatistics);
+
+// 获取项目列表的计算属性
+const projects = computed(() => projectStore.getAllProjects || []);
+
+// 根据项目ID获取项目详情的辅助函数
+const getProjectById = (projectId) => {
+  if (!projectId) return null;
+  return projects.value.find((p) => p.id === projectId) || null;
+};
 
 // 应用过滤器
 function applyFilters() {
@@ -1356,13 +1382,14 @@ onMounted(async () => {
     todoStore.loading = true;
 
     console.log("初始化加载待办事项");
-    // 并行加载待办事项和统计数据
+    // 并行加载待办事项、统计数据和项目列表
     await Promise.all([
       fetchTodos({
         page: 1,
         reset: true,
       }),
       todoStore.fetchStatistics(),
+      projectStore.fetchProjects({ pageSize: 100 }), // 获取所有项目
     ]);
 
     // 为所有任务初始化子待办相关的属性
@@ -1414,7 +1441,8 @@ function openAddDialog() {
     priority: 2, // 中等优先级，使用数字
     due_date: todayStr, // 默认设置为今天
     due_time: "23:30", // 默认设置为23:30
-    is_memo: false,
+    type: "todo",
+    project: null, // 初始化项目为空
   };
   dialog.value = true;
 }
@@ -1430,7 +1458,7 @@ function openAddMemoDialog() {
     priority: 2, // 中等优先级，使用数字
     due_date: null,
     due_time: null,
-    is_memo: true,
+    type: "memo",
   };
   dialog.value = true;
 }
@@ -1459,7 +1487,7 @@ async function handleQuickAdd() {
       {
         priority: 2,
         due_date: isMemo ? null : dueDateTimeISO,
-        is_memo: isMemo,
+        type: isMemo ? "memo" : "todo",
       }
     );
 
@@ -1538,6 +1566,7 @@ async function handleDialogSubmit(todoData) {
         priority: todoData.priority,
         due_date: dueDateTimeISO,
         workload: todoData.workload || null,
+        project: todoData.project || null,
       };
 
       await todoStore.updateTodo(todoData.id, updates);
@@ -1546,8 +1575,9 @@ async function handleDialogSubmit(todoData) {
       await todoStore.addTodo(todoData.title, todoData.description, {
         priority: todoData.priority,
         due_date: dueDateTimeISO,
-        is_memo: todoData.is_memo,
+        type: todoData.type,
         workload: todoData.workload || null,
+        project: todoData.project || null,
       });
       showNotification("新任务添加成功", "success");
     }
@@ -1600,6 +1630,13 @@ async function convertToTodo(memoId) {
   } catch (error) {
     console.error("转换为待办事项失败:", error);
     showNotification("转换失败: " + error.message, "error");
+  }
+}
+
+// 跳转到项目页面
+function goToProject(projectId) {
+  if (projectId) {
+    router.push(`/projects/${projectId}`);
   }
 }
 
@@ -2476,6 +2513,18 @@ async function reopenSubTodo(parentId, subTodo) {
   border: 1px solid #e0e0e0;
   border-radius: 4px;
   padding: 8px;
+}
+
+/* Memo Grid View */
+.memo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.memo-grid .todo-card {
+  margin-bottom: 0 !important;
+  height: 100%;
 }
 </style>
 

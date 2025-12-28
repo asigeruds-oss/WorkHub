@@ -68,8 +68,28 @@
                 属性
               </div>
 
+              <!-- 所属项目 -->
+              <div class="mb-6">
+                <v-select
+                  v-model="localTodo.project"
+                  :items="projects"
+                  item-title="name"
+                  item-value="id"
+                  label="所属项目"
+                  variant="underlined"
+                  color="primary"
+                  hide-details
+                  clearable
+                  prepend-inner-icon="mdi-folder-outline"
+                >
+                  <template v-slot:selection="{ item }">
+                    <span class="text-truncate">{{ item.title }}</span>
+                  </template>
+                </v-select>
+              </div>
+
               <!-- 状态 -->
-              <div class="mb-6" v-if="!localTodo.is_memo">
+              <div class="mb-6" v-if="localTodo.type === 'todo'">
                 <v-select
                   v-model="localTodo.status"
                   :items="statusOptions"
@@ -176,7 +196,7 @@
               </div>
 
               <!-- 预计工作量 -->
-              <div class="mb-6" v-if="!localTodo.is_memo">
+              <div class="mb-6" v-if="localTodo.type === 'todo'">
                 <v-text-field
                   v-model.number="localTodo.workload"
                   type="number"
@@ -222,7 +242,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
+import { useProjectStore } from "@/stores/project";
+import { storeToRefs } from "pinia";
 import {
   priorityOptions,
   statusOptions,
@@ -244,11 +266,21 @@ const emit = defineEmits(["update:modelValue", "submit"]);
 const localTodo = ref({});
 const form = ref(null);
 
+const projectStore = useProjectStore();
+const { projects } = storeToRefs(projectStore);
+
+onMounted(() => {
+  projectStore.fetchProjects();
+});
+
 watch(
   () => props.modelValue,
   (val) => {
     if (val) {
       localTodo.value = { ...props.todo };
+      if (!projects.value.length) {
+        projectStore.fetchProjects();
+      }
     }
   }
 );

@@ -1,6 +1,6 @@
 <template>
   <div class="notion-page">
-    <iframe src="https://yoleo.notion.site/ebd/1b5a9ac6118e8030b238cf4638cd539b" width="100%" height="1000" frameborder="0" allowfullscreen />
+    <iframe src="https://yoleo.notion.site/ebd//929d855b317444d099bcce5274baf01f" width="100%" height="600" frameborder="0" allowfullscreen />
   </div>
 </template>
 
