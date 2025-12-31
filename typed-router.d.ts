@@ -20,19 +20,19 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...all]': RouteRecordInfo<'/[...all]', '/:all(.*)', { all: ParamValue<true> }, { all: ParamValue<false> }>,
+    '/admin/permissions': RouteRecordInfo<'/admin/permissions', '/admin/permissions', Record<never, never>, Record<never, never>>,
     '/autops': RouteRecordInfo<'/autops', '/autops', Record<never, never>, Record<never, never>>,
-    'cultivation': RouteRecordInfo<'cultivation', '/cultivation', Record<never, never>, Record<never, never>>,
     '/leave_form_info/[uuid]': RouteRecordInfo<'/leave_form_info/[uuid]', '/leave_form_info/:uuid', { uuid: ParamValue<true> }, { uuid: ParamValue<false> }>,
     '/loading': RouteRecordInfo<'/loading', '/loading', Record<never, never>, Record<never, never>>,
     '/login': RouteRecordInfo<'/login', '/login', Record<never, never>, Record<never, never>>,
-    '/mascot-demo': RouteRecordInfo<'/mascot-demo', '/mascot-demo', Record<never, never>, Record<never, never>>,
     '/notion/': RouteRecordInfo<'/notion/', '/notion', Record<never, never>, Record<never, never>>,
+    '/projects/': RouteRecordInfo<'/projects/', '/projects', Record<never, never>, Record<never, never>>,
+    '/projects/[id]': RouteRecordInfo<'/projects/[id]', '/projects/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/pure-loading': RouteRecordInfo<'/pure-loading', '/pure-loading', Record<never, never>, Record<never, never>>,
     '/register': RouteRecordInfo<'/register', '/register', Record<never, never>, Record<never, never>>,
     '/settings': RouteRecordInfo<'/settings', '/settings', Record<never, never>, Record<never, never>>,
     '/todos': RouteRecordInfo<'/todos', '/todos', Record<never, never>, Record<never, never>>,
-    'wiki': RouteRecordInfo<'wiki', '/wiki', Record<never, never>, Record<never, never>>,
-    'wiki-page': RouteRecordInfo<'wiki-page', '/wiki/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    'wiki': RouteRecordInfo<'wiki', '/wiki/:id?', Record<never, never>, Record<never, never>>,
     'wiki-search': RouteRecordInfo<'wiki-search', '/wiki/search', Record<never, never>, Record<never, never>>,
   }
 }
