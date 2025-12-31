@@ -49,6 +49,15 @@ export const navigationConfig = {
       description: 'Notion集成工具',
     },
     {
+      id: 'admin',
+      title: '权限管理',
+      path: '/admin/permissions',
+      icon: 'mdi-shield-admin',
+      requireAuth: true,
+      requireAdmin: true,
+      description: '管理用户组和权限配置',
+    },
+    {
       id: 'settings',
       title: '设置',
       path: '/settings',
@@ -116,11 +125,14 @@ export const navigationConfig = {
  * 获取可访问的菜单项
  * @param {Array} menuItems - 菜单配置数组
  * @param {Boolean} isAuthenticated - 是否已登录
+ * @param {Boolean} isAdmin - 是否为管理员
  * @returns {Array} 过滤后的菜单项
  */
-export function getAccessibleMenuItems(menuItems, isAuthenticated) {
+export function getAccessibleMenuItems(menuItems, isAuthenticated, isAdmin = false) {
   return menuItems.filter((item) => {
     if (item.divider) return true;
+    if (item.requireAuth === undefined && item.requireAdmin === undefined) return true;
+    if (item.requireAdmin && !isAdmin) return false;
     if (item.requireAuth === undefined) return true;
     return item.requireAuth ? isAuthenticated : true;
   });

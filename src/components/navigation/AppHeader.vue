@@ -165,6 +165,7 @@ const notificationCount = ref(0);
 // Computed
 const isMobile = computed(() => mobile.value);
 const isAuthenticated = computed(() => authStore.isAuthenticated);
+const isAdmin = computed(() => authStore.isAdmin);
 const username = computed(() => authStore.getUser?.username || "用户");
 
 const isDark = computed(() => theme.global.current.value.dark);
@@ -190,7 +191,8 @@ const pageTitle = computed(() => {
 const userMenuItems = computed(() => {
   return getAccessibleMenuItems(
     navigationConfig.userMenu,
-    isAuthenticated.value
+    isAuthenticated.value,
+    isAdmin.value
   );
 });
 

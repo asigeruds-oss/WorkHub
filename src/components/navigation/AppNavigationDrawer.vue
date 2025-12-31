@@ -184,6 +184,7 @@ const localDrawer = ref(props.modelValue);
 const isMobile = computed(() => mobile.value);
 const isPermanent = computed(() => props.permanent && !isMobile.value);
 const isAuthenticated = computed(() => authStore.isAuthenticated);
+const isAdmin = computed(() => authStore.isAdmin);
 
 const drawerWidth = computed(() => {
   if (isRail.value) return 72;
@@ -193,7 +194,8 @@ const drawerWidth = computed(() => {
 const accessibleMenu = computed(() => {
   return getAccessibleMenuItems(
     navigationConfig.mainMenu,
-    isAuthenticated.value
+    isAuthenticated.value,
+    isAdmin.value
   );
 });
 

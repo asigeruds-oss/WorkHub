@@ -109,5 +109,231 @@ export const AuthAPI = {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
+  },
+
+  // ==================== 用户组管理 ====================
+
+  /**
+   * 获取用户组列表
+   * @returns {Promise<{groups: Array}>}
+   */
+  async getGroups() {
+    try {
+      const response = await http.get('/api/auth/groups/')
+      return response.data
+    } catch (error) {
+      console.error('获取用户组列表失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 创建用户组
+   * @param {Object} data - 用户组数据
+   * @param {string} data.name - 用户组名称
+   * @returns {Promise<Object>}
+   */
+  async createGroup(data) {
+    try {
+      const response = await http.post('/api/auth/groups/', data)
+      return response.data
+    } catch (error) {
+      console.error('创建用户组失败:', error)
+      throw error
+    }
+  },
+
+  // ==================== 用户搜索 ====================
+
+  /**
+   * 搜索用户
+   * @param {Object} params - 查询参数
+   * @param {string} params.query - 搜索关键词
+   * @param {number} params.limit - 返回数量（默认20）
+   * @param {number} params.offset - 偏移量（用于分页，默认0）
+   * @returns {Promise<{users: Array, total: number}>}
+   */
+  async searchUsers(params) {
+    try {
+      const response = await http.get('/api/auth/users/search/', { params })
+      return response.data
+    } catch (error) {
+      console.error('搜索用户失败:', error)
+      throw error
+    }
+  },
+
+  // ==================== 权限管理 ====================
+
+  /**
+   * 获取当前用户的权限信息
+   * @returns {Promise<Object>} - 返回用户信息、组、权限
+   */
+  async getPermissions() {
+    try {
+      const response = await http.get('/api/auth/me/permissions/')
+      return response.data
+    } catch (error) {
+      console.error('获取权限信息失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 更新用户组
+   * @param {number} groupId - 用户组ID
+   * @param {Object} data - 更新数据
+   * @returns {Promise<Object>}
+   */
+  async updateGroup(groupId, data) {
+    try {
+      const response = await http.patch(`/api/auth/groups/${groupId}/`, data)
+      return response.data
+    } catch (error) {
+      console.error('更新用户组失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 删除用户组
+   * @param {number} groupId - 用户组ID
+   * @returns {Promise<void>}
+   */
+  async deleteGroup(groupId) {
+    try {
+      await http.delete(`/api/auth/groups/${groupId}/`)
+    } catch (error) {
+      console.error('删除用户组失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 批量删除用户组
+   * @param {Array<number>} groupIds - 用户组ID数组
+   * @returns {Promise<Object>}
+   */
+  async batchDeleteGroups(groupIds) {
+    try {
+      const response = await http.post('/api/auth/groups/batch-delete/', { group_ids: groupIds })
+      return response.data
+    } catch (error) {
+      console.error('批量删除用户组失败:', error)
+      throw error
+    }
+  },
+
+  // ==================== 用户组成员管理 ====================
+
+  /**
+   * 获取用户组成员列表
+   * @param {number} groupId - 用户组ID
+   * @returns {Promise<Object>}
+   */
+  async getGroupUsers(groupId) {
+    try {
+      const response = await http.get(`/api/auth/groups/${groupId}/users/`)
+      return response.data
+    } catch (error) {
+      console.error('获取用户组成员失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 添加用户到用户组
+   * @param {number} groupId - 用户组ID
+   * @param {number} userId - 用户ID
+   * @returns {Promise<Object>}
+   */
+  async addUserToGroup(groupId, userId) {
+    try {
+      const response = await http.post(`/api/auth/groups/${groupId}/users/`, { user_id: userId })
+      return response.data
+    } catch (error) {
+      console.error('添加用户到组失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 从用户组移除用户
+   * @param {number} groupId - 用户组ID
+   * @param {number} userId - 用户ID
+   * @returns {Promise<void>}
+   */
+  async removeUserFromGroup(groupId, userId) {
+    try {
+      await http.delete(`/api/auth/groups/${groupId}/users/${userId}/`)
+    } catch (error) {
+      console.error('从组移除用户失败:', error)
+      throw error
+    }
+  },
+
+  // ==================== 用户权限编辑 ====================
+
+  /**
+   * 获取特定用户的权限信息
+   * @param {number} userId - 用户ID
+   * @returns {Promise<Object>}
+   */
+  async getUserPermissions(userId) {
+    try {
+      const response = await http.get(`/api/auth/users/${userId}/permissions/`)
+      return response.data
+    } catch (error) {
+      console.error('获取用户权限失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 修改用户权限等级
+   * @param {number} userId - 用户ID
+   * @param {Object} data - 权限数据
+   * @returns {Promise<Object>}
+   */
+  async updateUserPermissions(userId, data) {
+    try {
+      const response = await http.patch(`/api/auth/users/${userId}/permissions/`, data)
+      return response.data
+    } catch (error) {
+      console.error('修改用户权限失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 批量设置用户的用户组
+   * @param {number} userId - 用户ID
+   * @param {Array<number>} groupIds - 用户组ID数组
+   * @returns {Promise<Object>}
+   */
+  async setUserGroups(userId, groupIds) {
+    try {
+      const response = await http.put(`/api/auth/users/${userId}/groups/`, { group_ids: groupIds })
+      return response.data
+    } catch (error) {
+      console.error('设置用户组失败:', error)
+      throw error
+    }
+  },
+
+  // ==================== 统计信息 ====================
+
+  /**
+   * 获取权限系统统计信息
+   * @returns {Promise<Object>}
+   */
+  async getStats() {
+    try {
+      const response = await http.get('/api/auth/stats/')
+      return response.data
+    } catch (error) {
+      console.error('获取统计信息失败:', error)
+      throw error
+    }
   }
 }

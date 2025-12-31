@@ -16,6 +16,9 @@ export const useAuthStore = defineStore('auth', {
     getUser: (state) => state.user,
     getError: (state) => state.error,
     isLoading: (state) => state.loading,
+    isAdmin: (state) => state.user?.is_superuser || state.user?.is_staff || false,
+    isSuperuser: (state) => state.user?.is_superuser || false,
+    isStaff: (state) => state.user?.is_staff || false,
   },
 
   actions: {

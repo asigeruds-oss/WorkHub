@@ -1,494 +1,328 @@
 <template>
-  <div class="home-container mascot-theme">
-    <!-- 装饰性背景 -->
-    <div class="bg-decoration">
-      <div class="circle circle-1"></div>
-      <div class="circle circle-2"></div>
-      <div class="circle circle-3"></div>
-      <!-- 吉祥物装饰元素 -->
-      <div class="mascot-decoration mascot-clock">🕐</div>
-      <div class="mascot-decoration mascot-star">⭐</div>
-      <div class="mascot-decoration mascot-lightning">⚡</div>
-      <div class="mascot-decoration mascot-check">✅</div>
-    </div>
-
-    <!-- 顶部欢迎区域 -->
-    <v-container class="hero-section py-12">
-      <v-row align="center" justify="center">
-        <v-col cols="12" md="10" lg="8" class="text-center">
-          <!-- 吉祥物头像 -->
-          <div class="mascot-hero mb-6">
-            <div class="mascot-avatar-large mascot-float">
-              <MascotCow size="large" />
-            </div>
-            <div class="mascot-subtitle"></div>
-          </div>
-          <h1 class="mascot-title text-h3 font-weight-bold mb-4 title-animate">
-            Ox Line
-          </h1>
-          <p class="text-h6 mb-8 subtitle-text">
-            <span class="mascot-tag feature-tag">📚 知识管理</span>
-            <span class="separator">·</span>
-            <span class="mascot-tag feature-tag">✅ 任务追踪</span>
-            <span class="separator">·</span>
-            <span class="mascot-tag feature-tag">🌱 个人成长</span>
-            <span class="separator">·</span>
-            <span class="mascot-tag feature-tag">💬 想法记录</span>
-          </p>
-          <v-btn
-            v-if="!isLoggedIn"
-            size="x-large"
-            rounded="pill"
-            to="/login"
-            elevation="8"
-            class="mascot-btn mascot-btn-primary px-10 py-3"
-          >
-            <v-icon start size="24">mdi-rocket-launch</v-icon>
-            和青牛线一起开始
-            <v-icon end size="24">mdi-arrow-right</v-icon>
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <!-- 已登录用户的仪表板 -->
-    <v-container v-if="isLoggedIn" class="dashboard-section py-8">
+  <div class="home-page">
+    <v-container fluid class="pa-4">
       <v-row>
-        <v-col cols="12">
-          <div class="welcome-banner pa-6 mb-6">
-            <div class="d-flex align-center">
-              <v-icon size="48" color="primary" class="mr-4"
-                >mdi-emoticon-excited-outline</v-icon
-              >
-              <div>
-                <h2 class="text-h4 font-weight-bold mb-1">
-                  欢迎回来，{{ username }}！
-                </h2>
-                <p class="text-body-1 text-medium-emphasis mb-0">
-                  今天也要元气满满地开始吧 ✨
-                </p>
-              </div>
-            </div>
-          </div>
-        </v-col>
-      </v-row>
-
-      <!-- 快速统计卡片 -->
-      <v-row>
-        <v-col cols="12" sm="6" md="3">
-          <v-card
-            class="stat-card stat-card-primary"
-            elevation="4"
-            rounded="xl"
-          >
-            <v-card-text class="pa-5">
-              <div class="d-flex align-center justify-space-between">
+        <!-- 左侧栏 -->
+        <v-col cols="12" md="3">
+          <!-- 欢迎卡片 -->
+          <v-card class="mb-4" elevation="0" border rounded="lg">
+            <v-card-text class="pa-4">
+              <div class="d-flex align-center mb-3">
+                <MascotCow size="small" class="mr-3" />
                 <div>
-                  <p class="text-caption text-medium-emphasis mb-2 stat-label">
-                    待办任务
-                  </p>
-                  <h3 class="text-h3 font-weight-bold stat-number">
-                    {{ stats.todos }}
-                  </h3>
-                  <p class="text-caption mt-1 stat-hint">
-                    <v-icon size="12" class="mr-1">mdi-trending-up</v-icon>
-                    保持高效
-                  </p>
+                  <div class="text-subtitle-1 font-weight-bold">
+                    {{ greeting }}，{{ username }}！
+                  </div>
+                  <div class="text-caption text-grey">{{ currentDate }}</div>
                 </div>
-                <div class="stat-icon-wrapper stat-icon-primary">
-                  <v-icon size="36" color="white"
-                    >mdi-checkbox-marked-circle-outline</v-icon
-                  >
-                </div>
+              </div>
+              <v-divider class="mb-3"></v-divider>
+              <div class="text-body-2 text-grey-darken-1">
+                {{ dailyQuote }}
               </div>
             </v-card-text>
           </v-card>
-        </v-col>
 
-        <v-col cols="12" sm="6" md="3">
-          <v-card
-            class="stat-card stat-card-success"
-            elevation="4"
-            rounded="xl"
-          >
-            <v-card-text class="pa-5">
-              <div class="d-flex align-center justify-space-between">
-                <div>
-                  <p class="text-caption text-medium-emphasis mb-2 stat-label">
-                    Wiki 文章
-                  </p>
-                  <h3 class="text-h3 font-weight-bold stat-number">
-                    {{ stats.wikis }}
-                  </h3>
-                  <p class="text-caption mt-1 stat-hint">
-                    <v-icon size="12" class="mr-1"
-                      >mdi-book-open-variant</v-icon
-                    >
-                    知识积累
-                  </p>
-                </div>
-                <div class="stat-icon-wrapper stat-icon-success">
-                  <v-icon size="36" color="white"
-                    >mdi-book-open-page-variant</v-icon
-                  >
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-
-        <v-col cols="12" sm="6" md="3">
-          <v-card class="stat-card stat-card-info" elevation="4" rounded="xl">
-            <v-card-text class="pa-5">
-              <div class="d-flex align-center justify-space-between">
-                <div>
-                  <p class="text-caption text-medium-emphasis mb-2 stat-label">
-                    留言数量
-                  </p>
-                  <h3 class="text-h3 font-weight-bold stat-number">
-                    {{ stats.messages }}
-                  </h3>
-                  <p class="text-caption mt-1 stat-hint">
-                    <v-icon size="12" class="mr-1">mdi-forum</v-icon>
-                    互动交流
-                  </p>
-                </div>
-                <div class="stat-icon-wrapper stat-icon-info">
-                  <v-icon size="36" color="white">mdi-message-text</v-icon>
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <!-- 功能模块卡片 -->
-    <v-container class="features-section py-10">
-      <v-row>
-        <v-col cols="12" class="text-center mb-4">
-          <div class="section-header">
-            <v-chip
-              size="large"
-              color="primary"
-              variant="tonal"
-              class="mb-4 px-6 py-5"
-            >
-              <v-icon start size="20">mdi-apps</v-icon>
-              <span class="text-subtitle-1 font-weight-bold">功能模块</span>
-            </v-chip>
-            <h2 class="section-title text-h3 font-weight-bold mb-3">
-              探索所有功能
-            </h2>
-            <p class="text-body-1 text-medium-emphasis">
-              一站式的个人内容管理解决方案
-            </p>
-          </div>
-        </v-col>
-      </v-row>
-
-      <v-row>
-        <!-- Wiki 知识库 -->
-        <v-col cols="12" md="6" lg="4">
-          <v-card
-            class="feature-card feature-card-glow"
-            elevation="0"
-            rounded="xl"
-            @click="navigateTo('/wiki')"
-          >
-            <div class="feature-card-gradient feature-gradient-primary"></div>
-            <v-card-text class="pa-6 position-relative">
-              <div class="d-flex align-center mb-4">
-                <div class="feature-icon-wrapper feature-icon-primary mr-4">
-                  <v-icon size="32" color="white"
-                    >mdi-book-open-page-variant</v-icon
-                  >
-                </div>
-                <div>
-                  <h3 class="text-h5 font-weight-bold">Wiki 知识库</h3>
-                  <p class="text-caption text-medium-emphasis mb-0">
-                    构建你的知识体系
-                  </p>
-                </div>
-              </div>
-              <p class="text-body-2 mb-4 feature-description">
-                树形结构管理文章，支持 Markdown
-                编辑、标签分类、评论互动，打造个人知识图谱
-              </p>
-              <div class="mb-3">
-                <v-chip
-                  size="small"
-                  color="primary"
-                  variant="tonal"
-                  class="mr-2 mb-2"
-                  >Markdown</v-chip
-                >
-                <v-chip
-                  size="small"
-                  color="primary"
-                  variant="tonal"
-                  class="mr-2 mb-2"
-                  >树形结构</v-chip
-                >
-                <v-chip
-                  size="small"
-                  color="primary"
-                  variant="tonal"
-                  class="mb-2"
-                  >版本历史</v-chip
-                >
-              </div>
-            </v-card-text>
+          <!-- 快速统计 -->
+          <v-card class="mb-4" elevation="0" border rounded="lg">
+            <v-card-title class="d-flex align-center py-3 px-4">
+              <v-icon
+                icon="mdi-chart-box-outline"
+                class="mr-2"
+                color="primary"
+                size="small"
+              ></v-icon>
+              <span class="text-body-1 font-weight-medium">数据概览</span>
+            </v-card-title>
             <v-divider></v-divider>
-            <v-card-actions class="pa-6">
-              <v-btn
-                color="primary"
-                variant="flat"
-                :to="isLoggedIn ? '/wiki' : '/login'"
-                block
-                rounded="lg"
-              >
-                进入知识库
-                <v-icon end>mdi-arrow-right</v-icon>
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-
-        <!-- 待办事项 -->
-        <v-col cols="12" md="6" lg="4">
-          <v-card
-            class="feature-card"
-            elevation="2"
-            rounded="lg"
-            hover
-            @click="navigateTo('/todos')"
-          >
-            <v-card-text class="pa-6">
-              <div class="d-flex align-center mb-4">
-                <v-avatar color="success" size="60" class="mr-4">
-                  <v-icon size="32" color="white"
-                    >mdi-checkbox-marked-circle-outline</v-icon
+            <v-card-text class="pa-4">
+              <v-row dense>
+                <v-col cols="6">
+                  <div
+                    class="stat-box text-center pa-3 rounded-lg cursor-pointer"
+                    @click="navigateTo('/todos')"
                   >
-                </v-avatar>
-                <div>
-                  <h3 class="text-h5 font-weight-bold">待办事项</h3>
-                  <p class="text-caption text-medium-emphasis">
-                    高效管理任务清单
-                  </p>
-                </div>
-              </div>
-              <p class="text-body-2 mb-4">
-                创建、分类、追踪你的待办任务，设置优先级和截止日期，让工作和生活更有条理
-              </p>
-              <v-chip size="small" color="success" variant="tonal" class="mr-2"
-                >任务管理</v-chip
-              >
-              <v-chip size="small" color="success" variant="tonal" class="mr-2"
-                >优先级</v-chip
-              >
-              <v-chip size="small" color="success" variant="tonal"
-                >提醒功能</v-chip
-              >
+                    <div class="text-h5 font-weight-bold text-primary">
+                      {{ stats.pendingTodos }}
+                    </div>
+                    <div class="text-caption text-grey">待办任务</div>
+                  </div>
+                </v-col>
+                <v-col cols="6">
+                  <div
+                    class="stat-box text-center pa-3 rounded-lg cursor-pointer"
+                    @click="navigateTo('/todos')"
+                  >
+                    <div class="text-h5 font-weight-bold text-success">
+                      {{ stats.completedTodos }}
+                    </div>
+                    <div class="text-caption text-grey">已完成</div>
+                  </div>
+                </v-col>
+                <v-col cols="6">
+                  <div
+                    class="stat-box text-center pa-3 rounded-lg cursor-pointer"
+                    @click="navigateTo('/wiki')"
+                  >
+                    <div class="text-h5 font-weight-bold text-info">
+                      {{ stats.wikis }}
+                    </div>
+                    <div class="text-caption text-grey">Wiki文章</div>
+                  </div>
+                </v-col>
+                <v-col cols="6">
+                  <div
+                    class="stat-box text-center pa-3 rounded-lg cursor-pointer"
+                    @click="navigateTo('/projects')"
+                  >
+                    <div class="text-h5 font-weight-bold text-purple">
+                      {{ stats.projects }}
+                    </div>
+                    <div class="text-caption text-grey">项目</div>
+                  </div>
+                </v-col>
+              </v-row>
             </v-card-text>
-            <v-card-actions class="pa-6 pt-0">
-              <v-btn
-                color="success"
-                variant="text"
-                :to="isLoggedIn ? '/todos' : '/login'"
-              >
-                查看任务
-                <v-icon end>mdi-arrow-right</v-icon>
-              </v-btn>
-            </v-card-actions>
           </v-card>
-        </v-col>
 
-        <!-- AutoOps 自动化 -->
-        <v-col cols="12" md="6" lg="4">
-          <!--暂时不指向P假体网站-->
-          <v-card
-            class="feature-card"
-            elevation="2"
-            rounded="lg"
-            hover
-            @click="navigateTo('/autops1')"
-          >
-            <v-card-text class="pa-6">
-              <div class="d-flex align-center mb-4">
-                <v-avatar color="info" size="60" class="mr-4">
-                  <v-icon size="32" color="white">mdi-robot</v-icon>
-                </v-avatar>
-                <div>
-                  <h3 class="text-h5 font-weight-bold">AutoOps</h3>
-                  <p class="text-caption text-medium-emphasis">
-                    自动化运维工具
-                  </p>
-                </div>
-              </div>
-              <p class="text-body-2 mb-4">
-                自动化脚本执行、系统监控、日志分析等运维工具，提升工作效率
-              </p>
-              <v-chip size="small" color="info" variant="tonal" class="mr-2"
-                >自动化</v-chip
-              >
-              <v-chip size="small" color="info" variant="tonal" class="mr-2"
-                >运维工具</v-chip
-              >
-              <v-chip size="small" color="info" variant="tonal"
-                >效率提升</v-chip
-              >
-            </v-card-text>
-            <v-card-actions class="pa-6 pt-0">
-              <v-btn
-                color="info"
-                variant="text"
-                :to="isLoggedIn ? '/autops' : '/login'"
-              >
-                进入 AutoOps
-                <v-icon end>mdi-arrow-right</v-icon>
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-
-        <!-- Notion 集成 -->
-        <v-col cols="12" md="6" lg="4">
-          <v-card
-            class="feature-card"
-            elevation="2"
-            rounded="lg"
-            hover
-            @click="navigateTo('/notion')"
-          >
-            <v-card-text class="pa-6">
-              <div class="d-flex align-center mb-4">
-                <v-avatar color="purple" size="60" class="mr-4">
-                  <v-icon size="32" color="white">mdi-note-text</v-icon>
-                </v-avatar>
-                <div>
-                  <h3 class="text-h5 font-weight-bold">Notion</h3>
-                  <p class="text-caption text-medium-emphasis">
-                    笔记与文档管理
-                  </p>
-                </div>
-              </div>
-              <p class="text-body-2 mb-4">
-                与 Notion 无缝集成，同步笔记和文档，实现多平台内容管理
-              </p>
-              <v-chip size="small" color="purple" variant="tonal" class="mr-2"
-                >笔记同步</v-chip
-              >
-              <v-chip size="small" color="purple" variant="tonal" class="mr-2"
-                >文档管理</v-chip
-              >
-              <v-chip size="small" color="purple" variant="tonal">集成</v-chip>
-            </v-card-text>
-            <v-card-actions class="pa-6 pt-0">
-              <v-btn
-                color="purple"
-                variant="text"
-                :to="isLoggedIn ? '/notion' : '/login'"
-              >
-                查看笔记
-                <v-icon end>mdi-arrow-right</v-icon>
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-
-        <!-- 设置中心 -->
-        <v-col cols="12" md="6" lg="4">
-          <v-card
-            class="feature-card"
-            elevation="2"
-            rounded="lg"
-            hover
-            @click="navigateTo('/settings')"
-          >
-            <v-card-text class="pa-6">
-              <div class="d-flex align-center mb-4">
-                <v-avatar color="grey-darken-1" size="60" class="mr-4">
-                  <v-icon size="32" color="white">mdi-cog</v-icon>
-                </v-avatar>
-                <div>
-                  <h3 class="text-h5 font-weight-bold">设置中心</h3>
-                  <p class="text-caption text-medium-emphasis">个性化配置</p>
-                </div>
-              </div>
-              <p class="text-body-2 mb-4">
-                管理个人信息、通知设置、主题偏好等，打造专属于你的使用体验
-              </p>
-              <v-chip
-                size="small"
-                color="grey-darken-1"
-                variant="tonal"
+          <!-- 快捷入口 -->
+          <v-card elevation="0" border rounded="lg">
+            <v-card-title class="d-flex align-center py-3 px-4">
+              <v-icon
+                icon="mdi-lightning-bolt"
                 class="mr-2"
-                >个人资料</v-chip
-              >
-              <v-chip
+                color="warning"
                 size="small"
-                color="grey-darken-1"
-                variant="tonal"
-                class="mr-2"
-                >主题切换</v-chip
+              ></v-icon>
+              <span class="text-body-1 font-weight-medium">快捷入口</span>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-list density="compact" nav class="pa-2">
+              <v-list-item
+                v-for="shortcut in shortcuts"
+                :key="shortcut.to"
+                :to="shortcut.to"
+                :prepend-icon="shortcut.icon"
+                rounded="lg"
+                class="mb-1"
               >
-              <v-chip size="small" color="grey-darken-1" variant="tonal"
-                >通知</v-chip
-              >
-            </v-card-text>
-            <v-card-actions class="pa-6 pt-0">
-              <v-btn
-                color="grey-darken-1"
-                variant="text"
-                :to="isLoggedIn ? '/settings' : '/login'"
-              >
-                进入设置
-                <v-icon end>mdi-arrow-right</v-icon>
-              </v-btn>
-            </v-card-actions>
+                <v-list-item-title class="text-body-2">{{
+                  shortcut.title
+                }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
           </v-card>
         </v-col>
-      </v-row>
-    </v-container>
 
-    <!-- 未登录用户的行动号召 -->
-    <v-container v-if="!isLoggedIn" class="cta-section py-12">
-      <v-row justify="center">
-        <v-col cols="12" md="8" class="text-center">
-          <v-card class="cta-card pa-8" elevation="4" rounded="xl">
-            <v-icon size="80" color="primary" class="mb-4"
-              >mdi-rocket-launch</v-icon
+        <!-- 右侧主区域 -->
+        <v-col cols="12" md="9">
+          <!-- 今日任务概览 -->
+          <v-card class="mb-4" elevation="0" border rounded="lg">
+            <v-card-title class="d-flex align-center py-3 px-4">
+              <v-icon
+                icon="mdi-calendar-today"
+                class="mr-2"
+                color="primary"
+                size="small"
+              ></v-icon>
+              <span class="text-body-1 font-weight-medium">今日任务</span>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="primary"
+                size="small"
+                variant="text"
+                to="/todos"
+                class="text-none"
+              >
+                查看全部
+                <v-icon end size="small">mdi-arrow-right</v-icon>
+              </v-btn>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text class="pa-0">
+              <div v-if="loading" class="d-flex justify-center py-8">
+                <v-progress-circular
+                  indeterminate
+                  color="primary"
+                ></v-progress-circular>
+              </div>
+              <div
+                v-else-if="todayTodos.length === 0"
+                class="text-center py-8 text-grey"
+              >
+                <v-icon
+                  icon="mdi-check-circle-outline"
+                  size="48"
+                  color="grey-lighten-1"
+                  class="mb-2"
+                ></v-icon>
+                <div class="text-body-2">今日暂无任务，享受轻松时光！</div>
+                <v-btn
+                  color="primary"
+                  size="small"
+                  variant="outlined"
+                  class="mt-3"
+                  to="/todos"
+                >
+                  添加新任务
+                </v-btn>
+              </div>
+              <v-list v-else class="py-0">
+                <template v-for="(todo, index) in todayTodos" :key="todo.id">
+                  <v-list-item
+                    class="todo-item px-4"
+                    :class="{
+                      'completed-item': todo.status === 'done',
+                    }"
+                  >
+                    <template v-slot:prepend>
+                      <v-checkbox
+                        :model-value="todo.status === 'done'"
+                        @change="toggleTodoStatus(todo)"
+                        hide-details
+                        density="compact"
+                        :color="getPriorityColor(todo.priority)"
+                        class="mr-2"
+                      ></v-checkbox>
+                    </template>
+                    <v-list-item-title
+                      class="text-body-2"
+                      :class="{
+                        'text-decoration-line-through text-grey':
+                          todo.status === 'done',
+                      }"
+                    >
+                      {{ todo.title }}
+                    </v-list-item-title>
+                    <template v-slot:append>
+                      <v-chip
+                        v-if="todo.priority && todo.priority !== 'low'"
+                        size="x-small"
+                        :color="getPriorityColor(todo.priority)"
+                        variant="tonal"
+                        class="font-weight-medium"
+                      >
+                        {{ getPriorityLabel(todo.priority) }}
+                      </v-chip>
+                    </template>
+                  </v-list-item>
+                  <v-divider
+                    v-if="index < todayTodos.length - 1"
+                    class="mx-4"
+                  ></v-divider>
+                </template>
+              </v-list>
+            </v-card-text>
+          </v-card>
+
+          <!-- 功能模块网格 -->
+          <div class="text-subtitle-1 font-weight-medium mb-3 px-1">
+            <v-icon icon="mdi-apps" size="small" class="mr-1"></v-icon>
+            功能模块
+          </div>
+          <v-row>
+            <v-col
+              v-for="module in modules"
+              :key="module.to"
+              cols="12"
+              sm="6"
+              lg="4"
             >
-            <h2 class="text-h4 font-weight-bold mb-4">开启你的高效之旅</h2>
-            <p class="text-body-1 mb-6 text-medium-emphasis">
-              注册账号，开始使用个人内容中心的所有功能
-            </p>
-            <div class="d-flex justify-center flex-wrap gap-4">
-              <v-btn
-                color="primary"
-                size="large"
-                rounded="pill"
-                to="/register"
-                class="px-10"
+              <v-card
+                class="module-card h-100"
+                elevation="0"
+                border
+                rounded="lg"
+                @click="navigateTo(module.to)"
               >
-                立即注册
-              </v-btn>
-              <v-btn
-                variant="outlined"
-                color="primary"
-                size="large"
-                rounded="pill"
-                to="/login"
-                class="px-10"
+                <v-card-text class="pa-4">
+                  <div class="d-flex align-center mb-3">
+                    <v-avatar :color="module.color" size="40" class="mr-3">
+                      <v-icon
+                        :icon="module.icon"
+                        color="white"
+                        size="20"
+                      ></v-icon>
+                    </v-avatar>
+                    <div>
+                      <div class="text-subtitle-2 font-weight-bold">
+                        {{ module.title }}
+                      </div>
+                      <div class="text-caption text-grey">
+                        {{ module.subtitle }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-body-2 text-grey-darken-1 mb-3">
+                    {{ module.description }}
+                  </div>
+                  <div class="d-flex flex-wrap" style="gap: 4px">
+                    <v-chip
+                      v-for="tag in module.tags"
+                      :key="tag"
+                      size="x-small"
+                      :color="module.color"
+                      variant="tonal"
+                    >
+                      {{ tag }}
+                    </v-chip>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+
+          <!-- 最近活动 -->
+          <v-card class="mt-4" elevation="0" border rounded="lg">
+            <v-card-title class="d-flex align-center py-3 px-4">
+              <v-icon
+                icon="mdi-history"
+                class="mr-2"
+                color="grey"
+                size="small"
+              ></v-icon>
+              <span class="text-body-1 font-weight-medium">最近活动</span>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text class="pa-4">
+              <div
+                v-if="recentActivities.length === 0"
+                class="text-center py-4 text-grey"
               >
-                已有账号？登录
-              </v-btn>
-            </div>
+                <div class="text-body-2">暂无最近活动</div>
+              </div>
+              <v-timeline v-else density="compact" side="end">
+                <v-timeline-item
+                  v-for="activity in recentActivities"
+                  :key="activity.id"
+                  :dot-color="activity.color"
+                  size="x-small"
+                >
+                  <div class="d-flex align-center">
+                    <v-icon
+                      :icon="activity.icon"
+                      size="small"
+                      :color="activity.color"
+                      class="mr-2"
+                    ></v-icon>
+                    <span class="text-body-2">{{ activity.text }}</span>
+                    <v-spacer></v-spacer>
+                    <span class="text-caption text-grey">{{
+                      activity.time
+                    }}</span>
+                  </div>
+                </v-timeline-item>
+              </v-timeline>
+            </v-card-text>
           </v-card>
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- 操作提示 -->
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="2000">
+      {{ snackbar.text }}
+    </v-snackbar>
   </div>
 </template>
 
@@ -497,28 +331,144 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useTodoStore } from "@/stores/todo";
+import MascotCow from "@/components/MascotCow.vue";
 
 const authStore = useAuthStore();
 const todoStore = useTodoStore();
 const router = useRouter();
 
+// 状态
+const loading = ref(false);
+const snackbar = ref({
+  show: false,
+  text: "",
+  color: "success",
+});
+
 // 统计数据
 const stats = ref({
-  todos: 0,
+  pendingTodos: 0,
+  completedTodos: 0,
   wikis: 0,
-  messages: 0,
+  projects: 0,
 });
+
+// 今日待办
+const todayTodos = ref([]);
+
+// 最近活动
+const recentActivities = ref([]);
+
+// 每日名言
+const dailyQuotes = [
+  "每一个不曾起舞的日子，都是对生命的辜负。",
+  "把每一件简单的事做好就是不简单。",
+  "不积跬步，无以至千里。",
+  "今天的努力，是明天的收获。",
+  "保持专注，成就非凡。",
+  "坚持就是胜利，加油！",
+  "知识改变命运，学习成就未来。",
+  "每天进步一点点，终将成就大不同。",
+];
 
 // 计算属性
-const isLoggedIn = computed(() => {
-  return authStore.isAuthenticated;
+const isLoggedIn = computed(() => authStore.isAuthenticated);
+
+const username = computed(() => authStore.user?.username || "访客");
+
+const greeting = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 6) return "夜深了";
+  if (hour < 9) return "早上好";
+  if (hour < 12) return "上午好";
+  if (hour < 14) return "中午好";
+  if (hour < 18) return "下午好";
+  if (hour < 22) return "晚上好";
+  return "夜深了";
 });
 
-const username = computed(() => {
-  return authStore.user?.username || "访客";
+const currentDate = computed(() => {
+  const now = new Date();
+  const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+  return `${now.getMonth() + 1}月${now.getDate()}日 ${weekdays[now.getDay()]}`;
 });
 
-// 导航方法
+const dailyQuote = computed(() => {
+  const index = new Date().getDate() % dailyQuotes.length;
+  return dailyQuotes[index];
+});
+
+// 快捷入口
+const shortcuts = [
+  {
+    title: "待办事项",
+    icon: "mdi-checkbox-marked-circle-outline",
+    to: "/todos",
+  },
+  { title: "Wiki知识库", icon: "mdi-book-open-page-variant", to: "/wiki" },
+  { title: "项目管理", icon: "mdi-folder-multiple", to: "/projects" },
+  { title: "系统设置", icon: "mdi-cog-outline", to: "/settings" },
+];
+
+// 功能模块
+const modules = [
+  {
+    title: "Wiki 知识库",
+    subtitle: "构建你的知识体系",
+    description: "树形结构管理文章，支持 Markdown 编辑、标签分类、评论互动",
+    icon: "mdi-book-open-page-variant",
+    color: "primary",
+    to: "/wiki",
+    tags: ["Markdown", "树形结构", "版本历史"],
+  },
+  {
+    title: "待办事项",
+    subtitle: "高效管理任务清单",
+    description: "创建、分类、追踪你的待办任务，设置优先级和截止日期",
+    icon: "mdi-checkbox-marked-circle-outline",
+    color: "success",
+    to: "/todos",
+    tags: ["任务管理", "优先级", "提醒"],
+  },
+  {
+    title: "项目管理",
+    subtitle: "团队协作中心",
+    description: "管理项目进度、任务分配、成员协作，让团队更高效",
+    icon: "mdi-folder-multiple",
+    color: "purple",
+    to: "/projects",
+    tags: ["项目", "协作", "进度"],
+  },
+  {
+    title: "AutoOps",
+    subtitle: "自动化运维工具",
+    description: "自动化脚本执行、系统监控、日志分析等运维工具",
+    icon: "mdi-robot",
+    color: "info",
+    to: "/autops",
+    tags: ["自动化", "运维", "监控"],
+  },
+  {
+    title: "Notion",
+    subtitle: "笔记与文档管理",
+    description: "与 Notion 无缝集成，同步笔记和文档，实现多平台内容管理",
+    icon: "mdi-note-text",
+    color: "orange",
+    to: "/notion",
+    tags: ["笔记同步", "文档", "集成"],
+  },
+  {
+    title: "设置中心",
+    subtitle: "个性化配置",
+    description: "管理个人信息、通知设置、主题偏好等",
+    icon: "mdi-cog",
+    color: "grey",
+    to: "/settings",
+    tags: ["个人资料", "主题", "通知"],
+  },
+];
+
+// 方法
 const navigateTo = (path) => {
   if (isLoggedIn.value) {
     router.push(path);
@@ -527,883 +477,222 @@ const navigateTo = (path) => {
   }
 };
 
-// 加载统计数据
-const loadStats = async () => {
-  if (!isLoggedIn.value) return;
+const showNotification = (text, color = "success") => {
+  snackbar.value = { show: true, text, color };
+};
 
+// 优先级相关
+const getPriorityColor = (priority) => {
+  const colors = {
+    5: "error",
+    4: "deep-orange",
+    3: "warning",
+    2: "success",
+    1: "info",
+    critical: "error",
+    high: "deep-orange",
+    medium: "warning",
+    low: "success",
+    minimal: "info",
+  };
+  return colors[priority] || "grey";
+};
+
+const getPriorityLabel = (priority) => {
+  const labels = {
+    5: "极高",
+    4: "高",
+    3: "中",
+    2: "低",
+    1: "极低",
+    critical: "极高",
+    high: "高",
+    medium: "中",
+    low: "低",
+    minimal: "极低",
+  };
+  return labels[priority] || "";
+};
+
+// 切换待办状态
+const toggleTodoStatus = async (todo) => {
   try {
-    // 加载待办任务统计
-    await todoStore.loadTodos();
-    stats.value.todos = todoStore.todos.filter((t) => !t.completed).length;
-
-    // TODO: 添加 Wiki 和留言板的统计
-    // 这里可以调用相应的 API 获取数据
-    stats.value.wikis = 0;
-    stats.value.messages = 0;
+    if (todo.status === "done") {
+      await todoStore.reopenTodo(todo.id);
+    } else {
+      await todoStore.completeTodo(todo.id);
+    }
+    await loadTodayTodos();
+    showNotification(todo.status === "done" ? "已重新打开任务" : "已完成任务");
   } catch (error) {
-    console.error("加载统计数据失败:", error);
+    console.error("更新任务状态失败:", error);
+    showNotification("操作失败，请重试", "error");
   }
 };
 
-// 在组件挂载时检查认证状态和加载数据
-onMounted(async () => {
-  // 检查localStorage中的令牌
-  const accessToken = localStorage.getItem("accessToken");
+// 加载今日待办
+const loadTodayTodos = async () => {
+  if (!isLoggedIn.value) return;
 
-  // 如果有令牌但authStore中没有用户信息，尝试获取
+  try {
+    await todoStore.loadTodos();
+    const allTodos = todoStore.getAllTodos || [];
+
+    // 获取今日的待办任务（优先级高的或截止日期是今天的）
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    todayTodos.value = allTodos
+      .filter((todo) => {
+        // 排除已归档的
+        if (todo.status === "archived") return false;
+        // 包含处理中的、高优先级的、或今天截止的
+        if (todo.status === "processing") return true;
+        if (todo.priority >= 4) return true;
+        if (todo.deadline) {
+          const deadline = new Date(todo.deadline);
+          return deadline >= today && deadline < tomorrow;
+        }
+        return false;
+      })
+      .slice(0, 5);
+
+    // 统计数据
+    stats.value.pendingTodos = allTodos.filter(
+      (t) => t.status !== "done" && t.status !== "archived"
+    ).length;
+    stats.value.completedTodos = allTodos.filter(
+      (t) => t.status === "done"
+    ).length;
+  } catch (error) {
+    console.error("加载待办失败:", error);
+  }
+};
+
+// 加载最近活动
+const loadRecentActivities = () => {
+  // 这里可以从API获取最近活动，暂时使用示例数据
+  const todos = todoStore.getAllTodos || [];
+  const activities = [];
+
+  // 获取最近完成的任务
+  const recentCompleted = todos.filter((t) => t.status === "done").slice(0, 3);
+
+  recentCompleted.forEach((todo) => {
+    activities.push({
+      id: `todo-${todo.id}`,
+      icon: "mdi-check-circle",
+      color: "success",
+      text: `完成任务: ${todo.title}`,
+      time: "最近",
+    });
+  });
+
+  recentActivities.value = activities.slice(0, 5);
+};
+
+// 加载数据
+const loadData = async () => {
+  if (!isLoggedIn.value) return;
+
+  loading.value = true;
+  try {
+    await loadTodayTodos();
+    loadRecentActivities();
+  } catch (error) {
+    console.error("加载数据失败:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 生命周期
+onMounted(async () => {
+  const accessToken = localStorage.getItem("accessToken");
   if (accessToken && !authStore.user) {
     await authStore.checkAuthStatus();
   }
 
-  // 加载统计数据
   if (isLoggedIn.value) {
-    await loadStats();
+    await loadData();
   }
 });
 </script>
 
 <style scoped>
-/* 主容器 */
-.home-container {
-  background: linear-gradient(180deg, #f5f7fa 0%, #ffffff 50%, #fafbfc 100%);
+.home-page {
   min-height: 100vh;
-  overflow-x: hidden;
-  position: relative;
+  background-color: #f8f9fa;
+  padding-top: 12px;
+  padding-bottom: 24px;
 }
 
-/* 装饰性背景 */
-.bg-decoration {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 0;
-  pointer-events: none;
+/* 统计盒子 */
+.stat-box {
+  background-color: #f5f5f5;
+  transition: all 0.2s ease;
 }
 
-.circle {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.06;
-  animation: float 20s ease-in-out infinite;
-}
-
-.circle-1 {
-  width: 500px;
-  height: 500px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  top: -250px;
-  right: -250px;
-  animation-delay: 0s;
-}
-
-.circle-2 {
-  width: 400px;
-  height: 400px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  bottom: -200px;
-  left: -200px;
-  animation-delay: 5s;
-}
-
-.circle-3 {
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation-delay: 10s;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -30px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-}
-
-/* 顶部欢迎区域 */
-.hero-section {
-  padding-top: 80px;
-  padding-bottom: 60px;
-  position: relative;
-  background: transparent;
-  z-index: 1;
-}
-
-/* 头像样式 */
-.avatar-wrapper {
-  position: relative;
-  display: inline-block;
-  animation: avatarFloat 3s ease-in-out infinite;
-}
-
-.avatar-main {
-  position: relative;
-  z-index: 2;
-  border: 4px solid white;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) !important;
-}
-
-.avatar-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  border: 2px solid rgba(102, 126, 234, 0.3);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes avatarFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.5;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-    opacity: 0.8;
-  }
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
-}
-
-.title-animate {
-  animation: titleSlide 1s ease-out;
-}
-
-@keyframes titleSlide {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.subtitle-text {
-  color: #666;
-  font-weight: 400;
-}
-
-.feature-tag {
-  display: inline-block;
-  padding: 4px 12px;
-  background: rgba(102, 126, 234, 0.08);
-  border-radius: 20px;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-}
-
-.feature-tag:hover {
-  background: rgba(102, 126, 234, 0.15);
+.stat-box:hover {
+  background-color: #eeeeee;
   transform: translateY(-2px);
 }
 
-.separator {
-  margin: 0 12px;
-  color: #ccc;
-}
-
-.cta-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.35) !important;
-  transition: all 0.3s ease !important;
-  font-size: 1.1rem !important;
-  letter-spacing: 0.5px;
-}
-
-.cta-button:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.45) !important;
-}
-
-/* 仪表板区域 */
-.dashboard-section {
-  background-color: transparent;
-  position: relative;
-  z-index: 1;
-}
-
-.welcome-banner {
-  background: linear-gradient(
-    135deg,
-    rgba(102, 126, 234, 0.08) 0%,
-    rgba(118, 75, 162, 0.08) 100%
-  );
-  border-radius: 20px;
-  border: 1px solid rgba(102, 126, 234, 0.15);
-  backdrop-filter: blur(10px);
-  animation: slideInLeft 0.8s ease-out;
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.stat-card {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+/* 模块卡片 */
+.module-card {
   cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: white;
-  position: relative;
-  overflow: hidden;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background-color: white;
 }
 
-.stat-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 100%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-.stat-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+/* 待办项 */
+.todo-item {
+  transition: background-color 0.2s ease;
 }
 
-.stat-card:hover::before {
-  opacity: 1;
+.todo-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
-.stat-card-primary {
-  border-left: 4px solid #667eea;
-}
-.stat-card-success {
-  border-left: 4px solid #4caf50;
-}
-.stat-card-warning {
-  border-left: 4px solid #ff9800;
-}
-.stat-card-info {
-  border-left: 4px solid #2196f3;
+.completed-item {
+  background-color: #fafafa;
 }
 
-.stat-label {
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-}
-
-.stat-number {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.2;
-}
-
-.stat-hint {
-  color: #999;
-  font-style: italic;
-}
-
-.stat-icon-wrapper {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card:hover .stat-icon-wrapper {
-  transform: rotate(10deg) scale(1.1);
-}
-
-.stat-icon-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-.stat-icon-success {
-  background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
-}
-.stat-icon-warning {
-  background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
-}
-.stat-icon-info {
-  background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%);
-}
-
-/* 功能模块区域 */
-.features-section {
-  background-color: transparent;
-  position: relative;
-  z-index: 1;
-}
-
-.section-header {
-  animation: fadeInDown 1s ease-out;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.section-title {
-  color: #333;
-  position: relative;
-  background: linear-gradient(135deg, #333 0%, #667eea 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.feature-card {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+/* 光标指针 */
+.cursor-pointer {
   cursor: pointer;
-  height: 100%;
-  border: 2px solid rgba(0, 0, 0, 0.06);
-  background: white;
-  position: relative;
-  overflow: visible;
 }
 
-.feature-card-glow {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+/* 时间线 */
+:deep(.v-timeline-item__body) {
+  padding-top: 0 !important;
+  padding-bottom: 8px !important;
 }
 
-.feature-card:hover {
-  transform: translateY(-12px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.25) !important;
-  border-color: rgba(102, 126, 234, 0.3);
+/* 卡片标题统一样式 */
+:deep(.v-card-title) {
+  font-size: 0.95rem !important;
 }
 
-.feature-card-gradient {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+/* 列表项统一样式 */
+:deep(.v-list-item) {
+  min-height: 44px !important;
 }
 
-.feature-card:hover .feature-card-gradient {
-  opacity: 1;
-}
-
-.feature-gradient-primary {
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-}
-
-.feature-icon-wrapper {
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.4s ease;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-}
-
-.feature-card:hover .feature-icon-wrapper {
-  transform: scale(1.15) rotate(-5deg);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
-}
-
-.feature-icon-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.feature-description {
-  color: #666;
-  line-height: 1.7;
-  min-height: 60px;
-}
-
-/* 行动号召区域 */
-.cta-section {
-  background: transparent;
-  padding: 80px 0;
-  position: relative;
-  z-index: 1;
-}
-
-.cta-card {
-  background: linear-gradient(
-    135deg,
-    rgba(102, 126, 234, 0.08) 0%,
-    rgba(118, 75, 162, 0.08) 100%
-  );
-  border: 2px solid rgba(102, 126, 234, 0.2);
-  backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-  animation: ctaFadeIn 1.2s ease-out;
-}
-
-.cta-card::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: shine 3s infinite;
-}
-
-@keyframes ctaFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes shine {
-  0% {
-    transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(100%) translateY(100%) rotate(45deg);
-  }
-}
-
-.gap-4 {
-  gap: 1rem;
-}
-
-/* 通用样式 */
-:deep(.v-btn) {
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  text-transform: none;
-}
-
-:deep(.v-btn:hover) {
-  transform: translateY(-3px);
-}
-
-:deep(.v-btn:active) {
-  transform: translateY(-1px);
-}
-
-:deep(.v-card) {
-  border-radius: 20px;
-}
-
-:deep(.v-avatar) {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-:deep(.v-chip) {
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-:deep(.v-chip:hover) {
-  transform: translateY(-2px);
-}
-
-/* 响应式设计 */
+/* 响应式调整 */
 @media (max-width: 960px) {
-  .hero-section {
-    padding-top: 40px;
-    padding-bottom: 40px;
+  .home-page {
+    padding-top: 8px;
   }
-
-  .gradient-text {
-    font-size: 2rem !important;
-  }
-
-  .feature-card {
-    margin-bottom: 1.5rem;
-  }
-
-  .circle-1,
-  .circle-2,
-  .circle-3 {
-    display: none;
-  }
-
-  .avatar-wrapper {
-    margin-bottom: 2rem !important;
-  }
-
-  .feature-tag {
-    font-size: 0.85rem;
-    padding: 3px 10px;
-  }
-
-  .separator {
-    margin: 0 8px;
-  }
-}
-
-@media (max-width: 600px) {
-  .gradient-text {
-    font-size: 1.75rem !important;
-  }
-
-  .stat-card {
-    margin-bottom: 1rem;
-  }
-
-  .stat-icon-wrapper {
-    width: 52px;
-    height: 52px;
-  }
-
-  .stat-icon-wrapper :deep(.v-icon) {
-    font-size: 28px !important;
-  }
-
-  .feature-icon-wrapper {
-    width: 56px;
-    height: 56px;
-  }
-
-  .feature-icon-wrapper :deep(.v-icon) {
-    font-size: 28px !important;
-  }
-
-  .cta-section {
-    padding: 40px 0;
-  }
-}
-
-/* 动画效果 */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.feature-card,
-.stat-card {
-  animation: fadeInUp 0.8s ease-out backwards;
-}
-
-.feature-card:nth-child(1),
-.stat-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.feature-card:nth-child(2),
-.stat-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.feature-card:nth-child(3),
-.stat-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.feature-card:nth-child(4),
-.stat-card:nth-child(4) {
-  animation-delay: 0.4s;
-}
-.feature-card:nth-child(5) {
-  animation-delay: 0.5s;
-}
-.feature-card:nth-child(6) {
-  animation-delay: 0.6s;
-}
-
-/* 滚动平滑 */
-html {
-  scroll-behavior: smooth;
-}
-
-/* 自定义滚动条 */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-}
-
-/* ========== 吉祥物主题样式 ========== */
-
-/* 吉祥物装饰元素 */
-.mascot-decoration {
-  position: fixed;
-  font-size: 3rem;
-  opacity: 0.15;
-  animation: mascot-float-gentle 4s ease-in-out infinite;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.mascot-cow {
-  top: 15%;
-  left: 5%;
-  animation-delay: 0s;
-}
-
-.mascot-clock {
-  top: 25%;
-  right: 8%;
-  animation-delay: 0.5s;
-}
-
-.mascot-star {
-  top: 60%;
-  left: 10%;
-  animation-delay: 1s;
-}
-
-.mascot-lightning {
-  top: 70%;
-  right: 15%;
-  animation-delay: 1.5s;
-}
-
-.mascot-check {
-  top: 40%;
-  right: 5%;
-  animation-delay: 2s;
-}
-
-@keyframes mascot-float-gentle {
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translate(10px, -10px) rotate(5deg);
-  }
-  50% {
-    transform: translate(0, -20px) rotate(0deg);
-  }
-  75% {
-    transform: translate(-10px, -10px) rotate(-5deg);
-  }
-}
-
-/* 大号吉祥物头像 */
-.mascot-hero {
-  position: relative;
-  display: inline-block;
-}
-
-.mascot-avatar-large {
-  font-size: 120px;
-  display: inline-block;
-  filter: drop-shadow(0 10px 30px rgba(139, 69, 19, 0.3));
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.mascot-avatar-large:hover {
-  transform: scale(1.1) rotate(5deg);
-  filter: drop-shadow(0 15px 40px rgba(139, 69, 19, 0.4));
-}
-
-.mascot-subtitle {
-  margin-top: 10px;
-  color: var(--mascot-dark-brown, #5d2e0f);
-  font-size: 1.1rem;
-  font-weight: 600;
-  font-style: italic;
-}
-
-/* 吉祥物主题的主要按钮 */
-.mascot-btn-primary {
-  background: linear-gradient(135deg, #8b6914 0%, #8b4513 100%) !important;
-  color: white !important;
-  border: 3px solid #5d2e0f !important;
-  box-shadow: 0 8px 24px rgba(139, 69, 19, 0.35) !important;
-  transition: all 0.3s ease !important;
-  font-size: 1.1rem !important;
-  letter-spacing: 0.5px;
-  position: relative;
-  overflow: hidden;
-}
-
-.mascot-btn-primary:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 12px 32px rgba(139, 69, 19, 0.5) !important;
-}
-
-/* 重写主容器背景 */
-.mascot-theme.home-container {
-  background: linear-gradient(180deg, #fffaed 0%, #ffe4b5 50%, #f0e68c 100%);
-}
-
-/* 吉祥物主题的装饰圈圈 */
-.mascot-theme .circle-1 {
-  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
-  opacity: 0.08;
-}
-
-.mascot-theme .circle-2 {
-  background: linear-gradient(135deg, #8b4513 0%, #d2691e 100%);
-  opacity: 0.08;
-}
-
-.mascot-theme .circle-3 {
-  background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%);
-  opacity: 0.08;
-}
-
-/* 吉祥物主题的统计卡片 */
-.mascot-theme .stat-card {
-  background: linear-gradient(135deg, #ffffff 0%, #fff8dc 100%);
-  border: 3px solid #8b4513;
-  border-radius: 24px;
-}
-
-.mascot-theme .stat-card-primary {
-  border-left: 6px solid #8b6914;
-}
-
-.mascot-theme .stat-card-success {
-  border-left: 6px solid #3cb371;
-}
-
-.mascot-theme .stat-card-warning {
-  border-left: 6px solid #ffa500;
-}
-
-.mascot-theme .stat-card-info {
-  border-left: 6px solid #87ceeb;
-}
-
-/* 吉祥物主题的功能卡片 */
-.mascot-theme .feature-card {
-  background: linear-gradient(135deg, #ffffff 0%, #fff8dc 100%);
-  border: 3px solid #8b4513;
-  border-radius: 24px;
-}
-
-.mascot-theme .feature-card:hover {
-  border-color: #8b6914;
-  box-shadow: 0 20px 60px rgba(139, 69, 19, 0.25) !important;
-}
-
-/* 吉祥物主题的欢迎横幅 */
-.mascot-theme .welcome-banner {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 215, 0, 0.15) 0%,
-    rgba(139, 69, 19, 0.1) 100%
-  );
-  border: 2px solid rgba(139, 69, 19, 0.2);
-  border-radius: 24px;
-}
-
-/* 添加可爱的牛斑点效果到卡片 */
-.mascot-theme .feature-card::after,
-.mascot-theme .stat-card::after {
-  content: "";
-  position: absolute;
-  bottom: -20px;
-  right: -20px;
-  width: 100px;
-  height: 100px;
-  background: radial-gradient(
-    circle,
-    rgba(139, 69, 19, 0.08) 0%,
-    transparent 70%
-  );
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* CTA卡片吉祥物主题 */
-.mascot-theme .cta-card {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 215, 0, 0.12) 0%,
-    rgba(139, 69, 19, 0.08) 100%
-  );
-  border: 3px solid rgba(139, 105, 20, 0.3);
-  border-radius: 32px;
-}
-
-/* 吉祥物主题的标签 */
-.mascot-theme .feature-tag {
-  background: rgba(139, 105, 20, 0.12);
-  border: 2px solid rgba(139, 69, 19, 0.2);
-  border-radius: 16px;
-  padding: 6px 14px;
-  font-weight: 600;
-}
-
-.mascot-theme .feature-tag:hover {
-  background: rgba(139, 105, 20, 0.2);
-  border-color: rgba(139, 69, 19, 0.4);
-  transform: translateY(-3px) scale(1.05);
 }
 </style>
 

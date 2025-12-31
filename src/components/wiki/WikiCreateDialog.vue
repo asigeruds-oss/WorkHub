@@ -1,17 +1,13 @@
 <template>
-  <v-dialog
-    v-model="localValue"
-    max-width="800"
-    persistent
-  >
+  <v-dialog v-model="localValue" max-width="800" persistent>
     <v-card>
       <v-card-title class="d-flex align-center">
         <v-icon class="mr-2">mdi-plus</v-icon>
         创建新页面
       </v-card-title>
-      
+
       <v-divider />
-      
+
       <v-card-text class="pa-6">
         <v-form ref="form" v-model="valid">
           <!-- 页面标题 -->
@@ -22,7 +18,7 @@
             :rules="[rules.required]"
             class="mb-4"
           />
-          
+
           <!-- 父页面选择 -->
           <v-autocomplete
             v-model="pageData.parent_id"
@@ -41,13 +37,17 @@
               >
                 <template v-slot:prepend>
                   <v-icon>
-                    {{ item.raw.has_children ? 'mdi-folder' : 'mdi-file-document-outline' }}
+                    {{
+                      item.raw.has_children
+                        ? "mdi-folder"
+                        : "mdi-file-document-outline"
+                    }}
                   </v-icon>
                 </template>
               </v-list-item>
             </template>
           </v-autocomplete>
-          
+
           <!-- 标签 -->
           <v-combobox
             v-model="pageData.tags"
@@ -59,13 +59,13 @@
             closable-chips
             class="mb-4"
           />
-          
+
           <!-- 页面内容 -->
           <div class="mb-4">
             <label class="text-subtitle-2 font-weight-bold mb-2 d-block">
               页面内容
             </label>
-            
+
             <!-- 编辑器工具栏 -->
             <v-card variant="outlined" class="editor-toolbar">
               <v-card-text class="pa-2">
@@ -89,9 +89,9 @@
                     <v-icon>mdi-link</v-icon>
                   </v-btn>
                 </v-btn-group>
-                
+
                 <v-spacer />
-                
+
                 <v-btn-toggle
                   v-model="editorMode"
                   density="compact"
@@ -102,7 +102,7 @@
                 </v-btn-toggle>
               </v-card-text>
             </v-card>
-            
+
             <!-- 编辑区域 -->
             <v-textarea
               v-if="editorMode === 'edit'"
@@ -114,7 +114,7 @@
               :rules="[rules.required]"
               hide-details
             />
-            
+
             <!-- 预览区域 -->
             <v-card
               v-else
@@ -135,47 +135,127 @@
               </v-card-text>
             </v-card>
           </div>
-          
+
           <!-- 权限设置 -->
           <v-expansion-panels class="mb-4">
             <v-expansion-panel>
               <v-expansion-panel-title>
                 <v-icon class="mr-2">mdi-shield-outline</v-icon>
                 权限设置
+                <v-chip
+                  size="x-small"
+                  class="ml-2"
+                  color="info"
+                  variant="tonal"
+                >
+                  读: {{ pageData.permissions.read.length }} | 写:
+                  {{ pageData.permissions.edit.length }}
+                </v-chip>
               </v-expansion-panel-title>
               <v-expansion-panel-text>
+                <v-alert
+                  type="info"
+                  density="compact"
+                  variant="tonal"
+                  class="mb-4"
+                >
+                  <div class="text-caption">
+                    <strong>权限格式：</strong>
+                    <code>all</code> 所有人 | <code>team-xxx</code> 用户组 |
+                    <code>username</code> 指定用户
+                  </div>
+                </v-alert>
                 <v-row>
                   <v-col cols="12" md="6">
                     <v-combobox
                       v-model="pageData.permissions.read"
                       :items="permissionOptions"
+                      item-title="title"
+                      item-value="value"
                       label="读取权限"
                       variant="outlined"
+                      density="compact"
                       multiple
                       chips
                       closable-chips
-                    />
+                    >
+                      <template v-slot:chip="{ props, item }">
+                        <v-chip
+                          v-bind="props"
+                          :color="getPermissionColor(item.value)"
+                          size="small"
+                        >
+                          <v-icon start size="14">{{
+                            getPermissionIcon(item.value)
+                          }}</v-icon>
+                          {{ item.title }}
+                        </v-chip>
+                      </template>
+                    </v-combobox>
                   </v-col>
                   <v-col cols="12" md="6">
                     <v-combobox
                       v-model="pageData.permissions.edit"
                       :items="permissionOptions"
+                      item-title="title"
+                      item-value="value"
                       label="编辑权限"
                       variant="outlined"
+                      density="compact"
                       multiple
                       chips
                       closable-chips
-                    />
+                    >
+                      <template v-slot:chip="{ props, item }">
+                        <v-chip
+                          v-bind="props"
+                          :color="getPermissionColor(item.value)"
+                          size="small"
+                        >
+                          <v-icon start size="14">{{
+                            getPermissionIcon(item.value)
+                          }}</v-icon>
+                          {{ item.title }}
+                        </v-chip>
+                      </template>
+                    </v-combobox>
                   </v-col>
                 </v-row>
+                <!-- 快速设置 -->
+                <div class="mt-3">
+                  <span class="text-caption text-grey mr-2">快速设置:</span>
+                  <v-btn
+                    size="x-small"
+                    variant="tonal"
+                    class="mr-2"
+                    @click="applyPermissionPreset('public')"
+                  >
+                    公开可读
+                  </v-btn>
+                  <v-btn
+                    size="x-small"
+                    variant="tonal"
+                    class="mr-2"
+                    @click="applyPermissionPreset('private')"
+                  >
+                    仅自己
+                  </v-btn>
+                  <v-btn
+                    size="x-small"
+                    variant="tonal"
+                    @click="applyPermissionPreset('team')"
+                  >
+                    团队协作
+                  </v-btn>
+                </div>
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
         </v-form>
       </v-card-text>
-      
+
       <v-divider />
-      
+
       <v-card-actions class="pa-4">
         <v-spacer />
         <v-btn @click="cancel">取消</v-btn>
@@ -193,194 +273,258 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { marked } from 'marked'
-import WikiAPI from '@/api/wiki'
+import { ref, computed, watch, onMounted } from "vue";
+import { marked } from "marked";
+import WikiAPI from "@/api/wiki";
+import { AuthAPI } from "@/api/auth";
+import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps({
   modelValue: Boolean,
   parentId: {
     type: [String, Number],
-    default: null
-  }
-})
+    default: null,
+  },
+});
 
-const emit = defineEmits(['update:modelValue', 'created'])
+const emit = defineEmits(["update:modelValue", "created"]);
+
+const authStore = useAuthStore();
 
 // 状态
-const form = ref(null)
-const contentEditor = ref(null)
-const valid = ref(false)
-const creating = ref(false)
-const editorMode = ref('edit')
+const form = ref(null);
+const contentEditor = ref(null);
+const valid = ref(false);
+const creating = ref(false);
+const editorMode = ref("edit");
+const availableGroups = ref([]);
 
 // 数据
 const pageData = ref({
-  title: '',
-  content: '',
+  title: "",
+  content: "",
   parent_id: null,
   tags: [],
   permissions: {
-    read: ['all'],
-    edit: ['admin']
-  }
-})
+    read: ["all"],
+    edit: ["admin"],
+  },
+});
 
-const parentOptions = ref([])
-const availableTags = ref([])
+const parentOptions = ref([]);
+const availableTags = ref([]);
 
 // 规则
 const rules = {
-  required: value => !!value || '此字段为必填项'
-}
+  required: (value) => !!value || "此字段为必填项",
+};
 
-// 权限选项
-const permissionOptions = [
-  'all',
-  'admin',
-  'team-editors',
-  'team-developers'
-]
+// 权限选项 - 动态生成
+const permissionOptions = computed(() => {
+  const options = [{ value: "all", title: "全部" }];
+  // 从 API 获取的用户组
+  availableGroups.value.forEach((group) => {
+    options.push({ value: `team-${group.name}`, title: group.name });
+  });
+  return options;
+});
+
+// 加载用户组
+const loadGroups = async () => {
+  try {
+    const data = await AuthAPI.getGroups();
+    availableGroups.value = data.groups || [];
+  } catch (error) {
+    console.error("加载用户组失败:", error);
+  }
+};
+
+// 获取权限图标
+const getPermissionIcon = (permission) => {
+  if (permission === "all") return "mdi-earth";
+  if (permission.startsWith("group-") || permission.startsWith("team-"))
+    return "mdi-account-group";
+  return "mdi-account";
+};
+
+// 获取权限颜色
+const getPermissionColor = (permission) => {
+  if (permission === "all") return "success";
+  if (permission.startsWith("group-") || permission.startsWith("team-"))
+    return "primary";
+  return "grey";
+};
+
+// 应用权限预设
+const applyPermissionPreset = (preset) => {
+  const currentUser = authStore.user?.username || "";
+  switch (preset) {
+    case "public":
+      pageData.value.permissions.read = ["all"];
+      pageData.value.permissions.edit = currentUser ? [currentUser] : [];
+      break;
+    case "private":
+      pageData.value.permissions.read = currentUser ? [currentUser] : [];
+      pageData.value.permissions.edit = currentUser ? [currentUser] : [];
+      break;
+    case "team":
+      // 使用第一个可用的用户组
+      if (availableGroups.value.length > 0) {
+        const firstGroup = `team-${availableGroups.value[0].name}`;
+        pageData.value.permissions.read = [firstGroup];
+        pageData.value.permissions.edit = [firstGroup];
+      } else {
+        pageData.value.permissions.read = ["all"];
+        pageData.value.permissions.edit = currentUser ? [currentUser] : [];
+      }
+      break;
+  }
+};
 
 // 计算属性
 const localValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
-})
+  set: (value) => emit("update:modelValue", value),
+});
 
 const previewContent = computed(() => {
-  if (!pageData.value.content.trim()) return ''
-  return marked(pageData.value.content)
-})
+  if (!pageData.value.content.trim()) return "";
+  return marked(pageData.value.content);
+});
 
 // 方法
 const loadParentOptions = async () => {
   try {
-    const response = await WikiAPI.getPageTree()
-    parentOptions.value = flattenTree(response.data.tree || [])
+    const response = await WikiAPI.getPageTree();
+    parentOptions.value = flattenTree(response.data.tree || []);
   } catch (error) {
-    console.error('加载父页面选项失败:', error)
-    parentOptions.value = []
+    console.error("加载父页面选项失败:", error);
+    parentOptions.value = [];
   }
-}
+};
 
 const flattenTree = (tree, depth = 0) => {
-  const result = []
+  const result = [];
   for (const item of tree) {
     result.push({
       id: item.id,
       title: item.title,
       depth,
-      has_children: item.has_children
-    })
+      has_children: item.has_children,
+    });
     if (item.children && item.children.length > 0) {
-      result.push(...flattenTree(item.children, depth + 1))
+      result.push(...flattenTree(item.children, depth + 1));
     }
   }
-  return result
-}
+  return result;
+};
 
 const loadAvailableTags = async () => {
   try {
-    const response = await WikiAPI.getTags()
-    availableTags.value = response.data.map(tag => tag.name) || []
+    const response = await WikiAPI.getTags();
+    availableTags.value = response.data.map((tag) => tag.name) || [];
   } catch (error) {
-    console.error('加载标签失败:', error)
-    availableTags.value = []
+    console.error("加载标签失败:", error);
+    availableTags.value = [];
   }
-}
+};
 
 const insertMarkdown = (before, after) => {
-  if (!contentEditor.value) return
-  
-  const textarea = contentEditor.value.$el.querySelector('textarea')
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
-  const selectedText = pageData.value.content.substring(start, end)
-  
-  const newText = before + selectedText + after
-  const newContent = 
+  if (!contentEditor.value) return;
+
+  const textarea = contentEditor.value.$el.querySelector("textarea");
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selectedText = pageData.value.content.substring(start, end);
+
+  const newText = before + selectedText + after;
+  const newContent =
     pageData.value.content.substring(0, start) +
     newText +
-    pageData.value.content.substring(end)
-  
-  pageData.value.content = newContent
-  
+    pageData.value.content.substring(end);
+
+  pageData.value.content = newContent;
+
   // 设置新的光标位置
   setTimeout(() => {
-    const newCursorPos = start + before.length + selectedText.length
-    textarea.setSelectionRange(newCursorPos, newCursorPos)
-    textarea.focus()
-  }, 0)
-}
+    const newCursorPos = start + before.length + selectedText.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    textarea.focus();
+  }, 0);
+};
 
 const create = async () => {
-  if (!form.value.validate()) return
-  
-  creating.value = true
+  if (!form.value.validate()) return;
+
+  creating.value = true;
   try {
     const data = {
       title: pageData.value.title.trim(),
       content: pageData.value.content.trim(),
       tags: pageData.value.tags,
-      permissions: pageData.value.permissions
-    }
-    
+      permissions: pageData.value.permissions,
+    };
+
     if (pageData.value.parent_id) {
-      data.parent_id = pageData.value.parent_id
+      data.parent_id = pageData.value.parent_id;
     }
-    
-    const response = await WikiAPI.createPage(data)
-    emit('created', response.data)
-    reset()
-    localValue.value = false
+
+    const response = await WikiAPI.createPage(data);
+    emit("created", response.data);
+    reset();
+    localValue.value = false;
   } catch (error) {
-    console.error('创建页面失败:', error)
-    alert('创建页面失败，请稍后再试')
+    console.error("创建页面失败:", error);
+    alert("创建页面失败，请稍后再试");
   } finally {
-    creating.value = false
+    creating.value = false;
   }
-}
+};
 
 const cancel = () => {
-  reset()
-  localValue.value = false
-}
+  reset();
+  localValue.value = false;
+};
 
 const reset = () => {
+  const currentUser = authStore.user?.username || "";
   pageData.value = {
-    title: '',
-    content: '',
+    title: "",
+    content: "",
     parent_id: props.parentId,
     tags: [],
     permissions: {
-      read: ['all'],
-      edit: ['admin']
-    }
-  }
-  editorMode.value = 'edit'
+      read: ["all"],
+      edit: currentUser ? [currentUser] : [],
+    },
+  };
+  editorMode.value = "edit";
   if (form.value) {
-    form.value.reset()
+    form.value.reset();
   }
-}
+};
 
 // 监听
-watch(() => props.parentId, (newParentId) => {
-  pageData.value.parent_id = newParentId
-})
+watch(
+  () => props.parentId,
+  (newParentId) => {
+    pageData.value.parent_id = newParentId;
+  }
+);
 
 watch(localValue, (newValue) => {
   if (newValue) {
-    loadParentOptions()
-    loadAvailableTags()
-    pageData.value.parent_id = props.parentId
+    loadParentOptions();
+    loadAvailableTags();
+    loadGroups();
+    pageData.value.parent_id = props.parentId;
   }
-})
+});
 
 // 组件挂载
 onMounted(() => {
-  reset()
-})
+  reset();
+});
 </script>
 
 <style scoped>

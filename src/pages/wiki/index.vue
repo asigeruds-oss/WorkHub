@@ -1,1565 +1,1484 @@
 <template>
-  <div class="wiki-layout mascot-theme">
-    <!-- 侧边导航 - 吉祥物主题 -->
+  <div class="wiki-layout">
+    <!-- 侧边导航 -->
     <v-navigation-drawer
-      v-model="drawer"
       permanent
       :rail="railMode"
-      width="280"
-      class="wiki-sidebar mascot-wiki-sidebar"
-      @click="railMode = false"
+      :width="280"
+      class="wiki-sidebar"
     >
       <!-- 侧栏头部 -->
-      <v-list>
-        <v-list-item
-          prepend-icon="mdi-book-open-variant"
-          title="Wiki 知识库"
-          subtitle="知识共享平台"
-          class="mascot-sidebar-header"
-        >
-          <template v-slot:append>
+      <div class="sidebar-header pa-2">
+        <div class="d-flex align-center">
+          <v-icon size="24" color="primary">mdi-book-open-variant</v-icon>
+          <template v-if="!railMode">
+            <span class="ml-2 text-subtitle-2 font-weight-bold">Wiki</span>
+            <v-spacer />
             <v-btn
+              icon="mdi-chevron-left"
               variant="text"
-              :icon="railMode ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-              @click.stop="railMode = !railMode"
-              class="toggle-btn"
+              size="x-small"
+              @click.stop="railMode = true"
             />
           </template>
-        </v-list-item>
-      </v-list>
-
-      <v-divider class="mascot-divider-simple" />
-      
-      <!-- 搜索框 -->
-      <div class="pa-3">
-        <v-text-field
-          v-model="searchQuery"
-          placeholder="🔍 搜索页面..."
-          density="compact"
-          variant="outlined"
-          prepend-inner-icon="mdi-magnify"
-          clearable
-          hide-details
-          @keyup.enter="performSearch"
-          class="mascot-search-field"
-        />
-      </div>
-      
-      <v-divider class="mascot-divider-simple" />
-
-      <!-- 页面树形导航 -->
-      <v-list nav density="compact" class="wiki-nav compact-nav mascot-wiki-nav">
-        <v-list-subheader class="d-flex align-center mascot-nav-header">
-          <span>📚 页面导航</span>
-          <v-spacer />
           <v-btn
-            icon="mdi-plus"
-            size="x-small"
+            v-else
+            icon="mdi-chevron-right"
             variant="text"
-            @click="showCreateDialog = true"
-            class="add-page-btn"
+            size="x-small"
+            @click.stop="railMode = false"
           />
-        </v-list-subheader>
-        
-        <!-- 递归渲染树形结构 -->
-        <template v-if="pageTree.length > 0">
-          <wiki-tree-item
-            v-for="page in pageTree"
-            :key="page.id"
-            :page="page"
-            :current-page-id="currentPageId"
-            @navigate="navigateToPage"
-            @create-child="createChildPage"
-            @edit="editPage"
-            @delete="deletePage"
-          />
-        </template>
-        <v-list-item v-else>
-          <v-list-item-title class="text-caption text-medium-emphasis">
-            暂无页面
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
+        </div>
+      </div>
 
-      <!-- 底部操作 -->
-      <template v-slot:append>
-        <v-list density="compact" class="mascot-sidebar-actions">
-          <v-list-item
+      <template v-if="!railMode">
+        <!-- 快速操作 -->
+        <div class="pa-2">
+          <v-btn
+            v-if="canCreate"
             prepend-icon="mdi-plus"
-            title="创建根页面"
+            variant="tonal"
+            color="primary"
+            block
+            size="small"
+            density="comfortable"
             @click="showCreateDialog = true"
-            class="action-item"
-            rounded="xl"
+          >
+            新建页面
+          </v-btn>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="px-2 pb-2">
+          <v-text-field
+            v-model="searchQuery"
+            placeholder="搜索..."
+            density="compact"
+            variant="outlined"
+            prepend-inner-icon="mdi-magnify"
+            clearable
+            hide-details
+            single-line
+            @keyup.enter="performSearch"
           />
-          
-          <v-list-item
-            prepend-icon="mdi-tag-outline"
-            title="标签管理"
-            @click="showTagsDialog = true"
-            class="action-item"
-            rounded="xl"
-          />
-        </v-list>
+        </div>
+
+        <!-- 标签页 -->
+        <v-tabs v-model="sidebarTab" density="compact" grow>
+          <v-tab value="tree" size="small">
+            <v-icon size="16">mdi-file-tree</v-icon>
+            <span class="ml-1 text-caption">目录</span>
+          </v-tab>
+          <v-tab value="recent" size="small">
+            <v-icon size="16">mdi-clock-outline</v-icon>
+            <span class="ml-1 text-caption">最近</span>
+          </v-tab>
+          <v-tab value="favorites" size="small">
+            <v-icon size="16">mdi-star-outline</v-icon>
+            <span class="ml-1 text-caption">收藏</span>
+          </v-tab>
+        </v-tabs>
+
+        <v-divider />
+
+        <!-- 标签页内容 -->
+        <v-window v-model="sidebarTab" class="sidebar-content">
+          <v-window-item value="tree">
+            <div class="wiki-tree-container pa-2">
+              <template v-if="pageTree.length > 0">
+                <wiki-tree-item
+                  v-for="page in pageTree"
+                  :key="page.id"
+                  :page="page"
+                  :current-page-id="currentPageId"
+                  @navigate="navigateToPage"
+                  @create-child="createChildPage"
+                  @edit="editPage"
+                  @delete="deletePage"
+                />
+              </template>
+              <div
+                v-else
+                class="text-center pa-4 text-caption text-medium-emphasis"
+              >
+                <v-icon size="32" color="grey">mdi-file-outline</v-icon>
+                <div class="mt-1">暂无页面</div>
+              </div>
+            </div>
+          </v-window-item>
+
+          <v-window-item value="recent">
+            <v-list nav density="compact" class="pa-1">
+              <v-list-item
+                v-for="page in recentPages"
+                :key="page.id"
+                :title="page.title"
+                :subtitle="formatRelativeTime(page.visited_at)"
+                density="compact"
+                @click="navigateToPage(page.id)"
+              >
+                <template v-slot:prepend>
+                  <v-icon size="16">mdi-clock-outline</v-icon>
+                </template>
+              </v-list-item>
+              <div
+                v-if="recentPages.length === 0"
+                class="text-center pa-4 text-caption text-medium-emphasis"
+              >
+                暂无最近访问
+              </div>
+            </v-list>
+          </v-window-item>
+
+          <v-window-item value="favorites">
+            <v-list nav density="compact" class="pa-1">
+              <v-list-item
+                v-for="page in favoritePages"
+                :key="page.id"
+                :title="page.title"
+                density="compact"
+                @click="navigateToPage(page.id)"
+              >
+                <template v-slot:prepend>
+                  <v-icon size="16" color="amber">mdi-star</v-icon>
+                </template>
+              </v-list-item>
+              <div
+                v-if="favoritePages.length === 0"
+                class="text-center pa-4 text-caption text-medium-emphasis"
+              >
+                暂无收藏
+              </div>
+            </v-list>
+          </v-window-item>
+        </v-window>
       </template>
+
+      <!-- Rail 模式 -->
+      <div v-else class="d-flex flex-column align-center pa-1">
+        <v-tooltip text="新建页面" location="right">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-if="canCreate"
+              icon="mdi-plus"
+              variant="text"
+              size="small"
+              v-bind="props"
+              @click="showCreateDialog = true"
+              class="mb-1"
+            />
+          </template>
+        </v-tooltip>
+        <v-tooltip text="搜索" location="right">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              icon="mdi-magnify"
+              variant="text"
+              size="small"
+              v-bind="props"
+              @click="
+                railMode = false;
+                performSearch();
+              "
+            />
+          </template>
+        </v-tooltip>
+      </div>
     </v-navigation-drawer>
 
-    <!-- 主内容区域 -->
-    <div class="wiki-content mascot-wiki-content">
+    <!-- 主内容区 -->
+    <div class="wiki-main">
       <!-- 顶部工具栏 -->
-      <v-app-bar flat class="wiki-toolbar mascot-toolbar">
-        <div class="toolbar-content">
-          <!-- 面包屑导航 -->
-          <v-breadcrumbs
-            v-if="breadcrumbs.length > 0"
-            :items="breadcrumbs"
-            density="compact"
-            class="pa-0"
-          >
-            <template v-slot:item="{ item }">
-              <v-breadcrumbs-item
-                :title="item.title"
-                :disabled="item.disabled"
-                @click="item.onClick"
+      <div class="wiki-toolbar">
+        <v-breadcrumbs
+          v-if="breadcrumbs.length > 0"
+          :items="breadcrumbs"
+          density="compact"
+          class="text-body-2 pa-0"
+        >
+          <template v-slot:divider>
+            <v-icon size="14">mdi-chevron-right</v-icon>
+          </template>
+        </v-breadcrumbs>
+
+        <v-spacer />
+
+        <!-- 用户权限状态指示 -->
+        <v-chip
+          v-if="isAuthenticated"
+          size="x-small"
+          :color="userRoleColor"
+          variant="tonal"
+          class="mr-2"
+        >
+          <v-icon size="12" start>{{ userRoleIcon }}</v-icon>
+          {{ userRoleText }}
+        </v-chip>
+
+        <!-- 页面操作 -->
+        <template v-if="currentPage">
+          <v-btn
+            :icon="isFavorite(currentPageId) ? 'mdi-star' : 'mdi-star-outline'"
+            :color="isFavorite(currentPageId) ? 'amber' : undefined"
+            variant="text"
+            size="small"
+            @click="toggleFavorite(currentPageId)"
+          />
+          <v-btn
+            v-if="canEdit"
+            icon="mdi-pencil"
+            variant="text"
+            size="small"
+            @click="editCurrentPage"
+          />
+          <v-btn
+            icon="mdi-history"
+            variant="text"
+            size="small"
+            @click="showHistoryDialog = true"
+          />
+          <v-menu>
+            <template v-slot:activator="{ props }">
+              <v-btn
+                icon="mdi-dots-vertical"
+                variant="text"
+                size="small"
+                v-bind="props"
               />
             </template>
-          </v-breadcrumbs>
-          
-          <v-spacer />
-          
-          <!-- 页面操作按钮 -->
-          <div v-if="currentPage" class="d-flex align-center ga-2">
-            <v-btn
-              icon="mdi-pencil"
-              variant="text"
-              @click="editCurrentPage"
-            />
-            <v-btn
-              icon="mdi-history"
-              variant="text"
-              @click="showHistoryDialog = true"
-            />
-            <v-btn
-              icon="mdi-share-variant"
-              variant="text"
-              @click="sharePage"
-            />
-            <v-btn
-              icon="mdi-dots-vertical"
-              variant="text"
-            >
-              <v-menu activator="parent">
-                <v-list>
-                  <v-list-item @click="movePage">
-                    <template v-slot:prepend>
-                      <v-icon>mdi-folder-move</v-icon>
-                    </template>
-                    <v-list-item-title>移动页面</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item @click="deleteCurrentPage" class="text-error">
-                    <template v-slot:prepend>
-                      <v-icon>mdi-delete</v-icon>
-                    </template>
-                    <v-list-item-title>删除页面</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-            </v-btn>
-          </div>
-        </div>
-      </v-app-bar>
+            <v-list density="compact" min-width="140">
+              <v-list-item prepend-icon="mdi-share-variant" @click="sharePage">
+                <v-list-item-title class="text-body-2">分享</v-list-item-title>
+              </v-list-item>
+              <v-list-item
+                v-if="canEdit"
+                prepend-icon="mdi-folder-move"
+                @click="movePage"
+              >
+                <v-list-item-title class="text-body-2">移动</v-list-item-title>
+              </v-list-item>
+              <v-list-item
+                prepend-icon="mdi-tag-outline"
+                @click="showTagsDialog = true"
+              >
+                <v-list-item-title class="text-body-2">标签</v-list-item-title>
+              </v-list-item>
+              <v-list-item
+                v-if="canManagePermission"
+                prepend-icon="mdi-shield-lock"
+                @click="showPermissionDialog = true"
+              >
+                <v-list-item-title class="text-body-2">权限</v-list-item-title>
+              </v-list-item>
+              <v-divider v-if="canDelete" class="my-1" />
+              <v-list-item
+                v-if="canDelete"
+                prepend-icon="mdi-delete"
+                @click="deleteCurrentPage"
+                class="text-error"
+              >
+                <v-list-item-title class="text-body-2">删除</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </template>
+      </div>
 
       <!-- 页面内容 -->
-      <v-main>
-        <v-container fluid class="wiki-container pa-6">
-          <!-- 首页内容 - 吉祥物主题 -->
-          <div v-if="!currentPage" class="text-center welcome-section mascot-welcome">
-            <div class="mb-8 hero-welcome">
-              <div class="mascot-icon-wrapper mb-6">
-                <MascotCow size="large" :message="'开始构建知识库吧！'" />
-              </div>
-              <h1 class="text-h3 font-weight-bold mt-4 mb-3 mascot-page-title">📚 Wiki 知识库</h1>
-              <p class="text-h6 mb-4 mascot-subtitle">
-                和青牛线一起构建知识体系
-              </p>
-              <p class="text-body-1 text-medium-emphasis mascot-features">
-                📝 支持 Markdown · 🌳 树形结构 · 🏷️ 标签管理 · 💬 评论互动
-              </p>
+      <div class="wiki-content-area">
+        <div class="wiki-container">
+          <!-- 首页 -->
+          <div v-if="!currentPage && !loading" class="welcome-section">
+            <div class="text-center mb-4">
+              <v-icon size="48" color="primary"
+                >mdi-book-open-page-variant</v-icon
+              >
+              <h2 class="text-h5 font-weight-bold mt-2 mb-1">Wiki 知识库</h2>
+              <p class="text-body-2 text-medium-emphasis">构建团队知识体系</p>
             </div>
-            
-            <!-- 快速开始 -->
-            <v-row class="mb-8 justify-center">
-              <v-col cols="12" sm="6" md="4" lg="3">
-                <v-card class="action-card mascot-action-card elevation-4" rounded="xl" @click="showCreateDialog = true">
-                  <v-card-text class="pa-6 text-center">
-                    <div class="action-icon-wrapper mascot-icon-success mb-4">
-                      <v-icon size="42" color="white">mdi-file-plus-outline</v-icon>
-                    </div>
-                    <h3 class="text-h6 font-weight-bold mb-2">创建页面</h3>
-                    <p class="text-body-2 text-medium-emphasis mb-0">
-                      开始构建您的知识库
-                    </p>
-                  </v-card-text>
+
+            <!-- 快速操作 -->
+            <v-row dense justify="center" class="mb-4">
+              <v-col cols="6" sm="3" v-if="canCreate">
+                <v-card
+                  class="quick-card pa-3 text-center"
+                  variant="tonal"
+                  color="primary"
+                  hover
+                  @click="showCreateDialog = true"
+                >
+                  <v-icon size="28" class="mb-1">mdi-file-plus-outline</v-icon>
+                  <div class="text-caption font-weight-medium">创建页面</div>
                 </v-card>
               </v-col>
-              
-              <v-col cols="12" sm="6" md="4" lg="3">
-                <v-card class="action-card mascot-action-card elevation-4" rounded="xl" @click="performSearch">
-                  <v-card-text class="pa-6 text-center">
-                    <div class="action-icon-wrapper mascot-icon-warning mb-4">
-                      <v-icon size="42" color="white">mdi-magnify</v-icon>
-                    </div>
-                    <h3 class="text-h6 font-weight-bold mb-2">搜索内容</h3>
-                    <p class="text-body-2 text-medium-emphasis mb-0">
-                      快速找到所需信息
-                    </p>
-                  </v-card-text>
+              <v-col cols="6" sm="3">
+                <v-card
+                  class="quick-card pa-3 text-center"
+                  variant="tonal"
+                  hover
+                  @click="performSearch"
+                >
+                  <v-icon size="28" class="mb-1">mdi-magnify</v-icon>
+                  <div class="text-caption font-weight-medium">搜索内容</div>
                 </v-card>
               </v-col>
-              
-              <v-col cols="12" sm="6" md="4" lg="3">
-                <v-card class="action-card elevation-4" rounded="xl" @click="showTagsDialog = true">
-                  <v-card-text class="pa-6 text-center">
-                    <div class="action-icon-wrapper action-icon-success mb-4">
-                      <v-icon size="42" color="white">mdi-tag-multiple-outline</v-icon>
-                    </div>
-                    <h3 class="text-h6 font-weight-bold mb-2">标签管理</h3>
-                    <p class="text-body-2 text-medium-emphasis mb-0">
-                      组织和分类内容
-                    </p>
-                  </v-card-text>
+              <v-col cols="6" sm="3">
+                <v-card
+                  class="quick-card pa-3 text-center"
+                  variant="tonal"
+                  hover
+                  @click="sidebarTab = 'recent'"
+                >
+                  <v-icon size="28" class="mb-1">mdi-history</v-icon>
+                  <div class="text-caption font-weight-medium">最近访问</div>
                 </v-card>
               </v-col>
             </v-row>
-          </div>
-          
-          <!-- 页面详情内容 -->
-          <div v-else-if="currentPage && !loading" class="page-content">
-            <!-- 页面头部 -->
-            <div class="page-header mb-6">
-              <div class="d-flex align-center mb-3">
-                <h1 class="text-h4 font-weight-bold page-title">{{ currentPage.title }}</h1>
-              </div>
-              
-              <!-- 标签 -->
-              <div v-if="currentPage.tags && currentPage.tags.length > 0" class="mb-4">
-                <v-chip
-                  v-for="tag in currentPage.tags"
-                  :key="tag"
-                  size="small"
-                  color="primary"
-                  variant="tonal"
-                  class="mr-2"
-                  @click="searchByTag(tag)"
+
+            <!-- 统计 -->
+            <v-row dense justify="center">
+              <v-col cols="auto">
+                <div class="stat-item">
+                  <span class="text-h6 font-weight-bold text-primary">{{
+                    pageTree.length
+                  }}</span>
+                  <span class="text-caption text-medium-emphasis ml-1"
+                    >根页面</span
+                  >
+                </div>
+              </v-col>
+              <v-divider vertical class="mx-3" />
+              <v-col cols="auto">
+                <div class="stat-item">
+                  <span class="text-h6 font-weight-bold text-primary">{{
+                    totalPages
+                  }}</span>
+                  <span class="text-caption text-medium-emphasis ml-1"
+                    >总页面</span
+                  >
+                </div>
+              </v-col>
+              <v-divider vertical class="mx-3" />
+              <v-col cols="auto">
+                <div class="stat-item">
+                  <span class="text-h6 font-weight-bold text-primary">{{
+                    recentPages.length
+                  }}</span>
+                  <span class="text-caption text-medium-emphasis ml-1"
+                    >最近访问</span
+                  >
+                </div>
+              </v-col>
+            </v-row>
+
+            <!-- 未登录提示 -->
+            <v-alert
+              v-if="!isAuthenticated"
+              type="info"
+              variant="tonal"
+              density="compact"
+              class="mt-4 mx-auto"
+              max-width="400"
+            >
+              <template v-slot:prepend>
+                <v-icon size="20">mdi-information</v-icon>
+              </template>
+              <div class="text-body-2">
+                <router-link to="/login" class="text-primary font-weight-medium"
+                  >登录</router-link
                 >
-                  <v-icon start size="14">mdi-tag</v-icon>
-                  {{ tag }}
+                后可创建和编辑页面
+              </div>
+            </v-alert>
+          </div>
+
+          <!-- 页面详情 -->
+          <div v-else-if="currentPage && !loading" class="page-detail">
+            <!-- 主内容 -->
+            <div class="page-content-wrapper">
+              <div class="page-header mb-4">
+                <h1 class="page-title">{{ currentPage.title }}</h1>
+
+                <!-- 元信息 -->
+                <div class="meta-info mt-3">
+                  <span class="meta-item">
+                    <v-icon size="14">mdi-account</v-icon>
+                    {{ currentPage.created_by }}
+                  </span>
+                  <span class="meta-item">
+                    <v-icon size="14">mdi-calendar</v-icon>
+                    {{ formatDate(currentPage.created_at) }}
+                  </span>
+                  <span class="meta-item">
+                    <v-icon size="14">mdi-update</v-icon>
+                    {{ formatDate(currentPage.updated_at) }}
+                  </span>
+                  <span class="meta-item">
+                    <v-icon size="14">mdi-history</v-icon>
+                    v{{ currentPage.version }}
+                  </span>
+                </div>
+
+                <!-- 标签 -->
+                <div v-if="currentPage.tags?.length" class="mt-3">
+                  <v-chip
+                    v-for="tag in currentPage.tags"
+                    :key="tag"
+                    size="small"
+                    variant="tonal"
+                    color="primary"
+                    class="mr-2"
+                    @click="searchByTag(tag)"
+                  >
+                    {{ tag }}
+                  </v-chip>
+                </div>
+              </div>
+
+              <!-- 权限不足提示 -->
+              <v-alert
+                v-if="!canRead"
+                type="error"
+                variant="tonal"
+                density="compact"
+                class="mb-4"
+              >
+                <v-icon size="16" start>mdi-lock</v-icon>
+                <span class="text-body-2">您没有查看此页面的权限</span>
+              </v-alert>
+              <v-alert
+                v-else-if="!canEdit && isAuthenticated"
+                type="warning"
+                variant="tonal"
+                density="compact"
+                class="mb-4"
+              >
+                <v-icon size="16" start>mdi-lock</v-icon>
+                <span class="text-body-2">您没有编辑此页面的权限</span>
+              </v-alert>
+
+              <!-- 权限信息显示 -->
+              <div
+                v-if="currentPage.permissions && canManagePermission"
+                class="permission-info mb-4"
+              >
+                <v-chip
+                  size="x-small"
+                  variant="tonal"
+                  color="info"
+                  class="mr-1"
+                >
+                  <v-icon size="12" start>mdi-eye</v-icon>
+                  读取:
+                  {{ formatPermissionDisplay(currentPage.permissions.read) }}
+                </v-chip>
+                <v-chip size="x-small" variant="tonal" color="warning">
+                  <v-icon size="12" start>mdi-pencil</v-icon>
+                  编辑:
+                  {{ formatPermissionDisplay(currentPage.permissions.edit) }}
                 </v-chip>
               </div>
-              
-              <!-- 页面元信息 -->
-              <v-card class="meta-card pa-4 mb-6" elevation="0" rounded="lg">
-                <div class="d-flex flex-wrap align-center text-body-2">
-                  <div class="meta-item mr-6 mb-2">
-                    <v-icon size="18" class="mr-2">mdi-account</v-icon>
-                    <span class="text-medium-emphasis">创建者：</span>
-                    <span class="font-weight-medium">{{ currentPage.created_by }}</span>
-                  </div>
-                  <div class="meta-item mr-6 mb-2">
-                    <v-icon size="18" class="mr-2">mdi-calendar-plus</v-icon>
-                    <span class="text-medium-emphasis">创建时间：</span>
-                    <span class="font-weight-medium">{{ formatDate(currentPage.created_at) }}</span>
-                  </div>
-                  <div class="meta-item mr-6 mb-2">
-                    <v-icon size="18" class="mr-2">mdi-update</v-icon>
-                    <span class="text-medium-emphasis">最后更新：</span>
-                    <span class="font-weight-medium">{{ formatDate(currentPage.updated_at) }}</span>
-                  </div>
-                  <div class="meta-item mb-2">
-                    <v-icon size="18" class="mr-2">mdi-history</v-icon>
-                    <span class="text-medium-emphasis">版本：</span>
-                    <span class="font-weight-medium">{{ currentPage.version }}</span>
-                  </div>
-                </div>
-              </v-card>
+
+              <!-- 内容 -->
+              <div class="content-card">
+                <div class="markdown-content" v-html="renderedContent"></div>
+              </div>
+
+              <!-- 评论 -->
+              <wiki-comments
+                v-if="currentPage.id && canComment"
+                :page-id="currentPage.id"
+                class="mt-6"
+              />
             </div>
-            
-            <!-- Markdown 内容 -->
-            <v-card class="content-card pa-8" elevation="2" rounded="xl">
-              <div class="markdown-content" v-html="renderedContent"></div>
-            </v-card>
-            
-            <!-- 评论区域 -->
-            <wiki-comments
-              v-if="currentPage.id"
-              :page-id="currentPage.id"
-              class="mt-8"
-            />
           </div>
-          
-          <!-- 加载状态 -->
+
+          <!-- 加载中 -->
           <div v-else-if="loading" class="text-center py-8">
-            <v-progress-circular indeterminate color="primary" />
-            <p class="mt-4">加载中...</p>
+            <v-progress-circular indeterminate color="primary" size="32" />
+            <p class="text-body-2 text-medium-emphasis mt-2">加载中...</p>
           </div>
-          
-          <!-- 页面不存在 -->
-          <div v-else class="text-center py-8">
-            <v-icon size="80" color="error">mdi-file-question</v-icon>
-            <h2 class="text-h5 mt-4 mb-2">页面不存在</h2>
-            <p class="text-body-1 text-medium-emphasis mb-4">
-              您要查找的页面可能已被删除或移动
-            </p>
-            <v-btn color="primary" @click="navigateToHome">
-              返回首页
-            </v-btn>
-          </div>
-        </v-container>
-      </v-main>
+        </div>
+      </div>
     </div>
 
-    <!-- 创建页面对话框 -->
+    <!-- 对话框 -->
     <wiki-create-dialog
       v-model="showCreateDialog"
       :parent-id="createParentId"
       @created="onPageCreated"
     />
 
-    <!-- 编辑页面对话框 -->
     <wiki-edit-dialog
       v-model="showEditDialog"
       :page="editingPage"
       @updated="onPageUpdated"
     />
 
-    <!-- 标签管理对话框 -->
-    <wiki-tags-dialog
-      v-model="showTagsDialog"
-    />
+    <wiki-tags-dialog v-model="showTagsDialog" />
 
-    <!-- 历史版本对话框 -->
-    <wiki-history-dialog
-      v-model="showHistoryDialog"
-      :page-id="currentPageId"
-    />
+    <wiki-history-dialog v-model="showHistoryDialog" :page-id="currentPageId" />
 
-    <!-- 移动页面对话框 -->
     <wiki-move-dialog
       v-model="showMoveDialog"
       :page="currentPage"
       @moved="onPageMoved"
     />
+
+    <!-- 权限管理对话框 -->
+    <wiki-permission-dialog
+      v-model="showPermissionDialog"
+      :page="currentPage"
+      @updated="onPermissionUpdated"
+    />
+
+    <!-- 权限不足提示 -->
+    <v-snackbar v-model="showAuthSnackbar" :timeout="3000" color="warning">
+      {{ authMessage }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="showAuthSnackbar = false">关闭</v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { marked } from 'marked'
-import WikiAPI from '@/api/wiki'
-import MascotCow from '@/components/MascotCow.vue'
-import WikiTreeItem from '@/components/wiki/WikiTreeItem.vue'
-import WikiComments from '@/components/wiki/WikiComments.vue'
-import WikiCreateDialog from '@/components/wiki/WikiCreateDialog.vue'
-import WikiEditDialog from '@/components/wiki/WikiEditDialog.vue'
-import WikiTagsDialog from '@/components/wiki/WikiTagsDialog.vue'
-import WikiHistoryDialog from '@/components/wiki/WikiHistoryDialog.vue'
-import WikiMoveDialog from '@/components/wiki/WikiMoveDialog.vue'
+import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { marked } from "marked";
+import { useAuthStore } from "@/stores/auth";
+import { AuthAPI } from "@/api/auth";
+import WikiAPI from "@/api/wiki";
+import WikiTreeItem from "@/components/wiki/WikiTreeItem.vue";
+import WikiComments from "@/components/wiki/WikiComments.vue";
+import WikiCreateDialog from "@/components/wiki/WikiCreateDialog.vue";
+import WikiEditDialog from "@/components/wiki/WikiEditDialog.vue";
+import WikiTagsDialog from "@/components/wiki/WikiTagsDialog.vue";
+import WikiHistoryDialog from "@/components/wiki/WikiHistoryDialog.vue";
+import WikiMoveDialog from "@/components/wiki/WikiMoveDialog.vue";
+import WikiPermissionDialog from "@/components/wiki/WikiPermissionDialog.vue";
 
-const router = useRouter()
-const route = useRoute()
+// 缓存 key
+const TREE_CACHE_KEY = "wiki_tree_cache";
+const GROUPS_CACHE_KEY = "wiki_groups_cache";
+const PERMISSIONS_CACHE_KEY = "wiki_permissions_cache";
+const CACHE_TIME_SUFFIX = "_time";
+const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存有效期
 
-// 基础状态
-const drawer = ref(true)
-const railMode = ref(false)
-const loading = ref(false)
-const searchQuery = ref('')
+// 通用缓存获取函数
+const getCachedData = (key) => {
+  try {
+    const cached = sessionStorage.getItem(key);
+    const cacheTime = sessionStorage.getItem(key + CACHE_TIME_SUFFIX);
+    if (cached && cacheTime) {
+      if (Date.now() - parseInt(cacheTime) < CACHE_DURATION) {
+        return JSON.parse(cached);
+      }
+    }
+  } catch (e) {
+    console.warn(`读取缓存失败 [${key}]:`, e);
+  }
+  return null;
+};
+
+// 通用缓存设置函数
+const setCachedData = (key, data) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(data));
+    sessionStorage.setItem(key + CACHE_TIME_SUFFIX, Date.now().toString());
+  } catch (e) {
+    console.warn(`设置缓存失败 [${key}]:`, e);
+  }
+};
+
+// 通用缓存清除函数
+const clearCache = (key) => {
+  sessionStorage.removeItem(key);
+  sessionStorage.removeItem(key + CACHE_TIME_SUFFIX);
+};
+
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
+
+// ========== 鉴权状态 ==========
+const userPermissions = ref(null);
+const userGroups = ref([]); // 用户所属的用户组
+const allGroups = ref([]); // 所有用户组列表
+const showAuthSnackbar = ref(false);
+const authMessage = ref("");
+
+// 基础认证状态
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+const currentUser = computed(() => authStore.user);
+const isAdmin = computed(() => authStore.isAdmin);
+const isSuperuser = computed(() => authStore.isSuperuser);
+
+// 检查用户是否在指定权限列表中
+const checkUserInPermissionList = (permissionList) => {
+  if (!permissionList || permissionList.length === 0) return true; // 空列表默认允许
+  if (permissionList.includes("all")) return true;
+
+  const username = currentUser.value?.username;
+  if (!username) return false;
+
+  // 检查用户名是否直接在列表中
+  if (permissionList.includes(username)) return true;
+
+  // 检查用户组
+  for (const perm of permissionList) {
+    // 支持 group-xxx 和 team-xxx 前缀
+    if (perm.startsWith("group-") || perm.startsWith("team-")) {
+      const groupName = perm.replace(/^(group-|team-)/, "");
+      // 检查用户是否属于该用户组
+      // 支持多种用户组数据结构
+      const belongsToGroup = userGroups.value.some((g) => {
+        if (typeof g === "string") {
+          return g === groupName || g === perm;
+        }
+        return (
+          g.name === groupName ||
+          g.name === perm ||
+          g.id?.toString() === groupName
+        );
+      });
+      if (belongsToGroup) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+// 读取权限 - 基于页面的permissions.read字段
+const canRead = computed(() => {
+  if (isSuperuser.value) return true;
+  if (!currentPage.value) return true;
+
+  const permissions = currentPage.value.permissions;
+  if (!permissions || !permissions.read || permissions.read.length === 0) {
+    return true; // 没有设置权限时默认可读
+  }
+
+  return checkUserInPermissionList(permissions.read);
+});
+
+// 权限计算
+const canCreate = computed(() => {
+  if (!isAuthenticated.value) return false;
+  if (isAdmin.value) return true;
+  return userPermissions.value?.can_create_wiki ?? true;
+});
+
+const canEdit = computed(() => {
+  if (!isAuthenticated.value) return false;
+  if (isSuperuser.value) return true;
+  if (!currentPage.value) return false;
+
+  // 创建者可以编辑
+  if (currentPage.value.created_by === currentUser.value?.username) return true;
+
+  // 管理员可以编辑
+  if (isAdmin.value) return true;
+
+  // 检查页面的编辑权限
+  const permissions = currentPage.value.permissions;
+  if (permissions && permissions.edit && permissions.edit.length > 0) {
+    return checkUserInPermissionList(permissions.edit);
+  }
+
+  return userPermissions.value?.can_edit_wiki ?? false;
+});
+
+const canDelete = computed(() => {
+  if (!isAuthenticated.value) return false;
+  if (isSuperuser.value) return true;
+  if (!currentPage.value) return false;
+  // 创建者可以删除自己的页面
+  if (currentPage.value.created_by === currentUser.value?.username) return true;
+  return false;
+});
+
+const canComment = computed(() => {
+  return isAuthenticated.value && canRead.value;
+});
+
+// 是否可以管理权限（创建者或管理员）
+const canManagePermission = computed(() => {
+  if (!isAuthenticated.value) return false;
+  if (isSuperuser.value || isAdmin.value) return true;
+  if (!currentPage.value) return false;
+  return currentPage.value.created_by === currentUser.value?.username;
+});
+
+// 用户角色显示
+const userRoleText = computed(() => {
+  if (isSuperuser.value) return "超级管理员";
+  if (isAdmin.value) return "管理员";
+  return "用户";
+});
+
+const userRoleColor = computed(() => {
+  if (isSuperuser.value) return "error";
+  if (isAdmin.value) return "warning";
+  return "primary";
+});
+
+const userRoleIcon = computed(() => {
+  if (isSuperuser.value) return "mdi-shield-crown";
+  if (isAdmin.value) return "mdi-shield-account";
+  return "mdi-account";
+});
+
+// 加载用户权限
+const loadUserPermissions = async (forceRefresh = false) => {
+  if (!isAuthenticated.value) return;
+
+  if (!forceRefresh) {
+    const cached = getCachedData(PERMISSIONS_CACHE_KEY);
+    if (cached) {
+      userPermissions.value = cached.permissions;
+      userGroups.value = cached.groups;
+      return;
+    }
+  }
+
+  try {
+    const data = await AuthAPI.getPermissions();
+    userPermissions.value = data;
+    // 提取用户所属的用户组
+    if (data.groups) {
+      userGroups.value = Array.isArray(data.groups) ? data.groups : [];
+    } else if (data.user?.groups) {
+      userGroups.value = Array.isArray(data.user.groups)
+        ? data.user.groups
+        : [];
+    } else {
+      userGroups.value = currentUser.value?.groups || [];
+    }
+    // 缓存权限和用户组
+    setCachedData(PERMISSIONS_CACHE_KEY, {
+      permissions: data,
+      groups: userGroups.value,
+    });
+  } catch (error) {
+    console.error("加载用户权限失败:", error);
+  }
+};
+
+// 加载所有用户组
+const loadAllGroups = async (forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = getCachedData(GROUPS_CACHE_KEY);
+    if (cached) {
+      allGroups.value = cached;
+      return;
+    }
+  }
+  try {
+    const data = await AuthAPI.getGroups();
+    allGroups.value = data.groups || [];
+    setCachedData(GROUPS_CACHE_KEY, allGroups.value);
+  } catch (error) {
+    console.error("加载用户组列表失败:", error);
+  }
+};
+
+// 格式化权限显示
+const formatPermissionDisplay = (permissions) => {
+  if (!permissions || permissions.length === 0) return "无限制";
+  if (permissions.includes("all")) return "所有人";
+  if (permissions.length > 2) {
+    return `${permissions.slice(0, 2).join(", ")} 等${permissions.length}项`;
+  }
+  return permissions.join(", ");
+};
+
+// 权限检查辅助函数
+const checkPermission = (action, showMessage = true) => {
+  if (!isAuthenticated.value) {
+    if (showMessage) {
+      authMessage.value = "请先登录后再操作";
+      showAuthSnackbar.value = true;
+    }
+    return false;
+  }
+
+  let hasPermission = false;
+  switch (action) {
+    case "create":
+      hasPermission = canCreate.value;
+      break;
+    case "edit":
+      hasPermission = canEdit.value;
+      break;
+    case "delete":
+      hasPermission = canDelete.value;
+      break;
+    default:
+      hasPermission = true;
+  }
+
+  if (!hasPermission && showMessage) {
+    authMessage.value = "您没有执行此操作的权限";
+    showAuthSnackbar.value = true;
+  }
+
+  return hasPermission;
+};
+
+// ========== 基础状态 ==========
+const railMode = ref(false);
+const loading = ref(false);
+const searchQuery = ref("");
+const sidebarTab = ref("tree");
+const showToc = ref(true);
 
 // 页面数据
-const pageTree = ref([])
-const currentPage = ref(null)
-const currentPageId = ref(null)
-const breadcrumbs = ref([])
+const pageTree = ref([]);
+const currentPage = ref(null);
+const currentPageId = ref(null);
+const breadcrumbs = ref([]);
+const recentPages = ref([]);
+const favoritePages = ref([]);
 
-// 对话框状态
-const showCreateDialog = ref(false)
-const showEditDialog = ref(false)
-const showTagsDialog = ref(false)
-const showHistoryDialog = ref(false)
-const showMoveDialog = ref(false)
+// 对话框
+const showCreateDialog = ref(false);
+const showEditDialog = ref(false);
+const showTagsDialog = ref(false);
+const showHistoryDialog = ref(false);
+const showMoveDialog = ref(false);
+const showPermissionDialog = ref(false);
 
-// 编辑相关
-const editingPage = ref(null)
-const createParentId = ref(null)
+// 编辑
+const editingPage = ref(null);
+const createParentId = ref(null);
 
-// 渲染的内容
+// ========== 计算属性 ==========
 const renderedContent = computed(() => {
-  if (!currentPage.value?.content) return ''
-  return marked(currentPage.value.content)
-})
+  if (!currentPage.value?.content) return "";
+  return marked(currentPage.value.content);
+});
 
-// 页面方法
-const loadPageTree = async () => {
-  try {
-    const response = await WikiAPI.getPageTree()
-    pageTree.value = response.data.tree || []
-  } catch (error) {
-    console.error('加载页面树失败:', error)
-    pageTree.value = []
+const totalPages = computed(() => {
+  const count = (pages) =>
+    pages.reduce((acc, p) => acc + 1 + (p.children ? count(p.children) : 0), 0);
+  return count(pageTree.value);
+});
+
+const wordCount = computed(() => currentPage.value?.content?.length || 0);
+
+// ========== 收藏功能 ==========
+const isFavorite = (pageId) => favoritePages.value.some((p) => p.id === pageId);
+
+const toggleFavorite = (pageId) => {
+  const index = favoritePages.value.findIndex((p) => p.id === pageId);
+  if (index > -1) {
+    favoritePages.value.splice(index, 1);
+  } else if (currentPage.value?.id === pageId) {
+    favoritePages.value.push({
+      id: currentPage.value.id,
+      title: currentPage.value.title,
+    });
   }
-}
+  localStorage.setItem("wiki_favorites", JSON.stringify(favoritePages.value));
+};
+
+const loadFavorites = () => {
+  try {
+    favoritePages.value = JSON.parse(
+      localStorage.getItem("wiki_favorites") || "[]"
+    );
+  } catch {
+    favoritePages.value = [];
+  }
+};
+
+// ========== 最近访问 ==========
+const addToRecent = (page) => {
+  const idx = recentPages.value.findIndex((p) => p.id === page.id);
+  if (idx > -1) recentPages.value.splice(idx, 1);
+  recentPages.value.unshift({
+    id: page.id,
+    title: page.title,
+    visited_at: new Date().toISOString(),
+  });
+  if (recentPages.value.length > 15)
+    recentPages.value = recentPages.value.slice(0, 15);
+  localStorage.setItem("wiki_recent", JSON.stringify(recentPages.value));
+};
+
+const loadRecent = () => {
+  try {
+    recentPages.value = JSON.parse(localStorage.getItem("wiki_recent") || "[]");
+  } catch {
+    recentPages.value = [];
+  }
+};
+
+// ========== 目录生成 ==========
+const generateTOC = async () => {
+  await nextTick();
+  const content = document.querySelector(".markdown-content");
+  const toc = document.getElementById("toc-content");
+  if (!content || !toc) return;
+
+  const headings = content.querySelectorAll("h1, h2, h3");
+  if (!headings.length) {
+    toc.innerHTML = '<p class="text-caption text-medium-emphasis">暂无目录</p>';
+    return;
+  }
+
+  let html = '<ul class="toc-list">';
+  headings.forEach((h, i) => {
+    const level = parseInt(h.tagName[1]);
+    const id = `h-${i}`;
+    h.id = id;
+    html += `<li style="padding-left:${
+      (level - 1) * 10
+    }px"><a href="#${id}" class="toc-link">${h.textContent}</a></li>`;
+  });
+  html += "</ul>";
+  toc.innerHTML = html;
+
+  toc.querySelectorAll("a").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      document
+        .getElementById(a.getAttribute("href").slice(1))
+        ?.scrollIntoView({ behavior: "smooth" });
+    });
+  });
+};
+
+// ========== 页面操作 ==========
+const loadPageTree = async (forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = getCachedData(TREE_CACHE_KEY);
+    if (cached) {
+      pageTree.value = cached;
+      return;
+    }
+  }
+  try {
+    const res = await WikiAPI.getPageTree();
+    pageTree.value = res.data.tree || [];
+    setCachedData(TREE_CACHE_KEY, pageTree.value);
+  } catch (e) {
+    console.error("加载页面树失败:", e);
+    pageTree.value = [];
+  }
+};
+
+const refreshPageTree = async () => {
+  clearCache(TREE_CACHE_KEY);
+  await loadPageTree(true);
+};
 
 const loadPage = async (id) => {
   if (!id) {
-    currentPage.value = null
-    currentPageId.value = null
-    breadcrumbs.value = []
-    return
+    currentPage.value = null;
+    currentPageId.value = null;
+    breadcrumbs.value = [];
+    return;
   }
 
-  loading.value = true
+  loading.value = true;
   try {
-    const [pageResponse, breadcrumbResponse] = await Promise.all([
+    const [pageRes, crumbRes] = await Promise.all([
       WikiAPI.getPage(id),
-      WikiAPI.getPageBreadcrumb(id)
-    ])
-    
-    currentPage.value = pageResponse.data
-    currentPageId.value = id
-    
-    // 构建面包屑
+      WikiAPI.getPageBreadcrumb(id),
+    ]);
+
+    currentPage.value = pageRes.data;
+    currentPageId.value = id;
+    addToRecent(pageRes.data);
+
     breadcrumbs.value = [
-      {
-        title: '首页',
-        disabled: false,
-        onClick: () => navigateToHome()
-      },
-      ...breadcrumbResponse.data.breadcrumb.map((item, index, arr) => ({
+      { title: "首页", disabled: false, onClick: () => navigateToHome() },
+      ...crumbRes.data.breadcrumb.map((item, i, arr) => ({
         title: item.title,
-        disabled: index === arr.length - 1,
-        onClick: index < arr.length - 1 ? () => navigateToPage(item.id) : undefined
-      }))
-    ]
-  } catch (error) {
-    console.error('加载页面失败:', error)
-    currentPage.value = null
-    currentPageId.value = null
-    breadcrumbs.value = []
+        disabled: i === arr.length - 1,
+        onClick: i < arr.length - 1 ? () => navigateToPage(item.id) : undefined,
+      })),
+    ];
+
+    await nextTick();
+    generateTOC();
+  } catch (e) {
+    console.error("加载页面失败:", e);
+    currentPage.value = null;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
-const navigateToPage = (id) => {
-  router.push(`/wiki/${id}`)
-}
-
-const navigateToHome = () => {
-  router.push('/wiki')
-}
+const navigateToPage = (id) => router.push(`/wiki/${id}`);
+const navigateToHome = () => router.push("/wiki");
 
 const createChildPage = (parentId) => {
-  createParentId.value = parentId
-  showCreateDialog.value = true
-}
+  if (!checkPermission("create")) return;
+  createParentId.value = parentId;
+  showCreateDialog.value = true;
+};
 
 const editPage = (page) => {
-  editingPage.value = page
-  showEditDialog.value = true
-}
+  if (!checkPermission("edit")) return;
+  editingPage.value = page;
+  showEditDialog.value = true;
+};
 
 const editCurrentPage = () => {
+  if (!checkPermission("edit")) return;
   if (currentPage.value) {
-    editingPage.value = currentPage.value
-    showEditDialog.value = true
+    editingPage.value = currentPage.value;
+    showEditDialog.value = true;
   }
-}
+};
 
 const deleteCurrentPage = () => {
-  if (currentPage.value) {
-    deletePage(currentPage.value)
-  }
-}
+  if (!checkPermission("delete")) return;
+  if (currentPage.value) deletePage(currentPage.value);
+};
 
 const deletePage = async (page) => {
-  if (!confirm(`确定要删除页面"${page.title}"吗？`)) return
-  
+  if (!checkPermission("delete")) return;
+  if (!confirm(`确定要删除"${page.title}"吗？`)) return;
+
   try {
-    await WikiAPI.deletePage(page.id)
-    await loadPageTree()
-    
-    // 如果删除的是当前页面，返回首页
-    if (currentPageId.value === page.id) {
-      navigateToHome()
-    }
-  } catch (error) {
-    console.error('删除页面失败:', error)
-    alert('删除页面失败')
+    await WikiAPI.deletePage(page.id);
+    await refreshPageTree();
+    if (currentPageId.value === page.id) navigateToHome();
+  } catch (e) {
+    console.error("删除失败:", e);
+    alert("删除失败");
   }
-}
+};
 
 const movePage = () => {
-  showMoveDialog.value = true
-}
+  if (!checkPermission("edit")) return;
+  showMoveDialog.value = true;
+};
 
 const sharePage = () => {
-  if (currentPage.value) {
-    const url = `${window.location.origin}/wiki/${currentPage.value.id}`
-    navigator.clipboard.writeText(url).then(() => {
-      alert('页面链接已复制到剪贴板')
-    }).catch(() => {
-      alert(`页面链接：${url}`)
-    })
-  }
-}
+  if (!currentPage.value) return;
+  const url = `${window.location.origin}/wiki/${currentPage.value.id}`;
+  navigator.clipboard
+    .writeText(url)
+    .then(() => alert("链接已复制"))
+    .catch(() => alert(`链接：${url}`));
+};
 
 const performSearch = () => {
-  if (searchQuery.value.trim()) {
-    router.push(`/wiki/search?q=${encodeURIComponent(searchQuery.value)}`)
-  }
-}
+  router.push(
+    searchQuery.value.trim()
+      ? `/wiki/search?q=${encodeURIComponent(searchQuery.value)}`
+      : "/wiki/search"
+  );
+};
 
-const searchByTag = (tag) => {
-  router.push(`/wiki/search?tags=${encodeURIComponent(tag)}`)
-}
+const searchByTag = (tag) =>
+  router.push(`/wiki/search?tags=${encodeURIComponent(tag)}`);
 
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleString('zh-CN')
-}
+// ========== 格式化 ==========
+const formatDate = (d) => new Date(d).toLocaleDateString("zh-CN");
 
-// 事件处理
+const formatRelativeTime = (d) => {
+  const diff = Date.now() - new Date(d);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "刚刚";
+  if (mins < 60) return `${mins}分钟前`;
+  const hrs = Math.floor(diff / 3600000);
+  if (hrs < 24) return `${hrs}小时前`;
+  const days = Math.floor(diff / 86400000);
+  if (days < 7) return `${days}天前`;
+  return formatDate(d);
+};
+
+// ========== 事件处理 ==========
 const onPageCreated = (page) => {
-  loadPageTree()
-  navigateToPage(page.id)
-}
+  refreshPageTree();
+  navigateToPage(page.id);
+};
 
 const onPageUpdated = (page) => {
-  loadPageTree()
+  refreshPageTree();
   if (currentPageId.value === page.id) {
-    currentPage.value = page
+    currentPage.value = page;
+    nextTick(() => generateTOC());
   }
-}
+};
 
 const onPageMoved = () => {
-  loadPageTree()
-  if (currentPageId.value) {
-    loadPage(currentPageId.value)
+  refreshPageTree();
+  if (currentPageId.value) loadPage(currentPageId.value);
+};
+
+const onPermissionUpdated = () => {
+  // 权限更新后重新加载页面
+  if (currentPageId.value) loadPage(currentPageId.value);
+};
+
+// ========== 监听与挂载 ==========
+watch(
+  () => route.params.id,
+  (id, oldId) => {
+    // 只有当 id 变化时才加载
+    if (id !== oldId) {
+      loadPage(id);
+    }
   }
-}
+);
+watch(renderedContent, () => nextTick(() => generateTOC()));
+watch(isAuthenticated, (val) => {
+  if (val) loadUserPermissions();
+});
 
-// 路由监听
-watch(() => route.params.id, (newId) => {
-  loadPage(newId)
-}, { immediate: true })
-
-// 组件挂载
-onMounted(() => {
-  loadPageTree()
-})
+onMounted(async () => {
+  // 所有函数内部都有缓存机制，避免重复请求
+  await Promise.all([
+    loadPageTree(),
+    loadAllGroups(),
+    isAuthenticated.value ? loadUserPermissions() : Promise.resolve(),
+  ]);
+  loadRecent();
+  loadFavorites();
+  // 加载当前页面
+  if (route.params.id) {
+    loadPage(route.params.id);
+  }
+});
 </script>
 
 <style scoped>
-/* ========== 吉祥物主题样式 ========== */
-
-/* Wiki整体布局 */
-.mascot-theme.wiki-layout {
-  background: linear-gradient(180deg, #FFFAED 0%, #FFF8DC 100%);
-}
-
-/* 侧边栏 - 吉祥物主题 */
-.mascot-wiki-sidebar {
-  background: linear-gradient(180deg, #FFF8DC 0%, #FFFAED 100%) !important;
-  border-right: 3px solid #8B4513 !important;
-}
-
-/* Rail 模式（收缩模式）样式修复 */
-.mascot-wiki-sidebar.v-navigation-drawer--rail {
-  width: 72px !important;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-sidebar-header {
-  padding: 12px 8px !important;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .pa-3 {
-  padding: 8px !important;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-search-field {
-  display: none;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-nav-header span {
-  display: none;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-nav-header {
-  justify-content: center;
-  margin: 8px 4px;
-  padding: 8px;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .add-page-btn {
-  margin: 0;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-sidebar-actions {
-  padding: 8px !important;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .action-item {
-  justify-content: center;
-}
-
-.mascot-sidebar-header {
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
-  border-radius: 0 0 20px 20px;
-  margin: 0 !important;
-  padding: 20px !important;
-  border-bottom: 3px solid #8B4513;
-}
-
-.mascot-sidebar-header :deep(.v-list-item__prepend) {
-  color: #5D2E0F;
-}
-
-.mascot-sidebar-header :deep(.v-list-item-title) {
-  color: #5D2E0F !important;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.mascot-sidebar-header :deep(.v-list-item-subtitle) {
-  color: #8B4513 !important;
-  font-weight: 600;
-}
-
-.toggle-btn {
-  color: #5D2E0F !important;
-  transition: all 0.3s ease;
-}
-
-.toggle-btn:hover {
-  transform: scale(1.2) rotate(15deg);
-  background: rgba(93, 46, 15, 0.1);
-}
-
-.mascot-divider-simple {
-  display: none;
-}
-
-/* 搜索框 */
-.mascot-search-field :deep(.v-field) {
-  border: 2px solid #8B4513;
-  border-radius: 16px;
-  background: white;
-  transition: all 0.3s ease;
-}
-
-.mascot-search-field :deep(.v-field:hover) {
-  border-color: #FFD700;
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
-}
-
-.mascot-search-field :deep(.v-field--focused) {
-  border-color: #FFA500 !important;
-  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
-}
-
-/* 导航列表 */
-.mascot-nav-header {
-  font-weight: 700;
-  color: #5D2E0F;
-  padding: 12px 16px;
-  background: rgba(255, 215, 0, 0.1);
-  border-radius: 12px;
-  margin: 8px 12px;
-}
-
-.add-page-btn {
-  color: #8B4513 !important;
-  transition: all 0.3s ease;
-}
-
-.add-page-btn:hover {
-  transform: scale(1.2) rotate(90deg);
-  background: rgba(139, 69, 19, 0.1);
-}
-
-.mascot-wiki-nav :deep(.v-list-item) {
-  margin: 4px 12px;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  border-left: 4px solid transparent;
-}
-
-.mascot-wiki-nav :deep(.v-list-item:hover) {
-  background: rgba(139, 69, 19, 0.08);
-  border-left-color: #8B4513;
-  transform: translateX(4px);
-}
-
-.mascot-wiki-nav :deep(.v-list-item--active) {
-  background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, transparent 100%);
-  border-left-color: #8B4513;
-  font-weight: 700;
-  color: #5D2E0F;
-}
-
-/* Rail 模式下的导航项 */
-.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-wiki-nav :deep(.v-list-item) {
-  margin: 4px;
-  justify-content: center;
-}
-
-.mascot-wiki-sidebar.v-navigation-drawer--rail .mascot-wiki-nav :deep(.v-list-item:hover) {
-  transform: translateX(0) scale(1.1);
-}
-
-/* 侧边栏底部操作 */
-.mascot-sidebar-actions {
-  background: linear-gradient(0deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
-  border-top: 2px solid rgba(139, 69, 19, 0.2);
-  padding: 12px !important;
-}
-
-.mascot-sidebar-actions .action-item {
-  margin: 4px 0;
-  font-weight: 600;
-  color: #5D2E0F;
-  transition: all 0.3s ease;
-}
-
-.mascot-sidebar-actions .action-item:hover {
-  background: rgba(139, 69, 19, 0.1);
-  transform: translateX(4px);
-}
-
-/* 主内容区域 */
-.mascot-wiki-content {
-  background: linear-gradient(180deg, #FFFAED 0%, #FFF8DC 100%);
-}
-
-/* 工具栏 */
-.mascot-toolbar {
-  background: linear-gradient(135deg, #8B6914 0%, #8B4513 100%) !important;
-  border-bottom: 3px solid #5D2E0F;
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.25) !important;
-}
-
-.mascot-toolbar :deep(.v-breadcrumbs-item) {
-  color: rgb(0, 0, 0) !important;
-  font-weight: 600;
-}
-
-.mascot-toolbar :deep(.v-breadcrumbs-divider) {
-  color: rgba(255, 255, 255, 0.6) !important;
-}
-
-.mascot-toolbar :deep(.v-btn) {
-  color: rgb(161, 41, 41) !important;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.mascot-toolbar :deep(.v-btn:hover) {
-  background: rgba(255, 255, 255, 0.15);
-  transform: scale(1.1);
-}
-
-/* 欢迎页面 */
-.mascot-welcome {
-  padding: 80px 20px;
-  background: radial-gradient(circle at top, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
-}
-
-.mascot-icon-wrapper {
-  animation: floatAnimation 3s ease-in-out infinite;
-}
-
-@keyframes floatAnimation {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.mascot-page-title {
-  color: #5D2E0F;
-  text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.1);
-  animation: titlePulse 2s ease-in-out infinite;
-}
-
-@keyframes titlePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-}
-
-.mascot-subtitle {
-  color: #8B4513;
-  font-weight: 600;
-}
-
-.mascot-features {
-  background: rgba(255, 215, 0, 0.1);
-  padding: 12px 24px;
-  border-radius: 20px;
-  border: 2px solid #FFD700;
-  display: inline-block;
-}
-
-/* 操作卡片 */
-.mascot-action-card {
-  border: 3px solid #8B4513;
-  background: linear-gradient(135deg, #FFFAED 0%, white 100%);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-}
-
-.mascot-action-card:hover {
-  transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 12px 32px rgba(139, 69, 19, 0.25) !important;
-  border-color: #FFD700;
-}
-
-.mascot-icon-success {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #3CB371 0%, #2E8B57 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  box-shadow: 0 4px 16px rgba(60, 179, 113, 0.3);
-  transition: all 0.3s ease;
-}
-
-.mascot-action-card:hover .mascot-icon-success {
-  transform: rotate(360deg) scale(1.1);
-}
-
-.mascot-icon-warning {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  box-shadow: 0 4px 16px rgba(255, 165, 0, 0.3);
-  transition: all 0.3s ease;
-}
-
-.mascot-action-card:hover .mascot-icon-warning {
-  transform: rotate(-360deg) scale(1.1);
-}
-
-/* ========== 原有布局样式 ========== */
-
-/* 布局样式 */
+/* 布局 */
 .wiki-layout {
   display: flex;
-  min-height: calc(100vh - 64px);
-  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  height: calc(100vh - 64px);
+  background: #fafafa;
 }
 
 .wiki-sidebar {
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fff7de !important;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  border-right: 1px solid #e0e0e0;
+  background: #fff !important;
 }
 
-.wiki-content {
+.sidebar-header {
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.sidebar-content {
+  height: calc(100vh - 260px);
+  overflow-y: auto;
+}
+
+.sidebar-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
+}
+
+/* 目录树容器 */
+.wiki-tree-container {
+  padding: 4px !important;
+}
+
+/* 主内容 */
+.wiki-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: auto;
-  margin-left: 0 !important;
+  overflow: hidden;
 }
 
 .wiki-toolbar {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  background: #fff9e9 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.toolbar-content {
-  width: 100%;
-  max-width: 100%;
-  padding: 0 24px;
   display: flex;
   align-items: center;
+  height: 48px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+
+.wiki-content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 !important;
 }
 
 .wiki-container {
-  max-width: 100% !important;
   width: 100%;
-  margin: 0 auto !important;
-  padding: 24px !important;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 32px 40px;
+  box-sizing: border-box;
 }
 
-:deep(.v-main) {
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-:deep(.v-main__wrap) {
+.page-detail {
   width: 100%;
-  margin: 0 auto;
 }
 
-:deep(.v-container) {
-  max-width: 100% !important;
+.page-content-wrapper {
+  max-width: 100%;
 }
 
-/* 欢迎页面样式 */
+/* 欢迎页 */
 .welcome-section {
-  padding: 60px 20px;
-  animation: fadeIn 0.8s ease-out;
-  max-width: 1200px;
-  margin: 0 auto !important;
+  max-width: 600px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.quick-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.quick-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-item {
+  display: flex;
+  align-items: baseline;
+}
+
+/* 页面详情 */
+.page-detail {
+  animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-.hero-welcome {
-  position: relative;
-}
-
-.icon-wrapper {
-  display: inline-block;
-  animation: iconFloat 3s ease-in-out infinite;
-}
-
-@keyframes iconFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
-}
-
-.gradient-title {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* 页面内容区域 */
-.page-content {
-  max-width: 1100px;
-  margin: 0 auto !important;
-  width: 100%;
-  animation: slideIn 0.6s ease-out;
-  padding: 0 20px !important;
-  display: block;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 
 .page-header {
-  animation: fadeInDown 0.6s ease-out;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8e8e8;
 }
 
 .page-title {
-  color: #2c3e50;
-  position: relative;
-  padding-bottom: 8px;
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.3;
 }
 
-.page-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 60px;
-  height: 4px;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  border-radius: 2px;
+.content-card {
+  background: #fff;
+  padding: 32px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
 }
 
-.meta-card {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  border: 1px solid rgba(102, 126, 234, 0.1);
+.meta-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .meta-item {
   display: inline-flex;
   align-items: center;
-  white-space: nowrap;
+  gap: 6px;
+  font-size: 13px;
+  color: #888;
 }
 
-.content-card {
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
-  animation: fadeInUp 0.8s ease-out;
+.meta-item .v-icon {
+  color: #aaa;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* 目录 */
+.toc-card {
+  position: sticky;
+  top: 16px;
 }
 
-/* 导航样式 */
-.wiki-nav {
-  margin-top: 8px;
+.toc-body {
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-/* 快速操作卡片样式 */
-.action-card {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  background: white;
-  border: 2px solid rgba(0, 0, 0, 0.06);
-  position: relative;
-  overflow: hidden;
+.toc-body::-webkit-scrollbar {
+  width: 3px;
 }
 
-.action-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.action-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.25) !important;
-  border-color: rgba(102, 126, 234, 0.3);
-}
-
-.action-card:hover::before {
-  opacity: 1;
-}
-
-.action-icon-wrapper {
-  width: 80px;
-  height: 80px;
-  border-radius: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.4s ease;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  margin: 0 auto;
-}
-
-.action-card:hover .action-icon-wrapper {
-  transform: scale(1.1) rotate(-5deg);
-}
-
-.action-icon-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.action-icon-warning {
-  background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
-}
-
-.action-icon-success {
-  background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
-}
-
-/* Markdown 内容样式 */
-.markdown-content {
-  line-height: 1.8;
-  font-size: 16px;
-  color: #2c3e50;
-  width: 100%;
-}
-
-.markdown-content :deep(h1) {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 2.5rem 0 1.25rem 0;
-  padding-bottom: 0.75rem;
-  color: #1a1a1a;
-  border-bottom: 3px solid transparent;
-  background: linear-gradient(white, white) padding-box,
-              linear-gradient(90deg, #667eea 0%, #764ba2 100%) border-box;
-  border-image: linear-gradient(90deg, #667eea 0%, #764ba2 100%) 1;
-  border-bottom: 3px solid;
-}
-
-.markdown-content :deep(h2) {
-  font-size: 1.625rem;
-  font-weight: 700;
-  margin: 2rem 0 1rem 0;
-  color: #2c3e50;
-  position: relative;
-  padding-left: 16px;
-}
-
-.markdown-content :deep(h2)::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.toc-body::-webkit-scrollbar-thumb {
+  background: #ddd;
   border-radius: 2px;
 }
 
-.markdown-content :deep(h3) {
-  font-size: 1.375rem;
+:deep(.toc-list) {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+:deep(.toc-link) {
+  display: block;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  color: #666;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+:deep(.toc-link:hover) {
+  background: rgba(var(--v-theme-primary), 0.08);
+  color: rgb(var(--v-theme-primary));
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+/* Markdown */
+.markdown-content {
+  line-height: 1.8;
+  font-size: 15px;
+  color: #333;
+}
+
+.markdown-content :deep(h1) {
+  font-size: 24px;
   font-weight: 600;
-  margin: 1.75rem 0 0.75rem 0;
-  color: #34495e;
+  margin: 32px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.markdown-content :deep(h2) {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 28px 0 12px;
+  padding-left: 12px;
+  border-left: 3px solid rgb(var(--v-theme-primary));
+}
+
+.markdown-content :deep(h3) {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 24px 0 10px;
 }
 
 .markdown-content :deep(p) {
-  margin-bottom: 1.25rem;
-  line-height: 1.9;
-  color: #4a5568;
+  margin-bottom: 16px;
 }
 
 .markdown-content :deep(ul),
 .markdown-content :deep(ol) {
-  margin: 1.25rem 0;
-  padding-left: 2rem;
+  margin: 16px 0;
+  padding-left: 24px;
 }
 
 .markdown-content :deep(li) {
-  margin-bottom: 0.75rem;
-  line-height: 1.8;
-  color: #4a5568;
+  margin-bottom: 0.375rem;
 }
 
-.markdown-content :deep(ul) {
-  list-style-type: none;
-}
-
-.markdown-content :deep(ul li) {
-  position: relative;
-  padding-left: 8px;
-}
-
-.markdown-content :deep(ul li)::before {
-  content: '';
-  position: absolute;
-  left: -16px;
-  top: 10px;
-  width: 6px;
-  height: 6px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
-}
-
-.markdown-content :deep(strong) {
-  font-weight: 700;
-  color: #2d3748;
-}
-
-.markdown-content :deep(em) {
-  font-style: italic;
-  color: #4a5568;
-}
-
-/* 行内代码样式 */
 .markdown-content :deep(code) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
-  font-size: 0.9em;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+  background: #f5f5f5;
+  color: #e53935;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-size: 0.875em;
 }
 
-/* 代码块容器样式 */
 .markdown-content :deep(pre) {
-  background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
-  padding: 1.25rem;
-  border-radius: 12px;
+  background: #282c34;
+  padding: 1rem;
+  border-radius: 6px;
   overflow-x: auto;
-  margin: 1.5rem 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    0 8px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  position: relative;
+  margin: 1rem 0;
 }
 
-/* 代码块内的代码样式 */
 .markdown-content :deep(pre code) {
   background: none;
-  color: #e6e6e6;
+  color: #abb2bf;
   padding: 0;
-  border-radius: 0;
-  box-shadow: none;
-  font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
-  font-size: 0.95em;
-  line-height: 1.6;
-  display: block;
-  font-weight: normal;
 }
 
-/* 代码块顶部装饰 */
-.markdown-content :deep(pre)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 30px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
-  border-radius: 12px 12px 0 0;
-  pointer-events: none;
-}
-
-/* 滚动条样式优化 */
-.markdown-content :deep(pre)::-webkit-scrollbar {
-  height: 8px;
-}
-
-.markdown-content :deep(pre)::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-.markdown-content :deep(pre)::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.markdown-content :deep(pre)::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* 引用块样式 */
 .markdown-content :deep(blockquote) {
-  border-left: 5px solid;
-  border-image: linear-gradient(180deg, #667eea 0%, #764ba2 100%) 1;
-  padding: 1.25rem 1.5rem;
-  margin: 2rem 0;
-  background: linear-gradient(90deg, 
-    rgba(102, 126, 234, 0.08) 0%, 
-    rgba(118, 75, 162, 0.05) 30%,
-    transparent 100%);
-  border-radius: 0 12px 12px 0;
-  color: #4a5568;
-  font-style: italic;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 3px solid #e0e0e0;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #666;
 }
 
-.markdown-content :deep(blockquote)::before {
-  content: '"';
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 3rem;
-  color: rgba(102, 126, 234, 0.2);
-  font-family: Georgia, serif;
-  line-height: 1;
-}
-
-.markdown-content :deep(blockquote p) {
-  margin-bottom: 0.5rem;
-  padding-left: 30px;
-}
-
-/* 表格样式 */
 .markdown-content :deep(table) {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin: 1.5rem 0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-collapse: collapse;
+  margin: 1rem 0;
 }
 
 .markdown-content :deep(th),
 .markdown-content :deep(td) {
-  border: 1px solid rgba(var(--v-border-color-rgb), 0.3);
-  padding: 0.75rem 1rem;
-  text-align: left;
+  border: 1px solid #e0e0e0;
+  padding: 0.5rem;
 }
 
 .markdown-content :deep(th) {
-  background: linear-gradient(180deg, 
-    #667eea 0%, 
-    #764ba2 100%);
-  color: white !important;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.85em;
-  letter-spacing: 0.5px;
+  background: #f5f5f5;
 }
 
-.markdown-content :deep(tbody tr) {
-  background-color: rgb(var(--v-theme-surface));
-  transition: background-color 0.2s ease;
-}
-
-.markdown-content :deep(tbody tr:nth-child(even)) {
-  background-color: rgba(var(--v-theme-surface-variant-rgb), 0.3);
-}
-
-.markdown-content :deep(tbody tr:hover) {
-  background-color: rgba(var(--v-theme-primary-rgb), 0.08);
-}
-
-/* 链接样式 */
-.markdown-content :deep(a) {
-  color: #667eea;
-  text-decoration: none;
-  font-weight: 500;
-  border-bottom: 2px solid transparent;
-  transition: all 0.3s ease;
-  position: relative;
-  background: linear-gradient(to right, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.markdown-content :deep(a)::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  transition: width 0.3s ease;
-}
-
-.markdown-content :deep(a:hover)::after {
-  width: 100%;
-}
-
-/* 水平分割线 */
-.markdown-content :deep(hr) {
-  border: none;
-  height: 3px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    #667eea 25%,
-    #764ba2 50%,
-    #667eea 75%,
-    transparent 100%);
-  margin: 3rem 0;
-  border-radius: 2px;
-  opacity: 0.5;
-}
-
-/* 图片样式 */
 .markdown-content :deep(img) {
   max-width: 100%;
-  height: auto;
-  border-radius: 12px;
-  margin: 2rem 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  border-radius: 4px;
 }
 
-.markdown-content :deep(img:hover) {
-  transform: scale(1.02);
+.markdown-content :deep(a) {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
 }
 
-/* 紧凑化Wiki导航 */
-.compact-nav :deep(.v-list-item) {
-  min-height: 36px !important;
-  padding-inline: 8px !important;
+.markdown-content :deep(a:hover) {
+  text-decoration: underline;
 }
 
-.compact-nav :deep(.v-list-group) {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-}
-
-.compact-nav :deep(.v-list-group__items) {
-  padding-left: 12px !important;
-}
-
-.compact-nav :deep(.v-list-item__prepend) {
-  margin-right: 0 !important;
-}
-
-.compact-nav :deep(.v-list-item__content) {
-  padding-left: 0 !important;
-}
-
-.compact-nav :deep(.v-icon) {
-  margin-right: 4px !important;
-}
-
-/* 响应式设计 */
-@media (max-width: 1280px) {
-  .wiki-container {
-    max-width: 100%;
-    padding: 1rem !important;
-  }
-  
-  .page-content {
-    max-width: 100%;
-  }
-}
-
+/* 响应式 */
 @media (max-width: 960px) {
+  .wiki-container {
+    padding: 12px;
+  }
+
   .welcome-section {
-    padding: 40px 15px;
-  }
-  
-  .content-card {
-    padding: 1.5rem !important;
-  }
-  
-  .markdown-content {
-    font-size: 15px;
-  }
-  
-  .markdown-content :deep(h1) {
-    font-size: 1.75rem;
-  }
-  
-  .markdown-content :deep(h2) {
-    font-size: 1.5rem;
-  }
-  
-  .markdown-content :deep(h3) {
-    font-size: 1.25rem;
-  }
-  
-  .meta-item {
-    margin-right: 1rem !important;
-    font-size: 0.85rem;
+    margin: 20px auto;
   }
 }
 
 @media (max-width: 600px) {
-  .wiki-container {
-    padding: 0.75rem !important;
+  .meta-info {
+    gap: 8px;
   }
-  
-  .page-header {
-    margin-bottom: 1.5rem !important;
-  }
-  
-  .content-card {
-    padding: 1rem !important;
-    border-radius: 12px !important;
-  }
-  
-  .meta-card {
-    padding: 0.75rem !important;
-  }
-  
-  .meta-item {
-    width: 100%;
-    margin-bottom: 0.5rem !important;
-  }
-  
-  .action-icon-wrapper {
-    width: 64px;
-    height: 64px;
-  }
-  
-  .markdown-content :deep(h1) {
-    font-size: 1.5rem;
-  }
-  
-  .markdown-content :deep(pre) {
-    padding: 1rem;
-    font-size: 0.85rem;
-  }
-  
-  .markdown-content :deep(table) {
-    font-size: 0.875rem;
+
+  .stat-item {
+    flex-direction: column;
+    align-items: center;
   }
 }
-
-/* 滚动条美化 */
-.wiki-content::-webkit-scrollbar {
-  width: 10px;
-}
-
-.wiki-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.wiki-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 5px;
-}
-
-.wiki-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-}
-
-/* 过渡动画 */
-* {
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 打印样式 */
-@media print {
-  .wiki-sidebar,
-  .wiki-toolbar,
-  .meta-card {
-    display: none !important;
-  }
-  
-  .wiki-content {
-    margin: 0;
-  }
-  
-  .content-card {
-    box-shadow: none !important;
-    border: none !important;
-  }
-}
-
 </style>
 
 <route>
 {
   name: 'wiki',
+  path: '/wiki/:id?',
   meta: {
     requiresAuth: false,
     layout: 'default',
