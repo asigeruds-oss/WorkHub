@@ -32,7 +32,7 @@ declare module 'vue-router/auto-routes' {
     '/register': RouteRecordInfo<'/register', '/register', Record<never, never>, Record<never, never>>,
     '/settings': RouteRecordInfo<'/settings', '/settings', Record<never, never>, Record<never, never>>,
     '/todos': RouteRecordInfo<'/todos', '/todos', Record<never, never>, Record<never, never>>,
-    'wiki': RouteRecordInfo<'wiki', '/wiki/:id?', Record<never, never>, Record<never, never>>,
+    '/wiki/[[id]]': RouteRecordInfo<'/wiki/[[id]]', '/wiki/:id?', { id?: ParamValueZeroOrOne<true> }, { id?: ParamValueZeroOrOne<false> }>,
     'wiki-search': RouteRecordInfo<'wiki-search', '/wiki/search', Record<never, never>, Record<never, never>>,
   }
 }

@@ -1,12 +1,7 @@
 <template>
   <div class="wiki-layout">
     <!-- 侧边导航 -->
-    <v-navigation-drawer
-      permanent
-      :rail="railMode"
-      :width="280"
-      class="wiki-sidebar"
-    >
+    <div class="wiki-sidebar" :class="{ rail: railMode }">
       <!-- 侧栏头部 -->
       <div class="sidebar-header pa-2">
         <div class="d-flex align-center">
@@ -184,109 +179,124 @@
           </template>
         </v-tooltip>
       </div>
-    </v-navigation-drawer>
+    </div>
 
     <!-- 主内容区 -->
     <div class="wiki-main">
-      <!-- 顶部工具栏 -->
-      <div class="wiki-toolbar">
-        <v-breadcrumbs
-          v-if="breadcrumbs.length > 0"
-          :items="breadcrumbs"
-          density="compact"
-          class="text-body-2 pa-0"
-        >
-          <template v-slot:divider>
-            <v-icon size="14">mdi-chevron-right</v-icon>
-          </template>
-        </v-breadcrumbs>
-
-        <v-spacer />
-
-        <!-- 用户权限状态指示 -->
-        <v-chip
-          v-if="isAuthenticated"
-          size="x-small"
-          :color="userRoleColor"
-          variant="tonal"
-          class="mr-2"
-        >
-          <v-icon size="12" start>{{ userRoleIcon }}</v-icon>
-          {{ userRoleText }}
-        </v-chip>
-
-        <!-- 页面操作 -->
-        <template v-if="currentPage">
-          <v-btn
-            :icon="isFavorite(currentPageId) ? 'mdi-star' : 'mdi-star-outline'"
-            :color="isFavorite(currentPageId) ? 'amber' : undefined"
-            variant="text"
-            size="small"
-            @click="toggleFavorite(currentPageId)"
-          />
-          <v-btn
-            v-if="canEdit"
-            icon="mdi-pencil"
-            variant="text"
-            size="small"
-            @click="editCurrentPage"
-          />
-          <v-btn
-            icon="mdi-history"
-            variant="text"
-            size="small"
-            @click="showHistoryDialog = true"
-          />
-          <v-menu>
-            <template v-slot:activator="{ props }">
-              <v-btn
-                icon="mdi-dots-vertical"
-                variant="text"
-                size="small"
-                v-bind="props"
-              />
-            </template>
-            <v-list density="compact" min-width="140">
-              <v-list-item prepend-icon="mdi-share-variant" @click="sharePage">
-                <v-list-item-title class="text-body-2">分享</v-list-item-title>
-              </v-list-item>
-              <v-list-item
-                v-if="canEdit"
-                prepend-icon="mdi-folder-move"
-                @click="movePage"
-              >
-                <v-list-item-title class="text-body-2">移动</v-list-item-title>
-              </v-list-item>
-              <v-list-item
-                prepend-icon="mdi-tag-outline"
-                @click="showTagsDialog = true"
-              >
-                <v-list-item-title class="text-body-2">标签</v-list-item-title>
-              </v-list-item>
-              <v-list-item
-                v-if="canManagePermission"
-                prepend-icon="mdi-shield-lock"
-                @click="showPermissionDialog = true"
-              >
-                <v-list-item-title class="text-body-2">权限</v-list-item-title>
-              </v-list-item>
-              <v-divider v-if="canDelete" class="my-1" />
-              <v-list-item
-                v-if="canDelete"
-                prepend-icon="mdi-delete"
-                @click="deleteCurrentPage"
-                class="text-error"
-              >
-                <v-list-item-title class="text-body-2">删除</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </template>
-      </div>
-
       <!-- 页面内容 -->
       <div class="wiki-content-area">
         <div class="wiki-container">
+          <!-- 顶部工具栏 (移动到内容区域内) -->
+          <div class="wiki-toolbar mb-4">
+            <v-breadcrumbs
+              v-if="breadcrumbs.length > 0"
+              :items="breadcrumbs"
+              density="compact"
+              class="text-body-2 pa-0"
+            >
+              <template v-slot:divider>
+                <v-icon size="14">mdi-chevron-right</v-icon>
+              </template>
+            </v-breadcrumbs>
+
+            <v-spacer />
+
+            <!-- 用户权限状态指示 -->
+            <v-chip
+              v-if="isAuthenticated"
+              size="x-small"
+              :color="userRoleColor"
+              variant="tonal"
+              class="mr-2"
+            >
+              <v-icon size="12" start>{{ userRoleIcon }}</v-icon>
+              {{ userRoleText }}
+            </v-chip>
+
+            <!-- 页面操作 -->
+            <template v-if="currentPage">
+              <v-btn
+                :icon="
+                  isFavorite(currentPageId) ? 'mdi-star' : 'mdi-star-outline'
+                "
+                :color="isFavorite(currentPageId) ? 'amber' : undefined"
+                variant="text"
+                size="small"
+                @click="toggleFavorite(currentPageId)"
+              />
+              <v-btn
+                v-if="canEdit"
+                icon="mdi-pencil"
+                variant="text"
+                size="small"
+                @click="editCurrentPage"
+              />
+              <v-btn
+                icon="mdi-history"
+                variant="text"
+                size="small"
+                @click="showHistoryDialog = true"
+              />
+              <v-menu>
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    icon="mdi-dots-vertical"
+                    variant="text"
+                    size="small"
+                    v-bind="props"
+                  />
+                </template>
+                <v-list density="compact" min-width="140">
+                  <v-list-item
+                    prepend-icon="mdi-share-variant"
+                    @click="sharePage"
+                  >
+                    <v-list-item-title class="text-body-2"
+                      >分享</v-list-item-title
+                    >
+                  </v-list-item>
+                  <v-list-item
+                    v-if="canEdit"
+                    prepend-icon="mdi-folder-move"
+                    @click="movePage"
+                  >
+                    <v-list-item-title class="text-body-2"
+                      >移动</v-list-item-title
+                    >
+                  </v-list-item>
+                  <v-list-item
+                    prepend-icon="mdi-tag-outline"
+                    @click="showTagsDialog = true"
+                  >
+                    <v-list-item-title class="text-body-2"
+                      >标签</v-list-item-title
+                    >
+                  </v-list-item>
+                  <v-list-item
+                    v-if="canManagePermission"
+                    prepend-icon="mdi-shield-lock"
+                    @click="showPermissionDialog = true"
+                  >
+                    <v-list-item-title class="text-body-2"
+                      >权限</v-list-item-title
+                    >
+                  </v-list-item>
+                  <v-divider v-if="canDelete" class="my-1" />
+                  <v-list-item
+                    v-if="canDelete"
+                    prepend-icon="mdi-delete"
+                    @click="deleteCurrentPage"
+                    class="text-error"
+                  >
+                    <v-list-item-title class="text-body-2"
+                      >删除</v-list-item-title
+                    >
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </template>
+          </div>
+
           <!-- 首页 -->
           <div v-if="!currentPage && !loading" class="welcome-section">
             <div class="text-center mb-4">
@@ -1155,13 +1165,22 @@ onMounted(async () => {
 /* 布局 */
 .wiki-layout {
   display: flex;
-  height: calc(100vh - 64px);
+  height: 100%;
   background: #fafafa;
 }
 
 .wiki-sidebar {
+  width: 280px;
+  transition: width 0.2s;
   border-right: 1px solid #e0e0e0;
   background: #fff !important;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.wiki-sidebar.rail {
+  width: 56px;
 }
 
 .sidebar-header {
@@ -1199,10 +1218,7 @@ onMounted(async () => {
 .wiki-toolbar {
   display: flex;
   align-items: center;
-  height: 48px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #fff;
-  padding: 0 12px;
+  padding: 0;
   flex-shrink: 0;
 }
 
@@ -1475,14 +1491,9 @@ onMounted(async () => {
 }
 </style>
 
-<route>
-{
-  name: 'wiki',
-  path: '/wiki/:id?',
-  meta: {
-    requiresAuth: false,
-    layout: 'default',
-    title: 'Wiki 知识库'
-  }
-}
+<route lang="yaml">
+meta:
+  requiresAuth: false
+  layout: wiki
+  title: Wiki 知识库
 </route>
