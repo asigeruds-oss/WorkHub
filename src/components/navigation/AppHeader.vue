@@ -20,7 +20,7 @@
         <v-icon size="32" color="primary" class="logo-icon">
           mdi-briefcase-variant
         </v-icon>
-        <span class="logo-text">ContentHub</span>
+        <span class="logo-text">WorkHub</span>
       </router-link>
     </template>
 
@@ -185,7 +185,7 @@ const pageTitle = computed(() => {
     "/notion": "Notion",
     "/settings": "设置",
   };
-  return titles[route.path] || "ContentHub";
+  return titles[route.path] || "WorkHub";
 });
 
 const userMenuItems = computed(() => {

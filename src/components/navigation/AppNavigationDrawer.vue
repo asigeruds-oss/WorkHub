@@ -30,7 +30,7 @@
             mdi-briefcase-variant
           </v-icon>
           <div v-if="!isRail" class="brand-text">
-            <h2 class="brand-title">ContentHub</h2>
+            <h2 class="brand-title">WorkHub</h2>
             <p class="brand-subtitle">高效协作平台</p>
           </div>
         </div>
