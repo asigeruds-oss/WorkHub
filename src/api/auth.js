@@ -1,4 +1,8 @@
 import http from './http'
+import Logger from '@/utils/logger'
+import { handleError } from '@/utils/errorHandler'
+
+const logger = new Logger('AuthAPI')
 
 /**
  * 认证相关的API服务
@@ -17,10 +21,11 @@ export const AuthAPI = {
         password,
       })
       
+      logger.debug('登录成功')
       return response.data
     } catch (error) {
-      console.error('登录失败:', error)
-      throw error
+      logger.error('登录失败', error)
+      throw handleError(error, 'AuthAPI.login')
     }
   },
 
@@ -39,14 +44,14 @@ export const AuthAPI = {
    */
   async register(userData) {
     try {
-      console.log('发送注册请求，数据:', userData)
+      logger.debug('发送注册请求')
       const response = await http.post('/api/register/', userData)
       
-      console.log('注册API响应:', response.data)
+      logger.debug('注册成功')
       return response.data
     } catch (error) {
-      console.error('注册失败:', error.response || error)
-      throw error
+      logger.error('注册失败', error)
+      throw handleError(error, 'AuthAPI.register')
     }
   },
 
@@ -61,8 +66,8 @@ export const AuthAPI = {
       
       return response.data
     } catch (error) {
-      console.error('获取用户信息失败:', error)
-      throw error
+      logger.error('获取用户信息失败', error)
+      throw handleError(error, 'AuthAPI.getUserInfo')
     }
   },
 

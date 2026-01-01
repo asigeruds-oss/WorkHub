@@ -2,7 +2,6 @@ import { AuthAPI } from './auth'
 import { TodoAPI } from './todo'
 import { NotificationAPI } from './notification'
 import http from './http'
-import AutoPsAPI from './autops'
 import FeedbackAPI from './feedback'
 import MessageAPI from './message'
 import WikiAPI from './wiki'
@@ -14,7 +13,6 @@ export {
   AuthAPI,
   TodoAPI,
   NotificationAPI,
-  AutoPsAPI,
   FeedbackAPI,
   MessageAPI,
   WikiAPI,
@@ -28,7 +26,6 @@ export default {
   auth: AuthAPI,
   todo: TodoAPI,
   notification: NotificationAPI,
-  autops: AutoPsAPI,
   feedback: FeedbackAPI,
   message: MessageAPI,
   wiki: WikiAPI,

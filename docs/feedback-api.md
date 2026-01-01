@@ -1,7 +1,7 @@
 # 反馈功能API文档
 
 ## 概述
-本文档描述了假条自动生成页面中反馈功能所需的后端API接口规范。
+本文档描述了反馈功能所需的后端API接口规范。
 
 ## API端点
 
@@ -20,7 +20,7 @@
   "email": "user@example.com", // 可选，字符串，有效的电子邮件地址
   "type": "suggestion",        // 必填，字符串，取值: "suggestion", "bug", "question", "other"
   "content": "反馈内容",       // 必填，字符串
-  "source": "autops"           // 可选，字符串，表示反馈来源页面
+  "source": "general"          // 可选，字符串，表示反馈来源页面
 }
 ```
 
@@ -55,7 +55,7 @@
 | email     | 字符串   | 否    | 用户电子邮箱，用于回复反馈                      |
 | type      | 字符串   | 是    | 反馈类型，可选值：suggestion, bug, question, other |
 | content   | 字符串   | 是    | 反馈的具体内容                                 |
-| source    | 字符串   | 否    | 反馈来源页面，例如："autops"表示来自假条生成页面 |
+| source    | 字符串   | 否    | 反馈来源页面，例如："wiki"、"project"等 |
 
 ## 注意事项
 

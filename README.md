@@ -1,79 +1,208 @@
-# Vuetify (Default)
+# Content Hub
 
-This is the official scaffolding tool for Vuetify, designed to give you a head start in building your new Vuetify application. It sets up a base template with all the necessary configurations and standard directory structure, enabling you to begin development without the hassle of setting up the project from scratch.
+<div align="center">
 
-## ❗️ Important Links
+![Content Hub Logo](https://img.shields.io/badge/Content-Hub-blue?style=for-the-badge)
 
-- 📄 [Docs](https://vuetifyjs.com/)
-- 🚨 [Issues](https://issues.vuetifyjs.com/)
-- 🏬 [Store](https://store.vuetifyjs.com/)
-- 🎮 [Playground](https://play.vuetifyjs.com/)
-- 💬 [Discord](https://community.vuetifyjs.com)
+**现代化的团队协作与知识管理平台**
 
-## 💿 Install
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Vue 3](https://img.shields.io/badge/Vue-3.x-brightgreen.svg)](https://vuejs.org/)
+[![Vuetify 3](https://img.shields.io/badge/Vuetify-3.x-blue.svg)](https://vuetifyjs.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-Set up your project using your preferred package manager. Use the corresponding command to install the dependencies:
+</div>
 
-| Package Manager                                                | Command        |
-|---------------------------------------------------------------|----------------|
-| [yarn](https://yarnpkg.com/getting-started)                   | `yarn install` |
-| [npm](https://docs.npmjs.com/cli/v7/commands/npm-install)     | `npm install`  |
-| [pnpm](https://pnpm.io/installation)                          | `pnpm install` |
-| [bun](https://bun.sh/#getting-started)                        | `bun install`  |
+---
 
-After completing the installation, your environment is ready for Vuetify development.
+## 📖 简介
 
-## ✨ Features
+Content Hub 是一个功能丰富的团队协作平台，集成了Wiki知识库、项目管理、待办事项、消息板等多个模块。采用现代化的技术栈构建，提供流畅的用户体验和强大的权限管理系统。
 
-- 🖼️ **Optimized Front-End Stack**: Leverage the latest Vue 3 and Vuetify 3 for a modern, reactive UI development experience. [Vue 3](https://v3.vuejs.org/) | [Vuetify 3](https://vuetifyjs.com/en/)
-- 🗃️ **State Management**: Integrated with [Pinia](https://pinia.vuejs.org/), the intuitive, modular state management solution for Vue.
-- 🚦 **Routing and Layouts**: Utilizes Vue Router for SPA navigation and vite-plugin-vue-layouts for organizing Vue file layouts. [Vue Router](https://router.vuejs.org/) | [vite-plugin-vue-layouts](https://github.com/JohnCampionJr/vite-plugin-vue-layouts)
-- ⚡ **Next-Gen Tooling**: Powered by Vite, experience fast cold starts and instant HMR (Hot Module Replacement). [Vite](https://vitejs.dev/)
-- 🧩 **Automated Component Importing**: Streamline your workflow with unplugin-vue-components, automatically importing components as you use them. [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
+### ✨ 核心功能
 
-These features are curated to provide a seamless development experience from setup to deployment, ensuring that your Vuetify application is both powerful and maintainable.
+#### 📚 Wiki 知识库
+- 🌲 **树形结构**：支持无限层级的页面嵌套
+- ✏️ **Markdown 编辑**：强大的 Markdown 编辑器，支持实时预览
+- 🔍 **全文搜索**：快速查找所需内容
+- 🏷️ **标签系统**：灵活的内容分类和组织
+- 📝 **版本历史**：追踪所有修改记录
+- 💬 **评论功能**：团队协作讨论
+- 🔐 **精细权限**：基于用户/组的访问控制
 
-## 💡 Usage
+#### 📊 项目管理
+- 📁 **项目看板**：可视化的项目管理
+- 📈 **进度追踪**：实时项目进度统计
+- 🎯 **优先级管理**：合理安排任务优先级
+- 👥 **团队协作**：项目成员管理
+- 📊 **数据统计**：项目完成度分析
 
-This section covers how to start the development server and build your project for production.
+#### ✅ 待办事项
+- 📝 **任务管理**：创建、编辑、删除任务
+- 📅 **日期提醒**：设置截止日期
+- 🔄 **状态流转**：待处理、进行中、已完成、已挂起
+- 📊 **统计视图**：任务完成情况统计
+- 🔗 **关联项目**：任务与项目关联
+- 📎 **子任务**：支持任务分解
 
-### Starting the Development Server
+#### 💬 消息板
+- 📢 **团队公告**：发布团队通知
+- 💡 **讨论交流**：团队成员互动
+- 📌 **置顶功能**：重要消息优先展示
 
-To start the development server with hot-reload, run the following command. The server will be accessible at [http://localhost:3000](http://localhost:3000):
+#### 🔐 权限管理
+- 👤 **用户管理**：用户账户管理
+- 👥 **用户组**：灵活的组织架构
+- 🛡️ **权限控制**：细粒度的权限设置
+- 🔑 **JWT 认证**：安全的身份验证机制
+
+---
+
+## 🚀 快速开始
+
+### 📋 前置要求
+
+- **Node.js** >= 18.0.0
+- **npm** / **yarn** / **pnpm** / **bun**
+- **后端 API** 服务（需单独部署）
+
+### ⚙️ 安装
 
 ```bash
-yarn dev
+# 克隆项目
+git clone https://github.com/yourusername/content-hub.git
+cd content-hub
+
+# 安装依赖（选择一个包管理器）
+npm install
+# 或
+yarn install
+# 或
+pnpm install
+# 或
+bun install
 ```
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+### 🔧 配置
 
-> Add NODE_OPTIONS='--no-warnings' to suppress the JSON import warnings that happen as part of the Vuetify import mapping. If you are on Node [v21.3.0](https://nodejs.org/en/blog/release/v21.3.0) or higher, you can change this to NODE_OPTIONS='--disable-warning=5401'. If you don't mind the warning, you can remove this from your package.json dev script.
-
-### Building for Production
-
-To build your project for production, use:
+复制 `.env.example` 为 `.env` 并根据实际情况修改配置：
 
 ```bash
-yarn build
+cp .env.example .env
 ```
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+主要配置项：
 
-Once the build process is completed, your application will be ready for deployment in a production environment.
+```env
+# API 基础地址（开发环境留空，使用Vite代理）
+VITE_API_URL=
 
-## 💪 Support Vuetify Development
+# 应用标题
+VITE_APP_TITLE=Content Hub
 
-This project is built with [Vuetify](https://vuetifyjs.com/en/), a UI Library with a comprehensive collection of Vue components. Vuetify is an MIT licensed Open Source project that has been made possible due to the generous contributions by our [sponsors and backers](https://vuetifyjs.com/introduction/sponsors-and-backers/). If you are interested in supporting this project, please consider:
+# 功能开关
+VITE_FEATURE_WIKI=true
+VITE_FEATURE_PROJECTS=true
+VITE_FEATURE_TODOS=true
+```
 
-- [Requesting Enterprise Support](https://support.vuetifyjs.com/)
-- [Sponsoring John on Github](https://github.com/users/johnleider/sponsorship)
-- [Sponsoring Kael on Github](https://github.com/users/kaelwd/sponsorship)
-- [Supporting the team on Open Collective](https://opencollective.com/vuetify)
-- [Becoming a sponsor on Patreon](https://www.patreon.com/vuetify)
-- [Becoming a subscriber on Tidelift](https://tidelift.com/subscription/npm/vuetify)
-- [Making a one-time donation with Paypal](https://paypal.me/vuetify)
+### 🏃 运行
 
-## 📑 License
-[MIT](http://opensource.org/licenses/MIT)
+#### 开发环境
 
-Copyright (c) 2016-present Vuetify, LLC
+```bash
+npm run dev
+```
+
+访问 http://localhost:3000
+
+#### 生产构建
+
+```bash
+npm run build
+```
+
+#### 预览生产构建
+
+```bash
+npm run preview
+```
+
+---
+
+## 🐳 Docker 部署
+
+### 使用 Docker Compose
+
+```bash
+# 构建并启动
+docker-compose up -d --build
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+详细部署文档请参考 [docker-deployment-guide.md](docker-deployment-guide.md)
+
+---
+
+## 🛠️ 技术栈
+
+### 前端框架
+- **[Vue 3](https://vuejs.org/)** - 渐进式 JavaScript 框架
+- **[Vuetify 3](https://vuetifyjs.com/)** - Material Design 组件库
+- **[Vite](https://vitejs.dev/)** - 下一代前端构建工具
+
+### 状态管理
+- **[Pinia](https://pinia.vuejs.org/)** - Vue 官方推荐的状态管理库
+
+### 路由
+- **[Vue Router](https://router.vuejs.org/)** - 官方路由管理器
+
+### HTTP 请求
+- **[Axios](https://axios-http.com/)** - Promise based HTTP client
+
+### Markdown 编辑
+- **[Marked](https://marked.js.org/)** - Markdown 解析器
+
+---
+
+## 🤝 贡献指南
+
+我们欢迎所有形式的贡献！在参与贡献之前，请阅读 [贡献指南](CONTRIBUTING.md)。
+
+### 贡献方式
+
+1. 🐛 报告 Bug
+2. 💡 提出新功能建议
+3. 📝 改进文档
+4. 🔧 提交代码修复
+5. ⭐ Star 项目
+
+---
+
+## 📄 许可证
+
+本项目采用 [MIT](LICENSE) 许可证。
+
+---
+
+## 🙏 致谢
+
+感谢以下开源项目：
+
+- [Vue.js](https://vuejs.org/)
+- [Vuetify](https://vuetifyjs.com/)
+- [Vite](https://vitejs.dev/)
+- [Pinia](https://pinia.vuejs.org/)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by Content Hub Team**
+
+</div>

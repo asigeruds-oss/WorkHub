@@ -1,8 +1,29 @@
 {
-  "name": "work_hub",
-  "private": true,
+  "name": "content-hub",
+  "version": "1.0.0",
+  "description": "A modern team collaboration and knowledge management platform",
+  "author": "Content Hub Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/content-hub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/content-hub/issues"
+  },
+  "homepage": "https://github.com/yourusername/content-hub#readme",
+  "keywords": [
+    "vue",
+    "vuetify",
+    "wiki",
+    "knowledge-management",
+    "project-management",
+    "todo",
+    "collaboration",
+    "team"
+  ],
+  "private": false,
   "type": "module",
-  "version": "0.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

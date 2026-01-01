@@ -43,8 +43,6 @@ export const eventBus = reactive({
    * @param {*} [payload] - 事件数据
    */
   emit(event, payload) {
-    console.log(`[事件总线] 触发事件: ${event}`, payload)
-    
     if (!this._handlers[event]) return
     
     this._handlers[event].forEach(handler => {

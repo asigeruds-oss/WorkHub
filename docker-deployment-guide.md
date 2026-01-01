@@ -5,14 +5,14 @@
 使用git克隆
 ```bash
 git clone <your-repository-url>
-cd content_hub_f
+cd work_hub
 ```
 
 2. 构建并启动Docker容器
 
 ```bash
 # 切换到项目目录
-cd /path/to/content_hub_f
+cd /path/to/work_hub
 
 # 使用Docker Compose构建并启动容器
 docker-compose up -d --build

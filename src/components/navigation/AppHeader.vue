@@ -182,10 +182,9 @@ const pageTitle = computed(() => {
     "/": "工作台",
     "/wiki": "知识库",
     "/todos": "任务中心",
-    "/notion": "Notion",
     "/settings": "设置",
   };
-  return titles[route.path] || "WorkHub";
+  return titles[route.path] || "Content Hub";
 });
 
 const userMenuItems = computed(() => {

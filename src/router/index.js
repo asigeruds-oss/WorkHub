@@ -9,6 +9,9 @@ import { createRouter, createWebHistory } from 'vue-router/auto'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { routes } from 'vue-router/auto-routes'
 import { jwtDecode } from 'jwt-decode'
+import Logger from '@/utils/logger'
+
+const logger = new Logger('Router')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,33 +20,22 @@ const router = createRouter({
 
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
-  console.log('路由守卫 - 从', from.path, '到', to.path)
-  console.log('路由守卫 - 目标路由完整信息:', {
-    name: to.name,
-    path: to.path,
-    fullPath: to.fullPath,
-    query: to.query,
-    params: to.params,
-    meta: to.meta
-  })
+  logger.debug(`导航: ${from.path} -> ${to.path}`)
   
   // 检查路由是否需要认证
   const requiresAuth = to.meta.requiresAuth !== false
-  console.log('路由守卫 - 路由是否需要认证:', requiresAuth)
   
   // 如果路由不需要认证或是登录/注册页面，直接通过
   if (!requiresAuth || to.path === '/login' || to.path === '/register') {
-    console.log('路由守卫 - 无需认证或登录/注册页面，直接通过')
     return next()
   }
   
   // 检查token是否存在和有效
   const token = localStorage.getItem('accessToken')
-  console.log('路由守卫 - 检查令牌:', token ? token.substring(0, 20) + '...' : 'undefined')
   
   if (!token) {
     // 没有token，跳转到登录页面
-    console.log('路由守卫 - 没有令牌，跳转到登录页面')
+    logger.debug('无认证令牌，重定向到登录页')
     return next({ path: '/login', query: { redirect: to.fullPath } })
   }
   
@@ -58,6 +50,7 @@ router.beforeEach((to, from, next) => {
       
       if (!refreshToken) {
         // 没有刷新令牌，清除数据并跳转到登录页面
+        logger.debug('令牌过期且无刷新令牌，重定向到登录页')
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
@@ -71,7 +64,7 @@ router.beforeEach((to, from, next) => {
     // Token有效，允许访问
     return next()
   } catch (error) {
-    console.error('令牌验证失败', error)
+    logger.error('令牌验证失败', error)
     
     // 令牌无效，清除数据并跳转到登录页面
     localStorage.removeItem('accessToken')
@@ -86,14 +79,14 @@ router.beforeEach((to, from, next) => {
 router.onError((err, to) => {
   if (err?.message?.includes?.('Failed to fetch dynamically imported module')) {
     if (localStorage.getItem('vuetify:dynamic-reload')) {
-      console.error('Dynamic import error, reloading page did not fix it', err)
+      logger.error('动态导入错误，重载页面未修复', err)
     } else {
-      console.log('Reloading page to fix dynamic import error')
+      logger.debug('重载页面以修复动态导入错误')
       localStorage.setItem('vuetify:dynamic-reload', 'true')
       location.assign(to.fullPath)
     }
   } else {
-    console.error(err)
+    logger.error('路由错误', err)
   }
 })
 

@@ -41,14 +41,6 @@ export const navigationConfig = {
       description: '项目进度与任务追踪',
     },
     {
-      id: 'notion',
-      title: 'Notion',
-      path: '/notion',
-      icon: 'mdi-script-text',
-      requireAuth: false,
-      description: 'Notion集成工具',
-    },
-    {
       id: 'admin',
       title: '权限管理',
       path: '/admin/permissions',

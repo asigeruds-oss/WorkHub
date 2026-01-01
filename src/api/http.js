@@ -1,5 +1,8 @@
 import axios from 'axios'
 import router from '@/router'
+import Logger from '@/utils/logger'
+
+const logger = new Logger('HTTP')
 
 /**
  * 创建一个基础的axios实例
@@ -16,28 +19,22 @@ const http = axios.create({
  */
 http.interceptors.request.use(
   config => {
-    // 添加详细日志以跟踪请求
-    console.log(`[HTTP请求] ${config.method.toUpperCase()} ${config.url}`, {
-      baseURL: config.baseURL || '(无baseURL，使用相对路径)',
-      完整URL: config.baseURL ? `${config.baseURL}${config.url}` : config.url,
-      请求数据: config.data,
-      请求参数: config.params,
-      请求头: config.headers
+    logger.debug(`${config.method.toUpperCase()} ${config.url}`, {
+      data: config.data,
+      params: config.params,
     })
     
     const accessToken = localStorage.getItem('accessToken')
     
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`
-      console.log('[HTTP请求] 已添加认证Token')
-    } else {
-      console.log('[HTTP请求] 未找到认证Token')
+      logger.debug('已添加认证Token')
     }
     
     return config
   },
   error => {
-    console.error('[HTTP请求错误]', error)
+    logger.error('请求拦截器错误', error)
     return Promise.reject(error)
   }
 )
@@ -64,6 +61,7 @@ http.interceptors.response.use(
         
         if (!refreshToken) {
           // 如果没有刷新令牌，直接跳转到登录页
+          logger.warn('无刷新令牌，跳转登录页')
           localStorage.removeItem('accessToken')
           localStorage.removeItem('user')
           router.push('/login')
@@ -71,6 +69,7 @@ http.interceptors.response.use(
         }
         
         // 刷新令牌
+        logger.debug('尝试刷新访问令牌')
         const response = await axios.post('/api/token/refresh/', {
           refresh: refreshToken
         })
@@ -78,12 +77,14 @@ http.interceptors.response.use(
         // 更新存储的访问令牌
         const { access } = response.data
         localStorage.setItem('accessToken', access)
+        logger.debug('令牌刷新成功')
         
         // 更新原始请求的认证头并重试
         originalRequest.headers.Authorization = `Bearer ${access}`
         return http(originalRequest)
       } catch (refreshError) {
         // 刷新令牌失败，清除所有认证数据并跳转到登录页
+        logger.warn('令牌刷新失败，跳转登录页')
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
@@ -94,7 +95,7 @@ http.interceptors.response.use(
     
     // 其他错误处理
     if (error.response?.status === 403) {
-      console.error('没有权限执行此操作')
+      logger.warn('403: 没有权限执行此操作')
     }
     
     return Promise.reject(error)

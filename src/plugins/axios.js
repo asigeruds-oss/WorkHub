@@ -7,25 +7,6 @@ import router from '@/router'
 axios.defaults.headers.common['Content-Type'] = 'application/json'
 axios.defaults.timeout = 10000
 
-// 开发环境调试
-if (import.meta.env.DEV) {
-  axios.interceptors.request.use(request => {
-    console.log('Starting Request:', request.method, request.url, request.data)
-    return request
-  })
-  
-  axios.interceptors.response.use(
-    response => {
-      console.log('Response:', response.status, response.data)
-      return response
-    },
-    error => {
-      console.error('Response Error:', error.message, error.response?.data)
-      return Promise.reject(error)
-    }
-  )
-}
-
 // 创建请求拦截器
 axios.interceptors.request.use(
   config => {
