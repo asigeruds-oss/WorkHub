@@ -44,7 +44,7 @@
         </div>
 
         <!-- 搜索框 -->
-        <div class="px-2 pb-2">
+        <div class="px-2">
           <v-text-field
             v-model="searchQuery"
             placeholder="搜索..."
@@ -59,7 +59,7 @@
         </div>
 
         <!-- 标签页 -->
-        <v-tabs v-model="sidebarTab" density="compact" grow>
+        <v-tabs v-model="sidebarTab" density="compact" grow height="32">
           <v-tab value="tree" size="small">
             <v-icon size="16">mdi-file-tree</v-icon>
             <span class="ml-1 text-caption">目录</span>
@@ -79,7 +79,7 @@
         <!-- 标签页内容 -->
         <v-window v-model="sidebarTab" class="sidebar-content">
           <v-window-item value="tree">
-            <div class="wiki-tree-container pa-2">
+            <div class="wiki-tree-container">
               <template v-if="pageTree.length > 0">
                 <wiki-tree-item
                   v-for="page in pageTree"
@@ -94,9 +94,9 @@
               </template>
               <div
                 v-else
-                class="text-center pa-4 text-caption text-medium-emphasis"
+                class="text-center pa-2 text-caption text-medium-emphasis"
               >
-                <v-icon size="32" color="grey">mdi-file-outline</v-icon>
+                <v-icon size="20" color="grey">mdi-file-outline</v-icon>
                 <div class="mt-1">暂无页面</div>
               </div>
             </div>
@@ -118,7 +118,7 @@
               </v-list-item>
               <div
                 v-if="recentPages.length === 0"
-                class="text-center pa-4 text-caption text-medium-emphasis"
+                class="text-center pa-2 text-caption text-medium-emphasis"
               >
                 暂无最近访问
               </div>
@@ -140,7 +140,7 @@
               </v-list-item>
               <div
                 v-if="favoritePages.length === 0"
-                class="text-center pa-4 text-caption text-medium-emphasis"
+                class="text-center pa-2 text-caption text-medium-emphasis"
               >
                 暂无收藏
               </div>
@@ -1165,8 +1165,9 @@ onMounted(async () => {
 /* 布局 */
 .wiki-layout {
   display: flex;
-  height: 100%;
+  height: 100vh;
   background: #fafafa;
+  overflow: hidden;
 }
 
 .wiki-sidebar {
@@ -1177,6 +1178,10 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
 }
 
 .wiki-sidebar.rail {
@@ -1188,18 +1193,62 @@ onMounted(async () => {
   background: #fafafa;
 }
 
+/* 压缩标签页高度 */
+.wiki-sidebar :deep(.v-tabs) {
+  min-height: 32px;
+  height: 32px;
+}
+
+.wiki-sidebar :deep(.v-slide-group__container) {
+  height: 32px !important;
+}
+
+.wiki-sidebar :deep(.v-slide-group__content) {
+  height: 32px !important;
+}
+
+.wiki-sidebar :deep(.v-tab) {
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
 .sidebar-content {
-  height: calc(100vh - 260px);
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
+}
+
+.sidebar-content :deep(.v-window__container) {
+  height: auto !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+}
+
+.sidebar-content :deep(.v-window-item) {
+  height: auto !important;
+  align-self: flex-start !important;
+  width: 100% !important;
+}
+
+.sidebar-content :deep(.v-window-item > *) {
+  margin-top: 0 !important;
 }
 
 .sidebar-content::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 2px;
+}
+
+.sidebar-content {
+  scrollbar-gutter: stable;
 }
 
 /* 目录树容器 */
@@ -1212,7 +1261,8 @@ onMounted(async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  height: 100vh;
 }
 
 .wiki-toolbar {
@@ -1488,6 +1538,52 @@ onMounted(async () => {
     flex-direction: column;
     align-items: center;
   }
+}
+</style>
+
+<!-- 非 scoped 样式，确保能穿透到 Vuetify 组件 -->
+<style>
+/* 强制 v-tabs 及其内部元素不继承父元素高度 */
+.wiki-sidebar .v-tabs {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: auto !important;
+}
+
+.wiki-sidebar .v-tabs .v-slide-group__container {
+  height: auto !important;
+  min-height: auto !important;
+}
+
+.wiki-sidebar .v-tabs .v-slide-group__content {
+  height: auto !important;
+  min-height: auto !important;
+}
+
+.wiki-sidebar .v-tab {
+  height: 32px !important;
+  min-height: 32px !important;
+}
+
+/* 修复 v-window 空白问题 */
+.wiki-sidebar .sidebar-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.wiki-sidebar .sidebar-content .v-window__container {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.wiki-sidebar .sidebar-content .v-window-item {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.wiki-sidebar .sidebar-content .v-window-item--active {
+  height: auto !important;
 }
 </style>
 
